@@ -5,4 +5,20 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Coins\" />
+    <Folder Include="Config\Donation\" />
+    <Folder Include="Miners\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SimpleTCPNetCore">
+      <HintPath>Libraries\SimpleTCPNetCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
