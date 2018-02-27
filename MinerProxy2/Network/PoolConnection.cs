@@ -8,28 +8,31 @@ using SimpleTCP;
 
 namespace MinerProxy2.Network
 {
-    class Server
+    class PoolConnection
     {
-        readonly SimpleTcpClient server;
+        readonly SimpleTcpClient serverConnection;
 
         string host = "us1.ethermine.org";
         int port = 4444;
-        int bufferSize = 2048;
-        int connectAttempts;
 
-        Server(string address, int port, int bufferSize = 2048)
+        PoolConnection(string address, int port, int bufferSize = 2048)
         {
             
         }
 
-        Server()
+        PoolConnection()
         {
+            //start a MinerConnection instance as well
+            //that listens for miners for this pool's Proxy port.
 
+            //create a Coins class instance for a supported algo
+            //Hook into the methods within it when data is passed from the server or miners
+            //call methods in the Coins class to send work to miners
         }
 
         public void Connect()
         {
-
+            serverConnection.Connect(host, port);
         }
 
         public void Disconnect()
