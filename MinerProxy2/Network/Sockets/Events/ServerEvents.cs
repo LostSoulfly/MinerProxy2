@@ -41,14 +41,14 @@ namespace MinerProxy2.Network.Connections
 
     public class ClientErrorArgs : EventArgs
     {
-        public ClientErrorArgs(string error, TcpConnection connection)
+        public ClientErrorArgs(Exception exception, TcpConnection connection)
         {
             _connection = connection;
-            _error = error;
+            _exception = exception;
         }
         private TcpConnection _connection;
-        private string _error;
+        private Exception _exception;
         public TcpConnection connection { get { return _connection; } }
-        public string Error { get { return _error; } }
+        public Exception exception { get { return _exception; } }
     }
 }

@@ -18,9 +18,11 @@ namespace MinerProxy2.Network.Sockets
         private readonly byte[] buffer = new byte[BUFFER_SIZE];
         
         public event EventHandler<DataReceivedArgs> RaiseDataReceived;
+        public event EventHandler<ClientErrorArgs> RaiseClientError;
+        public event EventHandler<ClientConnectedArgs> RaiseClientConnected;
+        public event EventHandler<ClientDisonnectedArgs> RaiseClientDisconnected;
 
-        public event EventHandler<ServerErrorArgs> RaiseServerError;
-        
+
         /// <summary>
         /// Begin listening for new clients on port specified.
         /// </summary>
@@ -68,16 +70,21 @@ namespace MinerProxy2.Network.Sockets
                 Log.Error(ex, "AcceptCallback Disposed Exception");
                 return;
             }
-            
-            clientSockets.Add(new TcpConnection(socket.RemoteEndPoint, socket);
+
+            IPEndPoint endPoint = socket.RemoteEndPoint as IPEndPoint;
+            TcpConnection tcpConnection = new TcpConnection(endPoint, socket);
+
+            clientSockets.Add(tcpConnection);
             socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
             Log.Information("Client connected, waiting for request...");
             serverSocket.BeginAccept(AcceptCallback, null);
+            RaiseClientConnected?.Invoke(this, new ClientConnectedArgs(tcpConnection));
         }
 
         private void ReceiveCallback(IAsyncResult AR)
         {
             Socket current = (Socket)AR.AsyncState;
+            TcpConnection tcpConnection = GetTcpConnection(current);
             int received;
 
             try
@@ -88,21 +95,35 @@ namespace MinerProxy2.Network.Sockets
             {
                 Log.Information(ex, "Client forcefully disconnected");
                 // Don't shutdown because the socket may be disposed and its disconnected anyway.
+                RaiseClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 current.Close();
-                clientSockets.Remove(current);
+                clientSockets.Remove(tcpConnection);
                 return;
             }
 
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
             
-            RaiseDataReceived?.Invoke(this, new DataReceivedArgs(recBuf, current));
+            RaiseDataReceived?.Invoke(this, new DataReceivedArgs(recBuf, tcpConnection));
 
             try
             {
                 current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
             }
-            catch ( Exception ex )  { Log.Error(ex, "BeginReceive Error"); }
+            catch (Exception ex)
+            {
+
+                RaiseClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
+                Log.Error(ex, "BeginReceive Error");
+            }
+        }
+
+        private TcpConnection GetTcpConnection(Socket socket)
+        {
+            var tcpConnection = clientSockets.Find(x => x.socket.RemoteEndPoint == socket.RemoteEndPoint);
+            if (tcpConnection != null) { return tcpConnection; }
+
+            return null;
         }
 
     }

@@ -6,24 +6,21 @@ using MinerProxy2.Coins.MinerHandler;
 using MinerProxy2.Network.Sockets;
 using MinerProxy2.Interfaces;
 
-namespace MinerProxy2.Network.Sockets
+namespace MinerProxy2.Network
 {
     public class PoolClient
     {
-        readonly PoolClient poolClient;
         private MinerServer minerServer;
-
-        public byte[] currentWork = Encoding.ASCII.GetBytes("\r\n");
-
+        private ICoinHandlerPool poolHandler;
         string host = "us1.ethermine.org";
         int port = 4444;
         
-        /*
-        public PoolClient(string address, int port, int bufferSize = 2048, Container container = null)
+        
+        public PoolClient(string address, int port, ICoinHandlerPool pool)
         {
-            poolClient = new TcpClient();
+            poolHandler = pool;
         }
-        */
+        
 
         public PoolClient()
         {
@@ -34,7 +31,7 @@ namespace MinerProxy2.Network.Sockets
             //Hook into the methods within it when data is passed from the server or miners
             //call methods in the Coins class to send work to miners
 
-            ICoinHandlerMinerServer coinHandler = (ICoinHandlerMinerServer)new Ethereum();
+            ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new Ethereum();
 
             minerServer = new MinerServer(9000, this, coinHandler);
             
