@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Serilog;
 
 namespace MinerProxy2.Helpers
 {
-    static class Logger
+    static class Logging
     {
         private static string asciiLogo = 
     @"      __  __ _                 ____                      ____  
@@ -16,8 +17,7 @@ namespace MinerProxy2.Helpers
                                                    |___/       ";
 
         public static string credits = "Programmed by LostSoulfly";
-
-        public static string logFileName;
+        
         public static readonly object ConsoleColorLock = new object();
         public static readonly object ConsoleBlockLock = new object();
 
@@ -29,7 +29,6 @@ namespace MinerProxy2.Helpers
 
             Console.WriteLine(asciiLogo + version);
             Console.WriteLine(credits + '\n');
-            
         }
 
         public static void LogToConsole(string msg, string endpoint = "NONE", ConsoleColor color = ConsoleColor.White)

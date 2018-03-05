@@ -1,4 +1,6 @@
 ﻿using System;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace MinerProxy2
 {
@@ -7,8 +9,17 @@ namespace MinerProxy2
         
         static void Main(string[] args)
         {
-            Helpers.Logger.MinerProxyHeader();
-            Helpers.Logger.LogToConsole("Hello world", color: ConsoleColor.Green);
+            
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+                .WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "log.txt")
+                .CreateLogger();
+
+            Helpers.Logging.MinerProxyHeader();
+
+            //var container = new SimpleInjector.Container();
+            //container.Register()
 
             //initialize settings
 
@@ -24,6 +35,10 @@ namespace MinerProxy2
             //while returning a Success back to the miner, or optionally not sending anything at all.
 
             //don't initialize server connection until we have a client
+
+            Network.PoolClient pool = new Network.PoolClient();
+            Console.ReadLine();
+            pool.Connect();
 
             Console.ReadLine();
         }
