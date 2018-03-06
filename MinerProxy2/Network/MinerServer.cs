@@ -10,7 +10,7 @@ namespace MinerProxy2.Network
 {
     public class MinerServer
     {
-        Server minerServer;
+        readonly Server minerServer;
         private ICoinHandlerMiner _coinHandler;
         private readonly PoolClient _pool;
 
@@ -19,12 +19,17 @@ namespace MinerProxy2.Network
             Log.Information("Starting MinerServer on " + port);
             _pool = pool;
             _coinHandler = coinHandler;
-            //_coinHandler.InitializeHandler();
+            coinHandler.SetMinerServer(this);
 
             minerServer = new Server();
             minerServer.RaiseDataReceived += MinerServer_RaiseDataReceived;
             minerServer.RaiseClientConnected += MinerServer_RaiseClientConnected;
             minerServer.Start(port);
+        }
+
+        public void Test()
+        {
+            Log.Information("minerServer Test.");
         }
 
         private void MinerServer_RaiseClientConnected(object sender, ClientConnectedArgs e)
@@ -33,7 +38,7 @@ namespace MinerProxy2.Network
             //_coinHandler.MinerConnected
         }
 
-        private void MinerServer_RaiseDataReceived(object sender, DataReceivedArgs e)
+        private void MinerServer_RaiseDataReceived(object sender, ClientDataReceivedArgs e)
         {
             //Log.Information(Encoding.ASCII.GetString(e.Data));
             _coinHandler.MinerDataReceived(e.Data, e.connection);

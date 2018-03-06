@@ -8,16 +8,14 @@ using System.Text;
 
 namespace MinerProxy2.Network.Sockets
 {
-    
-
-    class Server
+    public class Server
     {
         private readonly Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
         private const int BUFFER_SIZE = 2048;
         private readonly byte[] buffer = new byte[BUFFER_SIZE];
         
-        public event EventHandler<DataReceivedArgs> RaiseDataReceived;
+        public event EventHandler<ClientDataReceivedArgs> RaiseDataReceived;
         public event EventHandler<ClientErrorArgs> RaiseClientError;
         public event EventHandler<ClientConnectedArgs> RaiseClientConnected;
         public event EventHandler<ClientDisonnectedArgs> RaiseClientDisconnected;
@@ -75,10 +73,10 @@ namespace MinerProxy2.Network.Sockets
             TcpConnection tcpConnection = new TcpConnection(endPoint, socket);
 
             clientSockets.Add(tcpConnection);
-            socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
-            Log.Information("Client connected, waiting for request...");
-            serverSocket.BeginAccept(AcceptCallback, null);
             RaiseClientConnected?.Invoke(this, new ClientConnectedArgs(tcpConnection));
+            socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
+            //Log.Information("Client connected, waiting for request...");
+            serverSocket.BeginAccept(AcceptCallback, null);
         }
 
         private void ReceiveCallback(IAsyncResult AR)
@@ -93,7 +91,7 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (SocketException ex)
             {
-                Log.Information(ex, "Client forcefully disconnected");
+                //Log.Information(ex, "Client forcefully disconnected");
                 // Don't shutdown because the socket may be disposed and its disconnected anyway.
                 RaiseClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 current.Close();
@@ -104,7 +102,7 @@ namespace MinerProxy2.Network.Sockets
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
             
-            RaiseDataReceived?.Invoke(this, new DataReceivedArgs(recBuf, tcpConnection));
+            RaiseDataReceived?.Invoke(this, new ClientDataReceivedArgs(recBuf, tcpConnection));
 
             try
             {

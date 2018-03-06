@@ -1,6 +1,7 @@
 ﻿using System;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using MinerProxy2.Network;
 
 namespace MinerProxy2
 {
@@ -36,10 +37,8 @@ namespace MinerProxy2
 
             //don't initialize server connection until we have a client
 
-            Network.PoolClient pool = new Network.PoolClient();
-            Console.ReadLine();
-            pool.Connect();
-
+            PoolClient pool = new PoolClient();
+            
             Console.ReadLine();
         }
     }

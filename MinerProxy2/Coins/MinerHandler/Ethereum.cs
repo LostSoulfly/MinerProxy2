@@ -11,28 +11,34 @@ namespace MinerProxy2.Coins.MinerHandler
 {
     class Ethereum : ICoinHandlerMiner
     {
-        PoolClient poolClient;
-        MinerServer minerServer;
-        //Need a way to inject the reference for the POOL and MinerServers into each CoinHandler!
+        private PoolClient _pool;
+        private MinerServer _minerServer;
 
-        public Ethereum(PoolClient pool, MinerServer miner)
+        public Ethereum()
         {
             Log.Information("Ethereum MinerHandler Initialized");
+
         }
 
-        public void MinerConnected(TcpConnection socket)
+        public void BroadcastToMiners(byte[] data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void MinerConnected(TcpConnection connection)
         {
             throw new NotImplementedException();
         }
 
         public void MinerDataReceived(byte[] data, TcpConnection connection)
         {
-            Log.Information(connection.endPoint.ToString() + " REC DATA: " + Encoding.ASCII.GetString(data));
+            Log.Debug(connection.endPoint.ToString() + ": " + Encoding.ASCII.GetString(data));
+            this.SendToMiner("hello world", connection);
         }
 
-        public void MinerDisconnected(TcpConnection socket)
+        public void MinerDisconnected(TcpConnection connection)
         {
-            throw new NotImplementedException();
+            Log.Information("Miner disconnected: " + connection.endPoint.ToString());
         }
 
         public void MinerError(Exception exception, TcpConnection connection)
@@ -40,9 +46,31 @@ namespace MinerProxy2.Coins.MinerHandler
             throw new NotImplementedException();
         }
 
+        public void SendToMiner(byte[] data, TcpConnection connection)
+        {
+            connection.socket.Send(data);
+        }
+
+        public void SendToMiner(string data, TcpConnection connection)
+        {
+            connection.socket.Send(Encoding.ASCII.GetBytes(data));
+        }
+
         public void SendToPool(byte[] data, TcpConnection connection)
         {
             throw new NotImplementedException();
+        }
+
+        public void SetMinerServer(MinerServer minerServer)
+        {
+            _minerServer = minerServer;
+            _minerServer.Test();
+        }
+
+        public void SetPool(PoolClient pool)
+        {
+            _pool = pool;
+            _pool.Test();
         }
     }
 }

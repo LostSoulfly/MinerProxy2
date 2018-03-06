@@ -1,15 +1,13 @@
 ﻿using MinerProxy2.Network.Sockets;
+using MinerProxy2.Network;
 using System;
-using System.Collections.Generic;
-using System.Text;
-
 
 namespace MinerProxy2.Interfaces
 {
     public interface ICoinHandlerPool
     {
-        bool SetupComplete();
-        void InitializeHandler();
+        void SetPool(PoolClient pool);
+        void SetMinerServer(MinerServer minerServer);
         void BroadcastToMiners(byte[] data);
         void SendToMiner(byte[] data, TcpConnection connection);
         void SendToPool(byte[] data, TcpConnection connection);

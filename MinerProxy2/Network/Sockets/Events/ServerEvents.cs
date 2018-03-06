@@ -6,9 +6,9 @@ using MinerProxy2.Network.Sockets;
 
 namespace MinerProxy2.Network.Connections
 {
-    public class DataReceivedArgs : EventArgs
+    public class ClientDataReceivedArgs : EventArgs
     {
-        public DataReceivedArgs(byte[] data, TcpConnection connection)
+        public ClientDataReceivedArgs(byte[] data, TcpConnection connection)
         {
             _data = data;
             _connection = connection;
