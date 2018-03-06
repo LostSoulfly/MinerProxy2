@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MinerProxy2.Network;
-using MinerProxy2.Network.Sockets;
-using System.Net;
 using System.Net.Sockets;
 
 namespace MinerProxy2.Network.Sockets
@@ -15,6 +10,7 @@ namespace MinerProxy2.Network.Sockets
             _data = data;
             _socket = socket;
         }
+
         private byte[] _data;
         private Socket _socket;
         public byte[] Data { get { return _data; } }
@@ -27,6 +23,7 @@ namespace MinerProxy2.Network.Sockets
         {
             _socket = socket;
         }
+
         private Socket _socket;
         public Socket socket { get { return _socket; } }
     }
@@ -37,6 +34,7 @@ namespace MinerProxy2.Network.Sockets
         {
             _socket = socket;
         }
+
         private Socket _socket;
         public Socket socket { get { return _socket; } }
     }
@@ -48,6 +46,7 @@ namespace MinerProxy2.Network.Sockets
             _socket = socket;
             _exception = exception;
         }
+
         private Socket _socket;
         private Exception _exception;
         public Socket socket { get { return _socket; } }

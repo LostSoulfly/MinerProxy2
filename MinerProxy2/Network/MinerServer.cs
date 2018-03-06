@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Serilog;
-using MinerProxy2.Network.Sockets;
-using MinerProxy2.Interfaces;
+﻿using MinerProxy2.Interfaces;
 using MinerProxy2.Network.Connections;
+using MinerProxy2.Network.Sockets;
+using Serilog;
 
 namespace MinerProxy2.Network
 {
     public class MinerServer
     {
-        readonly Server minerServer;
+        private readonly Server minerServer;
         private ICoinHandlerMiner _coinHandler;
         private readonly PoolClient _pool;
 

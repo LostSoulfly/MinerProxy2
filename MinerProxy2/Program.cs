@@ -1,16 +1,14 @@
-﻿using System;
+﻿using MinerProxy2.Network;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
-using MinerProxy2.Network;
+using System;
 
 namespace MinerProxy2
 {
-    class Program
+    internal class Program
     {
-        
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
@@ -38,7 +36,7 @@ namespace MinerProxy2
             //don't initialize server connection until we have a client
 
             PoolClient pool = new PoolClient();
-            
+
             Console.ReadLine();
         }
     }

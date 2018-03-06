@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace MinerProxy2.Network.Sockets
 {
@@ -14,12 +13,14 @@ namespace MinerProxy2.Network.Sockets
         private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
         private const int BUFFER_SIZE = 2048;
         private readonly byte[] buffer = new byte[BUFFER_SIZE];
-        
-        public event EventHandler<ClientDataReceivedArgs> RaiseDataReceived;
-        public event EventHandler<ClientErrorArgs> RaiseClientError;
-        public event EventHandler<ClientConnectedArgs> RaiseClientConnected;
-        public event EventHandler<ClientDisonnectedArgs> RaiseClientDisconnected;
 
+        public event EventHandler<ClientDataReceivedArgs> RaiseDataReceived;
+
+        public event EventHandler<ClientErrorArgs> RaiseClientError;
+
+        public event EventHandler<ClientConnectedArgs> RaiseClientConnected;
+
+        public event EventHandler<ClientDisonnectedArgs> RaiseClientDisconnected;
 
         /// <summary>
         /// Begin listening for new clients on port specified.
@@ -31,7 +32,8 @@ namespace MinerProxy2.Network.Sockets
                 serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
                 serverSocket.Listen(0);
                 serverSocket.BeginAccept(AcceptCallback, null);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Log.Fatal(ex, "Server failed to start.");
                 return false;
@@ -101,7 +103,7 @@ namespace MinerProxy2.Network.Sockets
 
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
-            
+
             RaiseDataReceived?.Invoke(this, new ClientDataReceivedArgs(recBuf, tcpConnection));
 
             try
@@ -110,7 +112,6 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (Exception ex)
             {
-
                 RaiseClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Log.Error(ex, "BeginReceive Error");
             }
@@ -123,6 +124,5 @@ namespace MinerProxy2.Network.Sockets
 
             return null;
         }
-
     }
 }

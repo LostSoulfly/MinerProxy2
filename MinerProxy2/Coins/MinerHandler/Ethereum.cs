@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
-using MinerProxy2.Interfaces;
+﻿using MinerProxy2.Interfaces;
 using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
 using Serilog;
+using System;
+using System.Text;
 
 namespace MinerProxy2.Coins.MinerHandler
 {
-    class Ethereum : ICoinHandlerMiner
+    internal class Ethereum : ICoinHandlerMiner
     {
         private PoolClient _pool;
         private MinerServer _minerServer;
@@ -17,7 +15,6 @@ namespace MinerProxy2.Coins.MinerHandler
         public Ethereum()
         {
             Log.Information("Ethereum MinerHandler Initialized");
-
         }
 
         public void BroadcastToMiners(byte[] data)

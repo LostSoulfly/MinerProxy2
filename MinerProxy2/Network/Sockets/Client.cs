@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using Serilog;
+using System;
 using System.Net.Sockets;
 using System.Text;
-using Serilog;
-using MinerProxy2.Network;
-using MinerProxy2.Network.Sockets;
-using MinerProxy2.Network.Connections;
 
 namespace MinerProxy2.Network.Sockets
 {
@@ -14,15 +9,19 @@ namespace MinerProxy2.Network.Sockets
     {
         private readonly Socket clientSocket = new Socket
                (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
         private const int BUFFER_SIZE = 2048;
 
         public event EventHandler<ServerDataReceivedArgs> RaiseServerDataReceived;
+
         public event EventHandler<ServerErrorArgs> RaiseServerError;
+
         public event EventHandler<ServerConnectedArgs> RaiseServerConnected;
+
         public event EventHandler<ServerDisonnectedArgs> RaiseServerDisconnected;
 
-
         //todo https://docs.microsoft.com/en-us/dotnet/framework/network-programming/asynchronous-client-socket-example
+        // Need to make the client async as well, BegineREceive, etc...
 
         public void Connect(string host, int port)
         {
@@ -33,7 +32,6 @@ namespace MinerProxy2.Network.Sockets
                 try
                 {
                     attempts++;
-                    // Change IPAddress.Loopback to a remote IP to connect to a remote host.
                     clientSocket.Connect(host, port);
                     System.Threading.Thread.Sleep(100);
                 }
@@ -48,7 +46,6 @@ namespace MinerProxy2.Network.Sockets
 
         public void RequestLoop()
         {
-            
             while (true)
             {
                 var buffer = new byte[BUFFER_SIZE];
@@ -72,7 +69,7 @@ namespace MinerProxy2.Network.Sockets
             clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();
         }
-        
+
         /// <summary>
         /// Sends a string to the server with ASCII encoding.
         /// </summary>
@@ -86,6 +83,5 @@ namespace MinerProxy2.Network.Sockets
         {
             clientSocket.Send(data, 0, data.Length, SocketFlags.None);
         }
-        
     }
 }
