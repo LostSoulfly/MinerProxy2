@@ -11,6 +11,10 @@ namespace MinerProxy2.Network.Sockets
                (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         private const int BUFFER_SIZE = 2048;
+        private byte[] buffer = new byte[BUFFER_SIZE];
+
+        private string host = "us1.ethermine.org";
+        private int port = 4444;
 
         public event EventHandler<ServerDataReceivedArgs> RaiseServerDataReceived;
 
@@ -23,65 +27,122 @@ namespace MinerProxy2.Network.Sockets
         //todo https://docs.microsoft.com/en-us/dotnet/framework/network-programming/asynchronous-client-socket-example
         // Need to make the client async as well, BegineREceive, etc...
 
-        public void Connect(string host, int port)
-        {
-            int attempts = 0;
+        //RaiseServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(data, clientSocket));
 
-            while (!clientSocket.Connected)
-            {
-                try
-                {
-                    attempts++;
-                    clientSocket.Connect(host, port);
-                    System.Threading.Thread.Sleep(100);
-                }
-                catch (SocketException exception)
-                {
-                    Log.Fatal(exception, "Client Connect");
-                }
-            }
-            RaiseServerConnected?.Invoke(this, new ServerConnectedArgs(clientSocket));
-            RequestLoop();
+        public void Connect()
+        {
+            clientSocket.BeginConnect(host, port,
+                new AsyncCallback(ConnectCallback), clientSocket);
+            
         }
 
-        public void RequestLoop()
+        private void ConnectCallback(IAsyncResult ar)
         {
-            while (true)
+            try
             {
-                var buffer = new byte[BUFFER_SIZE];
-                int received = clientSocket.Receive(buffer, SocketFlags.None);
-                if (received == 0) return;
-                var data = new byte[received];
-                Array.Copy(buffer, data, received);
+                // Retrieve the socket from the state object.  
+                Socket socket = (Socket)ar.AsyncState;
 
-                RaiseServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(data, clientSocket));
+                // Complete the connection.  
+                socket.EndConnect(ar);
 
-                Log.Debug("Pool sent: " + Encoding.ASCII.GetString(data));
-                System.Threading.Thread.Sleep(10);
+                Log.Information("Socket connected to {0}", socket.RemoteEndPoint.ToString());
+
+                RaiseServerConnected?.Invoke(this, new ServerConnectedArgs(socket));
+
+                socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
+
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "ConnectCallback");
             }
         }
 
-        /// <summary>
-        /// Close socket
-        /// </summary>
-        public void Disconnect()
+        private void Send(Socket socket, String data)
         {
-            clientSocket.Shutdown(SocketShutdown.Both);
-            clientSocket.Close();
+            // Convert the string data to byte data using ASCII encoding.  
+            byte[] byteData = Encoding.ASCII.GetBytes(data);
+
+            // Begin sending the data to the remote device.  
+            socket.BeginSend(byteData, 0, byteData.Length, SocketFlags.None,
+                new AsyncCallback(SendCallback), socket);
         }
 
-        /// <summary>
-        /// Sends a string to the server with ASCII encoding.
-        /// </summary>
-        public void SendString(string text)
+        public void SendToPool(byte[] data)
         {
-            byte[] buffer = Encoding.ASCII.GetBytes(text);
-            clientSocket.Send(buffer, 0, buffer.Length, SocketFlags.None);
+            Log.Debug("Client SendToPool: " + Encoding.ASCII.GetString(data));
+            // Begin sending the data to the remote device.  
+            this.clientSocket.BeginSend(data, 0, data.Length, SocketFlags.None,
+                new AsyncCallback(SendCallback), clientSocket);
         }
 
-        public void Send(byte[] data)
+        private void SendCallback(IAsyncResult ar)
         {
-            clientSocket.Send(data, 0, data.Length, SocketFlags.None);
+            try
+            {
+                Socket client = (Socket)ar.AsyncState;
+
+                // Complete sending the data to the remote device.  
+                int bytesSent = client.EndSend(ar);
+                Log.Debug("Sent {0} bytes to server.", bytesSent);
+                
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "SendCallback");
+            }
+        }
+
+        private void Receive(Socket socket)
+        {
+            try
+            {
+
+                // Begin receiving the data from the remote device.  
+                socket.BeginReceive(buffer, 0, BUFFER_SIZE, 0,
+                    new AsyncCallback(ReceiveCallback), socket);
+            }
+            catch(Exception exception)
+            {
+                Log.Error(exception, "Receive");
+            }
+        }
+
+        private void ReceiveCallback(IAsyncResult AR)
+        {
+            Socket socket = (Socket)AR.AsyncState;
+            int received;
+
+            try
+            {
+                received = socket.EndReceive(AR);
+            }
+            catch (SocketException ex)
+            {
+                //Log.Error(ex, "Client forcefully disconnected");
+                // Don't shutdown because the socket may be disposed and its disconnected anyway.
+                RaiseServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
+                socket.Close();
+                return;
+            }
+
+            byte[] recBuf = new byte[received];
+            Array.Copy(buffer, recBuf, received);
+
+            //Log.Debug("Pool sent: " + Encoding.ASCII.GetString(recBuf));
+
+            RaiseServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
+
+            try
+            {
+                socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
+            }
+            catch (Exception ex)
+            {
+                RaiseServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
+                Log.Error(ex, "Pool BeginReceive Error");
+            }
         }
     }
 }

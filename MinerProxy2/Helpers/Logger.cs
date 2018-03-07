@@ -25,19 +25,6 @@ namespace MinerProxy2.Helpers
             Console.WriteLine(asciiLogo + version);
             Console.WriteLine(credits + '\n');
         }
-
-        public static void LogToConsole(string msg, string endpoint = "NONE", ConsoleColor color = ConsoleColor.White)
-        {
-            string message;
-
-            message = string.Format("[{0}] {1}: {2}", endpoint, DateTime.Now.ToLongTimeString(), msg);
-
-            lock (ConsoleColorLock)
-            {
-                Console.ForegroundColor = color;
-                Console.WriteLine(message);
-                Console.ResetColor();
-            }
-        }
+        
     }
 }

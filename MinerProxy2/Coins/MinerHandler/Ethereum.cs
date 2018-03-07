@@ -30,7 +30,7 @@ namespace MinerProxy2.Coins.MinerHandler
         public void MinerDataReceived(byte[] data, TcpConnection connection)
         {
             Log.Debug(connection.endPoint.ToString() + ": " + Encoding.ASCII.GetString(data));
-            this.SendToMiner("hello world", connection);
+            _pool.SendToPool(data);
         }
 
         public void MinerDisconnected(TcpConnection connection)
@@ -61,13 +61,11 @@ namespace MinerProxy2.Coins.MinerHandler
         public void SetMinerServer(MinerServer minerServer)
         {
             _minerServer = minerServer;
-            _minerServer.Test();
         }
 
         public void SetPool(PoolClient pool)
         {
             _pool = pool;
-            _pool.Test();
         }
     }
 }

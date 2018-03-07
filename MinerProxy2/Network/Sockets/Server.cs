@@ -14,7 +14,7 @@ namespace MinerProxy2.Network.Sockets
         private const int BUFFER_SIZE = 2048;
         private readonly byte[] buffer = new byte[BUFFER_SIZE];
 
-        public event EventHandler<ClientDataReceivedArgs> RaiseDataReceived;
+        public event EventHandler<ClientDataReceivedArgs> RaiseClientDataReceived;
 
         public event EventHandler<ClientErrorArgs> RaiseClientError;
 
@@ -76,15 +76,16 @@ namespace MinerProxy2.Network.Sockets
 
             clientSockets.Add(tcpConnection);
             RaiseClientConnected?.Invoke(this, new ClientConnectedArgs(tcpConnection));
-            socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
+            socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
             //Log.Information("Client connected, waiting for request...");
             serverSocket.BeginAccept(AcceptCallback, null);
         }
 
         private void ReceiveCallback(IAsyncResult AR)
         {
-            Socket current = (Socket)AR.AsyncState;
-            TcpConnection tcpConnection = GetTcpConnection(current);
+            TcpConnection tcpConnection = (TcpConnection)AR.AsyncState;
+            Socket current = tcpConnection.socket;
+            //TcpConnection tcpConnection = GetTcpConnection(current);
             int received;
 
             try
@@ -104,16 +105,25 @@ namespace MinerProxy2.Network.Sockets
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
 
-            RaiseDataReceived?.Invoke(this, new ClientDataReceivedArgs(recBuf, tcpConnection));
+            RaiseClientDataReceived?.Invoke(this, new ClientDataReceivedArgs(recBuf, tcpConnection));
 
             try
             {
-                current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
+                current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
             }
             catch (Exception ex)
             {
                 RaiseClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Log.Error(ex, "BeginReceive Error");
+            }
+        }
+        
+        public void BroadcastToMiners(byte[] data)
+        {
+            Log.Debug("Server instance broadcasting data to all miners..");
+            foreach (TcpConnection connection in clientSockets)
+            {
+                connection.socket.Send(data);
             }
         }
 
