@@ -1,11 +1,16 @@
-﻿namespace MinerProxy2.Config
+﻿using MinerProxy2.Config.Pool;
+using System.Collections.Generic;
+
+namespace MinerProxy2.Config
 {
-    internal class Settings
+    public static class Settings
     {
         //load settings file
 
-        //load proxy file
-        //enumerate number of proxies
-        //start listening for each proxy specified?
+        public static PoolManager poolManager = new PoolManager();
+        public static bool logging { get; set; }
+        public static bool debug { get; set; }
+        public static int donationPercent { get; set; }
+        public static List<string> allowedIPAddresses = new List<string>();
     }
 }
