@@ -16,13 +16,13 @@ namespace MinerProxy2.Network.Sockets
         private string host = "us1.ethermine.org";
         private int port = 4444;
 
-        public event EventHandler<ServerDataReceivedArgs> RaiseServerDataReceived;
+        public event EventHandler<ServerDataReceivedArgs> OnServerDataReceived;
 
-        public event EventHandler<ServerErrorArgs> RaiseServerError;
+        public event EventHandler<ServerErrorArgs> OnServerError;
 
-        public event EventHandler<ServerConnectedArgs> RaiseServerConnected;
+        public event EventHandler<ServerConnectedArgs> OnServerConnected;
 
-        public event EventHandler<ServerDisonnectedArgs> RaiseServerDisconnected;
+        public event EventHandler<ServerDisonnectedArgs> OnServerDisconnected;
 
         //todo https://docs.microsoft.com/en-us/dotnet/framework/network-programming/asynchronous-client-socket-example
         // Need to make the client async as well, BegineREceive, etc...
@@ -48,7 +48,7 @@ namespace MinerProxy2.Network.Sockets
 
                 Log.Information("Socket connected to {0}", socket.RemoteEndPoint.ToString());
 
-                RaiseServerConnected?.Invoke(this, new ServerConnectedArgs(socket));
+                OnServerConnected?.Invoke(this, new ServerConnectedArgs(socket));
 
                 socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
 
@@ -122,7 +122,7 @@ namespace MinerProxy2.Network.Sockets
             {
                 //Log.Error(ex, "Client forcefully disconnected");
                 // Don't shutdown because the socket may be disposed and its disconnected anyway.
-                RaiseServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
+                OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
                 socket.Close();
                 return;
             }
@@ -132,7 +132,7 @@ namespace MinerProxy2.Network.Sockets
 
             //Log.Debug("Pool sent: " + Encoding.ASCII.GetString(recBuf));
 
-            RaiseServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
+            OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
 
             try
             {
@@ -140,7 +140,7 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (Exception ex)
             {
-                RaiseServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
+                OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
                 Log.Error(ex, "Pool BeginReceive Error");
             }
         }

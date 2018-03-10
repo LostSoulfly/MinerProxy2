@@ -22,8 +22,8 @@ namespace MinerProxy2.Network
 
             this.port = port;
             minerServer = new Server();
-            minerServer.RaiseClientDataReceived += MinerServer_RaiseClientDataReceived;
-            minerServer.RaiseClientConnected += MinerServer_RaiseClientConnected;
+            minerServer.OnClientDataReceived += MinerServer_OnClientDataReceived;
+            minerServer.OnClientConnected += MinerServer_OnClientConnected;
         }
 
         public void ListenForMiners()
@@ -44,13 +44,13 @@ namespace MinerProxy2.Network
             minerServer.BroadcastToMiners(data);
         }
 
-        private void MinerServer_RaiseClientConnected(object sender, ClientConnectedArgs e)
+        private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)
         {
             Log.Information(e.connection.endPoint.ToString() + " has connected!");
             //_coinHandler.MinerConnected
         }
 
-        private void MinerServer_RaiseClientDataReceived(object sender, ClientDataReceivedArgs e)
+        private void MinerServer_OnClientDataReceived(object sender, ClientDataReceivedArgs e)
         {
             //Log.Information(Encoding.ASCII.GetString(e.Data));
             _coinHandler.MinerDataReceived(e.Data, e.connection);

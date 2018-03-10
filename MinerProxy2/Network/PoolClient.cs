@@ -23,8 +23,8 @@ namespace MinerProxy2.Network
         {
             
             poolClient = new Client();
-            poolClient.RaiseServerConnected += PoolClient_RaiseServerConnected;
-            poolClient.RaiseServerDataReceived += PoolClient_RaiseServerDataReceived;
+            poolClient.OnServerConnected += PoolClient_OnServerConnected;
+            poolClient.OnServerDataReceived += PoolClient_OnServerDataReceived;
             poolClient.Connect();
             
 
@@ -33,7 +33,7 @@ namespace MinerProxy2.Network
             minerServer = new MinerServer(9000, this, coinHandler);
         }
 
-        private void PoolClient_RaiseServerDataReceived(object sender, ServerDataReceivedArgs e)
+        private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
         {
             Log.Debug("Pool sent: " + Encoding.ASCII.GetString(e.Data));
             minerServer.BroadcastToMiners(e.Data);
@@ -45,7 +45,7 @@ namespace MinerProxy2.Network
             this.poolClient.SendToPool(data);
         }
 
-        private void PoolClient_RaiseServerConnected(object sender, ServerConnectedArgs e)
+        private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
         {
             Log.Debug("Pool connected: " + e.socket.RemoteEndPoint.ToString());
             minerServer.ListenForMiners();
