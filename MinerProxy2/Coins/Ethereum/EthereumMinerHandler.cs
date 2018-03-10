@@ -1,4 +1,5 @@
 ﻿using MinerProxy2.Interfaces;
+using MinerProxy2.Miners;
 using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
 using Serilog;
@@ -12,12 +13,12 @@ namespace MinerProxy2.Coins.MinerHandler
         private PoolClient _pool;
         private MinerServer _minerServer;
 
-        public EthereumMinerHandler()
+        public void BroadcastToMiners(byte[] data)
         {
-            Log.Information("Ethereum MinerHandler Initialized");
+            throw new NotImplementedException();
         }
 
-        public void BroadcastToMiners(byte[] data)
+        public void BroadcastToMiners(string data)
         {
             throw new NotImplementedException();
         }
@@ -29,13 +30,12 @@ namespace MinerProxy2.Coins.MinerHandler
 
         public void MinerDataReceived(byte[] data, TcpConnection connection)
         {
-            Log.Debug(connection.endPoint.ToString() + ": " + Encoding.ASCII.GetString(data));
-            _pool.SendToPool(data);
+            throw new NotImplementedException();
         }
 
         public void MinerDisconnected(TcpConnection connection)
         {
-            Log.Information("Miner disconnected: " + connection.endPoint.ToString());
+            throw new NotImplementedException();
         }
 
         public void MinerError(Exception exception, TcpConnection connection)
@@ -43,17 +43,27 @@ namespace MinerProxy2.Coins.MinerHandler
             throw new NotImplementedException();
         }
 
+        public void PrintMinerStats()
+        {
+            throw new NotImplementedException();
+        }
+
         public void SendToMiner(byte[] data, TcpConnection connection)
         {
-            connection.socket.Send(data);
+            throw new NotImplementedException();
         }
 
         public void SendToMiner(string data, TcpConnection connection)
         {
-            connection.socket.Send(Encoding.ASCII.GetBytes(data));
+            throw new NotImplementedException();
         }
 
-        public void SendToPool(byte[] data, TcpConnection connection)
+        public void SendToPool(byte[] data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetMinerManager(MinerManager minerManager)
         {
             throw new NotImplementedException();
         }
