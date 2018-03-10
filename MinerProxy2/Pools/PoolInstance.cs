@@ -1,16 +1,18 @@
 ﻿using System.Collections.Generic;
 
-namespace MinerProxy2.Config.Pool
+namespace MinerProxy2.Pools
 {
-    public class PoolManager
+    public class PoolInstance
     {
         public List<PoolItem> failoverPools = new List<PoolItem>();
-        public PoolItem mainPool;
-        public PoolItem currentPool;
+        public readonly PoolItem mainPool;
+        private PoolItem currentPool;
+        public bool passwordAsWorkerName;
+        public bool useDotBeforeWorkerName;
         //failure attempts, then switch
         //retry main pool in seconds
 
-        PoolManager(string host, int port, string coin, int maxMiners)
+        PoolInstance(string host, int port, string coin, int maxMiners)
         {
             mainPool.poolAddress = host;
             mainPool.poolPort = port;
@@ -20,7 +22,7 @@ namespace MinerProxy2.Config.Pool
 
         void AddFailoverPool(string host, int port)
         {
-            failoverPools.Add(new PoolItem(host, port, mainPool.coin, mainPool.maxMiners));
+            failoverPools.Add(new PoolItem(host, port, mainPool.coin, mainPool.poolWorkerName, mainPool.maxMiners, mainPool.donationPercent));
         }
 
         PoolItem GetCurrentPool()
