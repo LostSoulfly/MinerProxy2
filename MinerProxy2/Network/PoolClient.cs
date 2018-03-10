@@ -18,10 +18,14 @@ namespace MinerProxy2.Network
         private int port = 4444;
         private List<byte[]> submittedShares = new List<byte[]>();
         private readonly object submittedShareLock = new object();
+        public string poolEndPoint { get; }
 
         public PoolClient(string address, int port, ICoinHandlerPool pool)
         {
             poolHandler = pool;
+            this.host = address;
+            this.port = port;
+            poolEndPoint = address + ":" + port;
         }
 
         public PoolClient()
