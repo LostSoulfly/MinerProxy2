@@ -2,7 +2,9 @@
 using MinerProxy2.Miners;
 using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
+using Serilog;
 using System;
+using System.Text;
 
 namespace MinerProxy2.Coins.MinerHandler
 {
@@ -10,15 +12,16 @@ namespace MinerProxy2.Coins.MinerHandler
     {
         private PoolClient _pool;
         private MinerServer _minerServer;
+        private MinerManager _minerManager;
 
         public void BroadcastToMiners(byte[] data)
         {
-            throw new NotImplementedException();
+            _minerServer.BroadcastToMiners(data);
         }
 
         public void BroadcastToMiners(string data)
         {
-            throw new NotImplementedException();
+            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(data));
         }
 
         public void MinerConnected(TcpConnection connection)
@@ -33,37 +36,38 @@ namespace MinerProxy2.Coins.MinerHandler
 
         public void MinerDisconnected(TcpConnection connection)
         {
-            throw new NotImplementedException();
+            Log.Information("Miner disconnected: " + connection.endPoint);
+            //_minerManager.RemoveMiner(connection);
         }
 
         public void MinerError(Exception exception, TcpConnection connection)
         {
-            throw new NotImplementedException();
+            Log.Error(exception, "Miner Error");
         }
 
         public void PrintMinerStats()
         {
-            throw new NotImplementedException();
+            Log.Information("Miner Stats");
         }
 
         public void SendToMiner(byte[] data, TcpConnection connection)
         {
-            throw new NotImplementedException();
+            _minerServer.SendToMiner(data, connection);
         }
 
         public void SendToMiner(string data, TcpConnection connection)
         {
-            throw new NotImplementedException();
+            _minerServer.SendToMiner(Encoding.ASCII.GetBytes(data), connection);
         }
 
         public void SendToPool(byte[] data)
         {
-            throw new NotImplementedException();
+            _pool.SendToPool(data);
         }
 
         public void SetMinerManager(MinerManager minerManager)
         {
-            throw new NotImplementedException();
+            _minerManager = minerManager;
         }
 
         public void SetMinerServer(MinerServer minerServer)

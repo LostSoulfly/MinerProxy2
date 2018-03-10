@@ -38,6 +38,11 @@ namespace MinerProxy2.Network
             _pool.SendToPool(data);
         }
 
+        public void SendToMiner(byte[] data, TcpConnection connection)
+        {
+            connection.socket.Send(data);
+        }
+
         public void BroadcastToMiners(byte[] data)
         {
             //Log.Debug("MinerServer broadcast");
