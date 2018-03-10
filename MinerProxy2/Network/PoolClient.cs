@@ -22,12 +22,10 @@ namespace MinerProxy2.Network
 
         public PoolClient()
         {
-            
             poolClient = new Client();
             poolClient.OnServerConnected += PoolClient_OnServerConnected;
             poolClient.OnServerDataReceived += PoolClient_OnServerDataReceived;
             poolClient.Connect();
-            
 
             coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
 
@@ -52,7 +50,6 @@ namespace MinerProxy2.Network
             Log.Debug("Pool connected: " + e.socket.RemoteEndPoint.ToString());
             minerServer.ListenForMiners();
             //poolClient.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"proxy\", \"jsonrpc\": \"2.0\", \"params\": [\"0x0c0ff71b06413865fe9fE9a4C40396c136a62980\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
-
         }
     }
 }

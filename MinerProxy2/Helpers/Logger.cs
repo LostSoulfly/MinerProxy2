@@ -25,6 +25,5 @@ namespace MinerProxy2.Helpers
             Console.WriteLine(asciiLogo + version);
             Console.WriteLine(credits + '\n');
         }
-        
     }
 }

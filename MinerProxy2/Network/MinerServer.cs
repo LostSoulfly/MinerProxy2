@@ -31,7 +31,7 @@ namespace MinerProxy2.Network
             Log.Information("Starting MinerServer on " + port);
             minerServer.Start(port);
         }
-        
+
         public void SendToPool(byte[] data)
         {
             Log.Debug("MinerServer SendToPool");

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MinerProxy2.Pools
+﻿namespace MinerProxy2.Pools
 {
     public class PoolManager
     {
-
         //not sure how I want to handle this.
         //Would like to init a PoolManager for each coin/port
         //then have the PoolManager handle the pools (poolitem) for that coin

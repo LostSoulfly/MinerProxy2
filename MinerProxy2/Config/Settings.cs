@@ -1,5 +1,4 @@
-﻿using MinerProxy2.Config.Pool;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace MinerProxy2.Config
 {

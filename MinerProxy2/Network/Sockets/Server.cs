@@ -117,7 +117,7 @@ namespace MinerProxy2.Network.Sockets
                 Log.Error(ex, "BeginReceive Error");
             }
         }
-        
+
         public void BroadcastToMiners(byte[] data)
         {
             Log.Debug("Server instance broadcasting data to all miners..");

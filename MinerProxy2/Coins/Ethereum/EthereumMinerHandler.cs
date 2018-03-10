@@ -2,9 +2,7 @@
 using MinerProxy2.Miners;
 using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
-using Serilog;
 using System;
-using System.Text;
 
 namespace MinerProxy2.Coins.MinerHandler
 {

@@ -33,17 +33,16 @@ namespace MinerProxy2.Network.Sockets
         {
             clientSocket.BeginConnect(host, port,
                 new AsyncCallback(ConnectCallback), clientSocket);
-            
         }
 
         private void ConnectCallback(IAsyncResult ar)
         {
             try
             {
-                // Retrieve the socket from the state object.  
+                // Retrieve the socket from the state object.
                 Socket socket = (Socket)ar.AsyncState;
 
-                // Complete the connection.  
+                // Complete the connection.
                 socket.EndConnect(ar);
 
                 Log.Information("Socket connected to {0}", socket.RemoteEndPoint.ToString());
@@ -51,7 +50,6 @@ namespace MinerProxy2.Network.Sockets
                 OnServerConnected?.Invoke(this, new ServerConnectedArgs(socket));
 
                 socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
-
             }
             catch (Exception exception)
             {
@@ -61,10 +59,10 @@ namespace MinerProxy2.Network.Sockets
 
         private void Send(Socket socket, String data)
         {
-            // Convert the string data to byte data using ASCII encoding.  
+            // Convert the string data to byte data using ASCII encoding.
             byte[] byteData = Encoding.ASCII.GetBytes(data);
 
-            // Begin sending the data to the remote device.  
+            // Begin sending the data to the remote device.
             socket.BeginSend(byteData, 0, byteData.Length, SocketFlags.None,
                 new AsyncCallback(SendCallback), socket);
         }
@@ -72,7 +70,7 @@ namespace MinerProxy2.Network.Sockets
         public void SendToPool(byte[] data)
         {
             Log.Debug("Client SendToPool: " + Encoding.ASCII.GetString(data));
-            // Begin sending the data to the remote device.  
+            // Begin sending the data to the remote device.
             this.clientSocket.BeginSend(data, 0, data.Length, SocketFlags.None,
                 new AsyncCallback(SendCallback), clientSocket);
         }
@@ -83,10 +81,9 @@ namespace MinerProxy2.Network.Sockets
             {
                 Socket client = (Socket)ar.AsyncState;
 
-                // Complete sending the data to the remote device.  
+                // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
                 Log.Debug("Sent {0} bytes to server.", bytesSent);
-                
             }
             catch (Exception exception)
             {
@@ -98,12 +95,11 @@ namespace MinerProxy2.Network.Sockets
         {
             try
             {
-
-                // Begin receiving the data from the remote device.  
+                // Begin receiving the data from the remote device.
                 socket.BeginReceive(buffer, 0, BUFFER_SIZE, 0,
                     new AsyncCallback(ReceiveCallback), socket);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 Log.Error(exception, "Receive");
             }

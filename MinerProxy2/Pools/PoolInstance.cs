@@ -12,7 +12,7 @@ namespace MinerProxy2.Pools
         //failure attempts, then switch
         //retry main pool in seconds
 
-        PoolInstance(string host, int port, string coin, int maxMiners)
+        private PoolInstance(string host, int port, string coin, int maxMiners)
         {
             mainPool.poolAddress = host;
             mainPool.poolPort = port;
@@ -20,27 +20,24 @@ namespace MinerProxy2.Pools
             mainPool.maxMiners = maxMiners;
         }
 
-        void AddFailoverPool(string host, int port)
+        private void AddFailoverPool(string host, int port)
         {
             failoverPools.Add(new PoolItem(host, port, mainPool.coin, mainPool.poolWorkerName, mainPool.maxMiners, mainPool.donationPercent));
         }
 
-        PoolItem GetCurrentPool()
+        private PoolItem GetCurrentPool()
         {
             if (currentPool == null)
                 currentPool = mainPool;
 
             return this.currentPool;
-
         }
 
-        PoolItem GetFailoverPool()
+        private PoolItem GetFailoverPool()
         {
             //check which pool we're on, then get the next failover or return mainpool
 
-
             return currentPool;
         }
-
     }
 }
