@@ -1,5 +1,6 @@
 ﻿using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
+using MinerProxy2.Pools;
 using System;
 
 namespace MinerProxy2.Interfaces
@@ -10,18 +11,20 @@ namespace MinerProxy2.Interfaces
 
         void SetMinerServer(MinerServer minerServer);
 
+        void SetPoolManager(PoolManager poolManager);
+
         void BroadcastToMiners(byte[] data);
 
         void SendToMiner(byte[] data, TcpConnection connection);
 
-        void SendToPool(byte[] data, TcpConnection connection);
+        void SendToPool(byte[] data);
 
-        void MinerDataReceived(byte[] data, TcpConnection connection);
+        void PoolDataReceived(byte[] data, PoolClient poolClient);
 
-        void MinerDisconnected(TcpConnection socket);
+        void PoolDisconnected(PoolClient poolClient);
 
-        void MinerConnected(TcpConnection socket);
+        void PoolConnected(PoolClient poolClient);
 
-        void MinerError(Exception exception, TcpConnection connection);
+        void PoolError(Exception exception, PoolClient poolClient);
     }
 }
