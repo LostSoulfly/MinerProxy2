@@ -26,12 +26,15 @@ namespace MinerProxy2.Coins.MinerHandler
 
         public void MinerConnected(TcpConnection connection)
         {
-            throw new NotImplementedException();
+            Log.Information("Miner connected: " + connection.endPoint);
+           //_minerManager.AddMiner();
         }
 
         public void MinerDataReceived(byte[] data, TcpConnection connection)
         {
-            throw new NotImplementedException();
+            //process the data here, such as replacing the wallet and then submitting shares to _pool
+            Log.Information("Sending to pool from " + connection.endPoint + ": " + Encoding.ASCII.GetString(data));
+            _pool.SendToPool(data);
         }
 
         public void MinerDisconnected(TcpConnection connection)
