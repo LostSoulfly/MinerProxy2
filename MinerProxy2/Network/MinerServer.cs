@@ -8,7 +8,7 @@ namespace MinerProxy2.Network
     public class MinerServer
     {
         private readonly Server minerServer;
-        private ICoinHandlerMiner _coinHandler;
+        public ICoinHandlerMiner _coinHandler;
         private readonly PoolClient _pool;
 
         private int port;

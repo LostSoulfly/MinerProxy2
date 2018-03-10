@@ -11,6 +11,7 @@ namespace MinerProxy2.Network
         private MinerServer minerServer;
         private Client poolClient;
         private ICoinHandlerPool poolHandler;
+        private ICoinHandlerMiner coinHandler;
         private string host = "us1.ethermine.org";
         private int port = 4444;
 
@@ -28,7 +29,8 @@ namespace MinerProxy2.Network
             poolClient.Connect();
             
 
-            ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
+            coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
+
             coinHandler.SetPool(this);
             minerServer = new MinerServer(9000, this, coinHandler);
         }
@@ -36,7 +38,7 @@ namespace MinerProxy2.Network
         private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
         {
             Log.Debug("Pool sent: " + Encoding.ASCII.GetString(e.Data));
-            minerServer.BroadcastToMiners(e.Data);
+            poolHandler.PoolDataReceived(e.Data, this);
         }
 
         public void SendToPool(byte[] data)
