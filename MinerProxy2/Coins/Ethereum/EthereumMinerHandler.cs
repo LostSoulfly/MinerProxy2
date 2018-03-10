@@ -7,12 +7,12 @@ using System.Text;
 
 namespace MinerProxy2.Coins.MinerHandler
 {
-    internal class Ethereum : ICoinHandlerMiner
+    internal class EthereumMinerHandler : ICoinHandlerMiner
     {
         private PoolClient _pool;
         private MinerServer _minerServer;
 
-        public Ethereum()
+        public EthereumMinerHandler()
         {
             Log.Information("Ethereum MinerHandler Initialized");
         }

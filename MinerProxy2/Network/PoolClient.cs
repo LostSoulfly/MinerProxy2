@@ -28,7 +28,7 @@ namespace MinerProxy2.Network
             poolClient.Connect();
             
 
-            ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new Ethereum();
+            ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
             coinHandler.SetPool(this);
             minerServer = new MinerServer(9000, this, coinHandler);
         }
