@@ -8,7 +8,7 @@ using System.Text;
 
 namespace MinerProxy2.Coins
 {
-    internal class EthereumPoolHandler : ICoinHandlerPool
+    public class EthereumPoolHandler : ICoinHandlerPool
     {
         private MinerServer _minerServer;
         private PoolClient _pool;

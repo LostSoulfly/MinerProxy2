@@ -6,7 +6,7 @@ using Serilog;
 using System;
 using System.Text;
 
-namespace MinerProxy2.Coins.MinerHandler
+namespace MinerProxy2.Coins
 {
     internal class EthereumMinerHandler : ICoinHandlerMiner
     {
