@@ -1,4 +1,6 @@
-﻿using MinerProxy2.Network;
+﻿using MinerProxy2.Coins;
+using MinerProxy2.Interfaces;
+using MinerProxy2.Network;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System;
@@ -35,7 +37,9 @@ namespace MinerProxy2
 
             //don't initialize server connection until we have a client
 
-            PoolClient pool = new PoolClient();
+            ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
+            ICoinHandlerPool poolHandler = (ICoinHandlerPool)new EthereumPoolHandler();
+            PoolClient pool = new PoolClient("us1.ethermine.org", 4444, poolHandler, coinHandler);
 
             Console.ReadLine();
         }
