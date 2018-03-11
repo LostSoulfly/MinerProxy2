@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using MinerProxy2.Network.Sockets;
+using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MinerProxy2.Miners
 {
@@ -7,17 +11,36 @@ namespace MinerProxy2.Miners
         public readonly object MinerManagerLock = new object();
         public List<Miner> minerList = new List<Miner>();
 
-        public void AddMiner()
+        public void AddMiner(Miner miner)
         {
+            lock (MinerManagerLock)
+            {
+                Miner existing = GetMiner(miner.connection);
+
+                if (existing == null)
+                    minerList.Add(miner);
+            }
         }
 
-        public void RemoveMiner()
+
+        public void RemoveMiner(Miner miner)
         {
+            lock (MinerManagerLock)
+            {
+                try
+                {
+                    minerList.Remove(miner);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "RemoveMiner");
+                }
+            }
         }
 
-        public Miner GetMiner()
+        public Miner GetMiner(TcpConnection connection)
         {
-            return null;
+            return minerList.Find(item => item.connection == connection);
         }
     }
 }
