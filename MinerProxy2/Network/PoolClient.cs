@@ -1,5 +1,7 @@
 ﻿using MinerProxy2.Interfaces;
+using MinerProxy2.Miners;
 using MinerProxy2.Network.Sockets;
+using MinerProxy2.Pools;
 using Serilog;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,24 +13,28 @@ namespace MinerProxy2.Network
     {
         private MinerServer minerServer;
         private Client poolClient;
+        private MinerManager minerManager;
+        private PoolInstance poolInstance;
         private ICoinHandlerPool poolHandler;
         private ICoinHandlerMiner coinHandler;
-        private string host = "us1.ethermine.org";
-        private int port = 4444;
+        private string host;
+        private int port;
+        private bool poolConnected;
         private List<byte[]> submittedShares = new List<byte[]>();
         private readonly object submittedShareLock = new object();
         public string poolEndPoint { get; }
 
-        public PoolClient(string address, int port, ICoinHandlerPool pool, ICoinHandlerMiner miner)
+        public PoolClient(PoolInstance poolInstance, string poolWorkerName, ICoinHandlerPool pool, ICoinHandlerMiner miner)
         {
             poolHandler = pool;
             coinHandler = miner;
-            this.host = address;
-            this.port = port;
-            poolEndPoint = address + ":" + port;
+            this.poolInstance = poolInstance;
+            this.host = poolInstance.mainPool.poolAddress;
+            this.port = poolInstance.mainPool.poolPort;
+            poolEndPoint = this.host + ":" + this.port;
 
 
-            minerServer = new MinerServer(9000, this, coinHandler);
+            minerServer = new MinerServer(poolInstance.localListenPort, this, coinHandler);
 
             poolClient = new Client();
             poolClient.OnServerConnected += PoolClient_OnServerConnected;
@@ -46,14 +52,17 @@ namespace MinerProxy2.Network
         
         private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
         {
-            //Log.Debug("Pool sent: " + Encoding.ASCII.GetString(e.Data));
+            if (!poolConnected)
+            {
+                poolConnected = true;
+                poolHandler.DoPoolLogin(this);
+            }
             poolHandler.PoolDataReceived(e.Data, this);
         }
         
         private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
         {
             Log.Debug("Pool connected: " + e.socket.RemoteEndPoint.ToString());
-            //poolClient.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"proxy\", \"jsonrpc\": \"2.0\", \"params\": [\"0x0c0ff71b06413865fe9fE9a4C40396c136a62980\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
         }
 
         public void SendToPool(byte[] data)
