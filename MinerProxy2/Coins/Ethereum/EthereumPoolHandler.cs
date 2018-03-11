@@ -21,6 +21,12 @@ namespace MinerProxy2.Coins
             _minerServer.BroadcastToMiners(data);
         }
 
+        public void DoPoolLogin(PoolClient poolClient)
+        {
+            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "<<this pool instance name from _poolManager? Or poolInstance?>>" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"0x0c0ff71b06413865fe9fE9a4C40396c136a62980\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
+
+        }
+
         public void PoolConnected(PoolClient poolClient)
         {
             Log.Information("Pool connected: " + poolClient.poolEndPoint);

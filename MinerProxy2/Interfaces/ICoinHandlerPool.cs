@@ -26,5 +26,7 @@ namespace MinerProxy2.Interfaces
         void PoolConnected(PoolClient poolClient);
 
         void PoolError(Exception exception, PoolClient poolClient);
+
+        void DoPoolLogin(PoolClient poolClient);
     }
 }
