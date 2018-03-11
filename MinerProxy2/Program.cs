@@ -1,6 +1,7 @@
 ﻿using MinerProxy2.Coins;
 using MinerProxy2.Interfaces;
 using MinerProxy2.Network;
+using MinerProxy2.Pools;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System;
@@ -11,6 +12,14 @@ namespace MinerProxy2
     {
         private static void Main(string[] args)
         {
+            //Initialize PoolManager
+            //PoolManager poolManager = new PoolManager();
+
+            //initialize settings
+            //Pass PoolManager to settings for populating it
+
+
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
@@ -18,28 +27,12 @@ namespace MinerProxy2
                 .CreateLogger();
 
             Helpers.Logging.MinerProxyHeader();
-
-            //var container = new SimpleInjector.Container();
-            //container.Register()
-
-            //initialize settings
-
-            //initialize an instance of PoolConnection for each proxy defined in settings
-            //MinerConnection is initialized for each PoolConnection for that proxy
-            //Each PoolConnection keeps track of its own miners, shares, and disseminating work updates.
-            //keep a list of all proxies that we can reference and control from here.
-
-            //failover support implemented in the PoolConnection class
-            //Miners don't need to disconnect.
-
-            //keep track of submitted work, all submits for the current work, and prevent sending to server
-            //while returning a Success back to the miner, or optionally not sending anything at all.
-
-            //don't initialize server connection until we have a client
+            
 
             ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
             ICoinHandlerPool poolHandler = (ICoinHandlerPool)new EthereumPoolHandler();
-            PoolClient pool = new PoolClient("us1.ethermine.org", 4444, poolHandler, coinHandler);
+            PoolInstance poolInstance = new PoolInstance("us1.ethermine.org", 4444, "ETH");
+            PoolClient pool = new PoolClient(poolInstance, "MProxy", poolHandler, coinHandler);
 
             Console.ReadLine();
         }
