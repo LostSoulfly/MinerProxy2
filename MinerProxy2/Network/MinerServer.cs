@@ -1,4 +1,5 @@
 ﻿using MinerProxy2.Interfaces;
+using MinerProxy2.Miners;
 using MinerProxy2.Network.Connections;
 using MinerProxy2.Network.Sockets;
 using Serilog;
@@ -10,15 +11,18 @@ namespace MinerProxy2.Network
         private readonly Server minerServer;
         public ICoinHandlerMiner _coinHandler;
         private readonly PoolClient _pool;
+        private MinerManager minerManager;
 
         private int port;
 
         public MinerServer(int port, PoolClient pool, ICoinHandlerMiner coinHandler)
         {
-            Log.Information("MinerServer initialized.");
+            Log.Information("MinerServer initialized: " + pool.poolEndPoint);
             _pool = pool;
             _coinHandler = coinHandler;
             coinHandler.SetMinerServer(this);
+
+            minerManager = new MinerManager();
 
             this.port = port;
             minerServer = new Server();
@@ -40,7 +44,7 @@ namespace MinerProxy2.Network
 
         public void SendToMiner(byte[] data, TcpConnection connection)
         {
-            connection.socket.Send(data);
+            minerServer.Send(data, connection);
         }
 
         public void BroadcastToMiners(byte[] data)
