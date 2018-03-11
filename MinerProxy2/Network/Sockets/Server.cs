@@ -99,6 +99,7 @@ namespace MinerProxy2.Network.Sockets
                 OnClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 current.Close();
                 clientSockets.Remove(tcpConnection);
+                Log.Error(ex, "Server ReceiveCallback");
                 return;
             }
 
@@ -124,6 +125,21 @@ namespace MinerProxy2.Network.Sockets
             foreach (TcpConnection connection in clientSockets)
             {
                 connection.socket.Send(data);
+            }
+        }
+
+        public bool Send(byte[] data, TcpConnection connection)
+        {
+            try
+            {
+                connection.socket.Send(data);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                //Remove miner?
+                Log.Error(ex, "Send");
+                return false;
             }
         }
 
