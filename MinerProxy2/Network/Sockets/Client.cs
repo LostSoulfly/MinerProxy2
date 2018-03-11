@@ -13,8 +13,8 @@ namespace MinerProxy2.Network.Sockets
         private const int BUFFER_SIZE = 2048;
         private byte[] buffer = new byte[BUFFER_SIZE];
 
-        private string host = "us1.ethermine.org";
-        private int port = 4444;
+        private string host;
+        private int port;
 
         public event EventHandler<ServerDataReceivedArgs> OnServerDataReceived;
 
@@ -56,25 +56,22 @@ namespace MinerProxy2.Network.Sockets
                 Log.Error(exception, "ConnectCallback");
             }
         }
-
-        private void Send(Socket socket, String data)
-        {
-            // Convert the string data to byte data using ASCII encoding.
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
-
-            // Begin sending the data to the remote device.
-            socket.BeginSend(byteData, 0, byteData.Length, SocketFlags.None,
-                new AsyncCallback(SendCallback), socket);
-        }
-
+        
         public void SendToPool(byte[] data)
         {
             Log.Debug("Client SendToPool: " + Encoding.ASCII.GetString(data));
             // Begin sending the data to the remote device.
-            this.clientSocket.BeginSend(data, 0, data.Length, SocketFlags.None,
-                new AsyncCallback(SendCallback), clientSocket);
+            try
+            {
+                this.clientSocket.BeginSend(data, 0, data.Length, SocketFlags.None,
+                    new AsyncCallback(SendCallback), clientSocket);
+            } catch (Exception ex)
+            {
+                //Reconnect to pool?
+                Log.Error(ex, "SendToPool");
+            }
         }
-
+        
         private void SendCallback(IAsyncResult ar)
         {
             try
