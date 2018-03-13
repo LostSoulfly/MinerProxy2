@@ -20,18 +20,21 @@ namespace MinerProxy2.Network
         private string host;
         private int port;
         private bool poolConnected;
+        public string poolWallet { get; }
+        public string poolWorkerName { get { return poolInstance.poolWorkerName; } }
+        public byte[] currentWork;
         private List<byte[]> submittedShares = new List<byte[]>();
         private readonly object submittedShareLock = new object();
         public string poolEndPoint { get; }
 
-        public PoolClient(PoolInstance poolInstance, string poolWorkerName, ICoinHandlerPool pool, ICoinHandlerMiner miner)
+        public PoolClient(PoolInstance poolInstance, ICoinHandlerPool pool, ICoinHandlerMiner miner)
         {
-            poolHandler = pool;
-            coinHandler = miner;
+            this.poolHandler = pool;
+            this.coinHandler = miner;
             this.poolInstance = poolInstance;
             this.host = poolInstance.mainPool.poolAddress;
             this.port = poolInstance.mainPool.poolPort;
-            poolEndPoint = this.host + ":" + this.port;
+            this.poolEndPoint = this.host + ":" + this.port;
 
 
             minerServer = new MinerServer(poolInstance.localListenPort, this, coinHandler);

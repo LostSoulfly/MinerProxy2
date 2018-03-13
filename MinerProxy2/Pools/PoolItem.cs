@@ -8,8 +8,9 @@
         //public int maxMiners { get; set; }
         public int donationPercent { get; set; }
         public string poolWorkerName { get; set; }
+        public string poolWallet { get; set; }
 
-        public PoolItem(string host, int port, string poolWorkerName, string coin, int donation)
+        public PoolItem(string host, int port, string poolWorkerName, string poolWallet, string coin, int donation)
         {
             this.poolAddress = host;
             this.poolPort = port;
@@ -17,6 +18,7 @@
             //this.maxMiners = maxMiners;
             this.donationPercent = donation;
             this.poolWorkerName = poolWorkerName;
+            this.poolWallet = poolWallet;
         }
     }
 }

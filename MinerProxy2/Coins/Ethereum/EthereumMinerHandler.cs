@@ -27,6 +27,8 @@ namespace MinerProxy2.Coins
         public void MinerConnected(TcpConnection connection)
         {
             Log.Information("Miner connected: " + connection.endPoint);
+            if (_pool.currentWork != null)
+                _minerServer.SendToMiner(_pool.currentWork, connection);
            //_minerManager.AddMiner();
         }
 
@@ -35,6 +37,10 @@ namespace MinerProxy2.Coins
             //process the data here, such as replacing the wallet and then submitting shares to _pool
             Log.Information("Sending to pool from " + connection.endPoint + ": " + Encoding.ASCII.GetString(data));
             _pool.SendToPool(data);
+
+            //Respond with getWork results with the currentWork from the pool
+            //occasionally request new work from the server?
+
         }
 
         public void MinerDisconnected(TcpConnection connection)

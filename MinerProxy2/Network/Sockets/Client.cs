@@ -23,10 +23,7 @@ namespace MinerProxy2.Network.Sockets
         public event EventHandler<ServerConnectedArgs> OnServerConnected;
 
         public event EventHandler<ServerDisonnectedArgs> OnServerDisconnected;
-
-        //todo https://docs.microsoft.com/en-us/dotnet/framework/network-programming/asynchronous-client-socket-example
-        // Need to make the client async as well, BegineREceive, etc...
-
+        
         //RaiseServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(data, clientSocket));
 
         public void Connect()

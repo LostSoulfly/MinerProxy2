@@ -5,6 +5,8 @@ using MinerProxy2.Pools;
 using Serilog;
 using System;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace MinerProxy2.Coins
 {
@@ -23,7 +25,7 @@ namespace MinerProxy2.Coins
 
         public void DoPoolLogin(PoolClient poolClient)
         {
-            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "<<this pool instance name from _poolManager? Or poolInstance?>>" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"0x0c0ff71b06413865fe9fE9a4C40396c136a62980\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
+            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + poolClient.poolWallet + "." + poolClient.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
 
         }
 
@@ -38,13 +40,53 @@ namespace MinerProxy2.Coins
             //such as pushing work to all miners
             //or letting miners know the share they submitted was accepted/rejected.
             Log.Information("Pool " + poolClient.poolEndPoint + " sent: " + Encoding.ASCII.GetString(data));
-
-            //This is a simple recording of last data incase a new miner connects after the pool has connected
-            //but the idea is to keep the current work to send to new miners going forward.
-            currentWork = data;
-
+            
             //This is just for testing with 1 miner.
-            _minerServer.BroadcastToMiners(data);
+            //_minerServer.BroadcastToMiners(data);
+
+            dynamic dyn = JsonConvert.DeserializeObject(Encoding.ASCII.GetString(data));
+
+            Log.Information(Encoding.ASCII.GetString(data));
+            if (dyn.id != null)
+            {
+                switch (dyn.id)
+                {
+                    case 0:
+                        Log.Information("Case 0");
+                        break;
+
+                    case 1:
+                        Log.Information("Case 1");
+                        break;
+
+                    case 2:
+                        Log.Information("Case 2");
+                        break;
+
+                    case 3:
+                        Log.Information("Server sent eth_getWork");
+                        currentWork = data;
+                        _minerServer.BroadcastToMiners(data);
+                        return;
+                        break;
+
+                    case 4:
+                        Log.Information("Case 4");
+                        break;
+
+                    case 5:
+                        Log.Information("Case 5");
+                        break;
+
+                    default:
+                        Log.Information("Unhandled.");
+                        break;
+                }
+            } /* else if (dyn.error != null && dyn.result == null)
+            {
+                Log.Error("Server sent Error: " + dyn.error.code + ": " + dyn.error.message);
+            }
+            */
 
         }
 

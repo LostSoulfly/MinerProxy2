@@ -14,6 +14,7 @@ namespace MinerProxy2.Miners
         public string workerName { get; set; }
         public bool connectionAlive { get; set; }
         public bool noRigName { get; set; }
+        public byte[] currentWork { get; set; }
         public TcpConnection connection { get; set; }
         public DateTime connectionStartTime;
         public DateTime lastCalculatedTime;
