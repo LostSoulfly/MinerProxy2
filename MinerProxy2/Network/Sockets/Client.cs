@@ -10,8 +10,8 @@ namespace MinerProxy2.Network.Sockets
         private readonly Socket clientSocket = new Socket
                (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-        private const int BUFFER_SIZE = 2048;
-        private byte[] buffer = new byte[BUFFER_SIZE];
+        private int BUFFER_SIZE = 2048;
+        private byte[] buffer;
 
         private string host;
         private int port;
@@ -25,6 +25,16 @@ namespace MinerProxy2.Network.Sockets
         public event EventHandler<ServerDisonnectedArgs> OnServerDisconnected;
         
         //RaiseServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(data, clientSocket));
+
+        public Client(string host, int port, int bufferSize = 2048)
+        {
+            this.host = host;
+            this.port = port;
+            this.BUFFER_SIZE = bufferSize;
+            
+            //initialize the buffer
+            buffer = new byte[BUFFER_SIZE];
+        }
 
         public void Connect()
         {

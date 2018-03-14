@@ -20,8 +20,8 @@ namespace MinerProxy2.Network
         private string host;
         private int port;
         private bool poolConnected;
-        public string poolWallet { get; }
-        public string poolWorkerName { get { return poolInstance.poolWorkerName; } }
+        //public string poolWallet { get { return poolInstance.GetCurrentPool().poolWallet; } }
+        //public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
         public byte[] currentWork;
         private List<byte[]> submittedShares = new List<byte[]>();
         private readonly object submittedShareLock = new object();
@@ -37,24 +37,27 @@ namespace MinerProxy2.Network
             this.poolEndPoint = this.host + ":" + this.port;
 
 
-            minerServer = new MinerServer(poolInstance.localListenPort, this, coinHandler);
+            minerServer = new MinerServer(poolInstance.GetCurrentPool().localListenPort, this, coinHandler);
 
-            poolClient = new Client();
+            poolClient = new Client(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
             poolClient.OnServerConnected += PoolClient_OnServerConnected;
             poolClient.OnServerDataReceived += PoolClient_OnServerDataReceived;
             poolClient.Connect();
 
             coinHandler.SetMinerServer(minerServer);
-            coinHandler.SetPool(this);
+            coinHandler.SetPoolClient(this);
 
             poolHandler.SetMinerServer(minerServer);
-            poolHandler.SetPool(this);
+            poolHandler.SetPoolClient(this);
+
+            poolHandler.SetPoolInfo(poolInstance);
 
             minerServer.ListenForMiners();
         }
         
         private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
         {
+            Log.Debug("OnServerDataReceived: " + poolConnected);
             if (!poolConnected)
             {
                 poolConnected = true;

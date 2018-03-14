@@ -2,6 +2,7 @@
 using MinerProxy2.Miners;
 using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
+using Newtonsoft.Json;
 using Serilog;
 using System;
 using System.Text;
@@ -35,8 +36,67 @@ namespace MinerProxy2.Coins
         public void MinerDataReceived(byte[] data, TcpConnection connection)
         {
             //process the data here, such as replacing the wallet and then submitting shares to _pool
-            Log.Information("Sending to pool from " + connection.endPoint + ": " + Encoding.ASCII.GetString(data));
-            _pool.SendToPool(data);
+            //Log.Information("Sending to pool from " + connection.endPoint + ": " + Encoding.ASCII.GetString(data));
+
+            string test = Encoding.ASCII.GetString(data);
+
+            foreach (string s in test.Split('\r', '\n'))
+            {
+                if (s.Length <= 1)
+                    continue;
+
+                dynamic dyn = JsonConvert.DeserializeObject(s);
+
+                //Log.Information("Split: " + s);
+                if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
+                {
+                    //Log.Information("dyn.id: " + dyn.id);
+                    switch ((int)dyn.id)
+                    {
+                        case 0:
+                            Log.Information("Server sent new work");
+                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            break;
+
+                        case 2:
+                            Log.Information("Miner sending eth_submitLogin");
+                            _minerServer.SendToMiner(Encoding.ASCII.GetBytes("{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":true}\r\n"), connection);
+                            break;
+
+                        case 3:
+                            Log.Information("Client requesting work");
+                            if (_pool.currentWork != null)
+                            {
+                                _minerServer.SendToMiner(_pool.currentWork, connection);
+                            } else
+                            {
+                                _pool.SendToPool(Encoding.ASCII.GetBytes(s));
+                            }
+                            break;
+
+                        case 4:
+                            Log.Information("Miner found a share: " + connection.endPoint);
+                            _pool.SendToPool(Encoding.ASCII.GetBytes(s));
+                            break;
+
+                        case 6:
+                            Log.Information("Miner sending hashrate: " + connection.endPoint);
+                            _pool.SendToPool(Encoding.ASCII.GetBytes(s));
+                            break;
+
+                        default:
+                            Log.Information("Unhandled: " + s);
+                            break;
+                    }
+                } /* else if (dyn.error != null && dyn.result == null)
+            {
+                Log.Error("Server sent Error: " + dyn.error.code + ": " + dyn.error.message);
+            }
+            */
+
+            }
+
+            //_pool.SendToPool(data);
 
             //Respond with getWork results with the currentWork from the pool
             //occasionally request new work from the server?
@@ -84,7 +144,7 @@ namespace MinerProxy2.Coins
             _minerServer = minerServer;
         }
 
-        public void SetPool(PoolClient pool)
+        public void SetPoolClient(PoolClient pool)
         {
             _pool = pool;
         }

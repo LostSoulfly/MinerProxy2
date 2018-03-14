@@ -7,11 +7,11 @@ namespace MinerProxy2.Interfaces
 {
     public interface ICoinHandlerPool
     {
-        void SetPool(PoolClient pool);
+        void SetPoolClient(PoolClient pool);
 
         void SetMinerServer(MinerServer minerServer);
 
-        void SetPoolManager(PoolManager poolManager);
+        void SetPoolInfo(PoolInstance poolInfo);
 
         void BroadcastToMiners(byte[] data);
 

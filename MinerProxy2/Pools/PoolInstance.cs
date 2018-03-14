@@ -7,21 +7,19 @@ namespace MinerProxy2.Pools
         public List<PoolItem> failoverPools = new List<PoolItem>();
         public readonly PoolItem mainPool;
         private PoolItem currentPool;
-        public int localListenPort;
-        public string poolWorkerName;
         public bool passwordAsWorkerName;
         public bool useDotBeforeWorkerName;
         //failure attempts, then switch
         //retry main pool in seconds
 
-        public PoolInstance(string host, int port, string poolWorkerName, string poolWallet, string coin)
+        public PoolInstance(string poolHost, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin)
         {
-            mainPool = new PoolItem(host, port, poolWorkerName, poolWallet, coin, 1);
+            mainPool = new PoolItem(poolHost, poolPort, localListenPort, poolWorkerName, poolWallet, coin, 1);
         }
 
         public void AddFailoverPool(string host, int port)
         {
-            failoverPools.Add(new PoolItem(host, port, mainPool.coin, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.donationPercent));
+            failoverPools.Add(new PoolItem(host, port, mainPool.localListenPort, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.coin, mainPool.donationPercent));
         }
 
         public PoolItem GetCurrentPool()

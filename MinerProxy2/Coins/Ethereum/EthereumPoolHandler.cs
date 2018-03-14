@@ -7,6 +7,8 @@ using System;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Collections.Generic;
+using System.IO;
 
 namespace MinerProxy2.Coins
 {
@@ -14,7 +16,7 @@ namespace MinerProxy2.Coins
     {
         private MinerServer _minerServer;
         private PoolClient _pool;
-        private PoolManager _poolManager;
+        private PoolInstance _poolInfo;
         private byte[] currentWork;
 
         public void BroadcastToMiners(byte[] data)
@@ -25,7 +27,8 @@ namespace MinerProxy2.Coins
 
         public void DoPoolLogin(PoolClient poolClient)
         {
-            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + poolClient.poolWallet + "." + poolClient.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
+            Log.Information("Sending login to pool");
+            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _poolInfo.GetCurrentPool().poolWallet + "." + _poolInfo.GetCurrentPool().poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
 
         }
 
@@ -39,54 +42,74 @@ namespace MinerProxy2.Coins
             //process pool data here
             //such as pushing work to all miners
             //or letting miners know the share they submitted was accepted/rejected.
-            Log.Information("Pool " + poolClient.poolEndPoint + " sent: " + Encoding.ASCII.GetString(data));
-            
+            //Log.Information("Pool " + poolClient.poolEndPoint + " sent: " + Encoding.ASCII.GetString(data));
+
             //This is just for testing with 1 miner.
             //_minerServer.BroadcastToMiners(data);
 
-            dynamic dyn = JsonConvert.DeserializeObject(Encoding.ASCII.GetString(data));
+            string test = Encoding.ASCII.GetString(data);
 
-            Log.Information(Encoding.ASCII.GetString(data));
-            if (dyn.id != null)
+            foreach (string s in test.Split('\r', '\n'))
             {
-                switch (dyn.id)
+                if (s.Length <= 1)
+                    continue;
+
+                dynamic dyn = JsonConvert.DeserializeObject(s);
+
+                //Log.Information("Split: " + s);
+                if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
-                    case 0:
-                        Log.Information("Case 0");
-                        break;
+                    //Log.Information("dyn.id: " + dyn.id);
+                    switch ((int)dyn.id)
+                    {
+                        case 0:
+                            Log.Information("Server sent new work");
+                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            break;
 
-                    case 1:
-                        Log.Information("Case 1");
-                        break;
+                        case 1:
+                            Log.Information("Case 1: " + s);
+                            break;
 
-                    case 2:
-                        Log.Information("Case 2");
-                        break;
+                        case 2:
+                            Log.Information("Server sent Auth success");
+                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            break;
 
-                    case 3:
-                        Log.Information("Server sent eth_getWork");
-                        currentWork = data;
-                        _minerServer.BroadcastToMiners(data);
-                        return;
-                        break;
+                        case 3:
+                            Log.Information("Server sent eth_getWork");
 
-                    case 4:
-                        Log.Information("Case 4");
-                        break;
+                            if (currentWork != Encoding.ASCII.GetBytes(s))
+                                _minerServer.BroadcastToMiners(data);
 
-                    case 5:
-                        Log.Information("Case 5");
-                        break;
+                            currentWork = Encoding.ASCII.GetBytes(s);
+                            break;
 
-                    default:
-                        Log.Information("Unhandled.");
-                        break;
-                }
-            } /* else if (dyn.error != null && dyn.result == null)
+                        case 4:
+                            Log.Information("Share accepted by pool");
+                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            break;
+
+                        case 5:
+                            Log.Information("Case 5: " + s);
+                            break;
+
+                        case 6:
+                            Log.Information("Hashrate accepted by pool?");
+                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            break;
+
+                        default:
+                            Log.Information("Unhandled: " + s);
+                            break;
+                    }
+                } /* else if (dyn.error != null && dyn.result == null)
             {
                 Log.Error("Server sent Error: " + dyn.error.code + ": " + dyn.error.message);
             }
             */
+
+            }
 
         }
 
@@ -115,14 +138,14 @@ namespace MinerProxy2.Coins
             _minerServer = minerServer;
         }
 
-        public void SetPool(PoolClient pool)
+        public void SetPoolClient(PoolClient pool)
         {
             _pool = pool;
         }
 
-        public void SetPoolManager(PoolManager poolManager)
+        public void SetPoolInfo(PoolInstance poolInfo)
         {
-            _poolManager = poolManager;
+            this._poolInfo = poolInfo;
         }
     }
 }
