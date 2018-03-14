@@ -21,6 +21,7 @@ namespace MinerProxy2.Network
             _pool = pool;
             _coinHandler = coinHandler;
             coinHandler.SetMinerServer(this);
+            coinHandler.SetPoolClient(_pool);
 
             minerManager = new MinerManager();
 

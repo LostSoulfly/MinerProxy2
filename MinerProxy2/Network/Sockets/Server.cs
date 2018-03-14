@@ -9,7 +9,7 @@ namespace MinerProxy2.Network.Sockets
 {
     public class Server
     {
-        private readonly Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
         private const int BUFFER_SIZE = 2048;
         private readonly byte[] buffer = new byte[BUFFER_SIZE];
@@ -57,6 +57,16 @@ namespace MinerProxy2.Network.Sockets
             serverSocket.Close();
         }
 
+        public void Disconnect(TcpConnection connection)
+        {
+            try
+            {
+                connection.socket.Shutdown(SocketShutdown.Both);
+                connection.socket.Close();
+            }
+            catch { } finally { clientSockets.Remove(connection); }
+        }
+
         private void AcceptCallback(IAsyncResult AR)
         {
             Socket socket;
@@ -97,8 +107,7 @@ namespace MinerProxy2.Network.Sockets
                 //Log.Information(ex, "Client forcefully disconnected");
                 // Don't shutdown because the socket may be disposed and its disconnected anyway.
                 OnClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
-                current.Close();
-                clientSockets.Remove(tcpConnection);
+                Disconnect(tcpConnection);
                 Log.Error(ex, "Server ReceiveCallback");
                 return;
             }
@@ -116,16 +125,28 @@ namespace MinerProxy2.Network.Sockets
             {
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Log.Error(ex, "BeginReceive Error");
+                Disconnect(tcpConnection);
             }
         }
 
         public void BroadcastToMiners(byte[] data)
         {
             Log.Debug("Server instance broadcasting data to all miners..");
+            
             foreach (TcpConnection connection in clientSockets)
-            {
-                connection.socket.Send(data);
+            { 
+                try
+                { 
+                    connection.socket.Send(data);
+                }
+                catch (Exception ex)
+                {
+                Log.Error(ex, "BroadcastToMiners");
+                Disconnect(connection);
+                //todo disconnect/remove client
             }
+        }
+            
         }
 
         public bool Send(byte[] data, TcpConnection connection)
@@ -139,6 +160,7 @@ namespace MinerProxy2.Network.Sockets
             {
                 //Remove miner?
                 Log.Error(ex, "Send");
+                Disconnect(connection);
                 return false;
             }
         }

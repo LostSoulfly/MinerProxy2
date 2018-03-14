@@ -22,7 +22,7 @@ namespace MinerProxy2.Network
         private bool poolConnected;
         //public string poolWallet { get { return poolInstance.GetCurrentPool().poolWallet; } }
         //public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
-        public byte[] currentWork;
+        public byte[] currentWork = new byte[0];
         private List<byte[]> submittedShares = new List<byte[]>();
         private readonly object submittedShareLock = new object();
         public string poolEndPoint { get; }
@@ -57,18 +57,18 @@ namespace MinerProxy2.Network
         
         private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
         {
-            Log.Debug("OnServerDataReceived: " + poolConnected);
-            if (!poolConnected)
-            {
-                poolConnected = true;
-                poolHandler.DoPoolLogin(this);
-            }
+            Log.Information(Encoding.ASCII.GetString(e.Data));
             poolHandler.PoolDataReceived(e.Data, this);
         }
         
         private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
         {
             Log.Debug("Pool connected: " + e.socket.RemoteEndPoint.ToString());
+            if (!poolConnected)
+            {
+                poolConnected = true;
+                poolHandler.DoPoolLogin(this);
+            }
         }
 
         public void SendToPool(byte[] data)

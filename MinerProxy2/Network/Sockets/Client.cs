@@ -7,8 +7,7 @@ namespace MinerProxy2.Network.Sockets
 {
     public class Client
     {
-        private readonly Socket clientSocket = new Socket
-               (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private Socket clientSocket;
 
         private int BUFFER_SIZE = 2048;
         private byte[] buffer;
@@ -38,8 +37,23 @@ namespace MinerProxy2.Network.Sockets
 
         public void Connect()
         {
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
             clientSocket.BeginConnect(host, port,
                 new AsyncCallback(ConnectCallback), clientSocket);
+        }
+
+        public void Close()
+        {
+            clientSocket.Shutdown(SocketShutdown.Both);
+            clientSocket.Close();
+        }
+
+        public void Reconnect()
+        {
+            Close();
+            Log.Information("Reconnecting to pool..");
+            Connect();
         }
 
         private void ConnectCallback(IAsyncResult ar)
@@ -74,8 +88,8 @@ namespace MinerProxy2.Network.Sockets
                     new AsyncCallback(SendCallback), clientSocket);
             } catch (Exception ex)
             {
-                //Reconnect to pool?
                 Log.Error(ex, "SendToPool");
+                Reconnect();
             }
         }
         
@@ -92,6 +106,7 @@ namespace MinerProxy2.Network.Sockets
             catch (Exception exception)
             {
                 Log.Error(exception, "SendCallback");
+                Reconnect();
             }
         }
 
@@ -106,6 +121,7 @@ namespace MinerProxy2.Network.Sockets
             catch (Exception exception)
             {
                 Log.Error(exception, "Receive");
+                Reconnect();
             }
         }
 
@@ -113,7 +129,6 @@ namespace MinerProxy2.Network.Sockets
         {
             Socket socket = (Socket)AR.AsyncState;
             int received;
-
             try
             {
                 received = socket.EndReceive(AR);
@@ -123,16 +138,22 @@ namespace MinerProxy2.Network.Sockets
                 //Log.Error(ex, "Client forcefully disconnected");
                 // Don't shutdown because the socket may be disposed and its disconnected anyway.
                 OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
-                socket.Close();
+                Reconnect();
                 return;
             }
 
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
 
-            //Log.Debug("Pool sent: " + Encoding.ASCII.GetString(recBuf));
+            if (recBuf.Length == 0)
+            {
+                Reconnect();
+                return;
+            }
 
-            OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
+            //Log.Debug("Pool sent: " + Encoding.ASCII.GetString(recBuf));
+            if (recBuf.Length > 0)
+                OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
 
             try
             {
@@ -142,6 +163,7 @@ namespace MinerProxy2.Network.Sockets
             {
                 OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
                 Log.Error(ex, "Pool BeginReceive Error");
+                Reconnect();
             }
         }
     }

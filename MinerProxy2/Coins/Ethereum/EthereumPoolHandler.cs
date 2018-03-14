@@ -17,7 +17,6 @@ namespace MinerProxy2.Coins
         private MinerServer _minerServer;
         private PoolClient _pool;
         private PoolInstance _poolInfo;
-        private byte[] currentWork;
 
         public void BroadcastToMiners(byte[] data)
         {
@@ -27,8 +26,8 @@ namespace MinerProxy2.Coins
 
         public void DoPoolLogin(PoolClient poolClient)
         {
-            Log.Information("Sending login to pool");
-            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _poolInfo.GetCurrentPool().poolWallet + "." + _poolInfo.GetCurrentPool().poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
+            //Log.Information("Sending login to pool");
+            //_pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _poolInfo.GetCurrentPool().poolWallet + "." + _poolInfo.GetCurrentPool().poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
 
         }
 
@@ -64,7 +63,12 @@ namespace MinerProxy2.Coins
                     {
                         case 0:
                             Log.Information("Server sent new work");
-                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            byte[] work = Encoding.ASCII.GetBytes(s);
+                            //_pool.currentWork = new byte[work.Length];
+                            _pool.currentWork = work;
+                            //Log.Debug("currentWork: " + _pool.currentWork.Length);
+                            
+                            _minerServer.BroadcastToMiners(work);
                             break;
 
                         case 1:
@@ -79,10 +83,10 @@ namespace MinerProxy2.Coins
                         case 3:
                             Log.Information("Server sent eth_getWork");
 
-                            if (currentWork != Encoding.ASCII.GetBytes(s))
+                            if (_pool.currentWork != Encoding.ASCII.GetBytes(s))
                                 _minerServer.BroadcastToMiners(data);
 
-                            currentWork = Encoding.ASCII.GetBytes(s);
+                            _pool.currentWork = Encoding.ASCII.GetBytes(s);
                             break;
 
                         case 4:

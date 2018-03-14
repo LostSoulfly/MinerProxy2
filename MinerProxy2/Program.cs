@@ -32,10 +32,9 @@ namespace MinerProxy2
             ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
             ICoinHandlerPool poolHandler = (ICoinHandlerPool)new EthereumPoolHandler();
 
-            string server = "ubq.pool.sexy";
-            int port = 9009;
-
-            //"us1.ethermine.org", 4444
+            string server = "us1.ethermine.org"; //"ubq.pool.sexy";
+            int port = 4444; //9009;
+            
 
             PoolInstance poolInstance = new PoolInstance(server, port, 9000, "MProxy", "0x3Ff3CF71689C7f2f8F5c1b7Fc41e030009ff7332", "ETH");
             PoolClient pool = new PoolClient(poolInstance, poolHandler, coinHandler);

@@ -37,7 +37,7 @@ namespace MinerProxy2.Coins
         {
             //process the data here, such as replacing the wallet and then submitting shares to _pool
             //Log.Information("Sending to pool from " + connection.endPoint + ": " + Encoding.ASCII.GetString(data));
-
+            
             string test = Encoding.ASCII.GetString(data);
 
             foreach (string s in test.Split('\r', '\n'))
@@ -50,12 +50,11 @@ namespace MinerProxy2.Coins
                 //Log.Information("Split: " + s);
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
-                    //Log.Information("dyn.id: " + dyn.id);
+                    Log.Information("dyn.id: " + dyn.id);
                     switch ((int)dyn.id)
                     {
                         case 0:
-                            Log.Information("Server sent new work");
-                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            Log.Information("Case 0?");
                             break;
 
                         case 2:
@@ -64,8 +63,8 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 3:
-                            Log.Information("Client requesting work");
-                            if (_pool.currentWork != null)
+                            Log.Information("Client requesting work: " + Encoding.ASCII.GetString(_pool.currentWork));
+                            if (_pool.currentWork.Length > 0)
                             {
                                 _minerServer.SendToMiner(_pool.currentWork, connection);
                             } else
