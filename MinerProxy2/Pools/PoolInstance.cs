@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MinerProxy2.Pools
 {
@@ -9,6 +10,8 @@ namespace MinerProxy2.Pools
         private PoolItem currentPool;
         public bool passwordAsWorkerName;
         public bool useDotBeforeWorkerName;
+        public DateTime poolConnectedTime;
+        public int numberOfConnects;
         //failure attempts, then switch
         //retry main pool in seconds
 

@@ -2,8 +2,10 @@
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace MinerProxy2.Network.Sockets
 {
@@ -50,8 +52,7 @@ namespace MinerProxy2.Network.Sockets
         {
             foreach (TcpConnection client in clientSockets)
             {
-                client.socket.Shutdown(SocketShutdown.Both);
-                client.socket.Close();
+                Disconnect(client);
             }
 
             serverSocket.Close();
@@ -61,6 +62,7 @@ namespace MinerProxy2.Network.Sockets
         {
             try
             {
+                Log.Debug("Disconnecting " + connection.endPoint);
                 connection.socket.Shutdown(SocketShutdown.Both);
                 connection.socket.Close();
             }
@@ -136,7 +138,14 @@ namespace MinerProxy2.Network.Sockets
             foreach (TcpConnection connection in clientSockets)
             { 
                 try
-                { 
+                {
+                    byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
+
+                    if (!(endCharacter.SequenceEqual(Encoding.ASCII.GetBytes(Environment.NewLine))))
+                    {
+                        data = data.Concat(Encoding.ASCII.GetBytes(Environment.NewLine)).ToArray();
+                    }
+
                     connection.socket.Send(data);
                 }
                 catch (Exception ex)
@@ -153,6 +162,13 @@ namespace MinerProxy2.Network.Sockets
         {
             try
             {
+                byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
+
+                if (!(endCharacter.SequenceEqual(Encoding.ASCII.GetBytes(Environment.NewLine))))
+                {
+                    data = data.Concat(Encoding.ASCII.GetBytes(Environment.NewLine)).ToArray();
+                }
+
                 connection.socket.Send(data);
                 return true;
             }

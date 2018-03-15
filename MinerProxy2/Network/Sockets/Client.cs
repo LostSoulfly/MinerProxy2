@@ -1,5 +1,6 @@
 ﻿using Serilog;
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 
@@ -22,8 +23,8 @@ namespace MinerProxy2.Network.Sockets
         public event EventHandler<ServerConnectedArgs> OnServerConnected;
 
         public event EventHandler<ServerDisonnectedArgs> OnServerDisconnected;
-        
-        //RaiseServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(data, clientSocket));
+
+        private readonly object dataLock = new object();
 
         public Client(string host, int port, int bufferSize = 2048)
         {
@@ -45,6 +46,7 @@ namespace MinerProxy2.Network.Sockets
 
         public void Close()
         {
+            Log.Debug("Close()");
             clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();
         }
@@ -84,6 +86,13 @@ namespace MinerProxy2.Network.Sockets
             // Begin sending the data to the remote device.
             try
             {
+                byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
+
+                if (!(endCharacter.SequenceEqual(Encoding.ASCII.GetBytes(Environment.NewLine))))
+                {
+                    data = data.Concat(Encoding.ASCII.GetBytes(Environment.NewLine)).ToArray();
+                }
+
                 this.clientSocket.BeginSend(data, 0, data.Length, SocketFlags.None,
                     new AsyncCallback(SendCallback), clientSocket);
             } catch (Exception ex)
@@ -121,6 +130,7 @@ namespace MinerProxy2.Network.Sockets
             catch (Exception exception)
             {
                 Log.Error(exception, "Receive");
+                OnServerError?.Invoke(this, new ServerErrorArgs(exception, socket));
                 Reconnect();
             }
         }
@@ -147,13 +157,12 @@ namespace MinerProxy2.Network.Sockets
 
             if (recBuf.Length == 0)
             {
+                Log.Error("Pool receive buffer was empty; need to reconnect.. " + received);
                 Reconnect();
                 return;
             }
 
-            //Log.Debug("Pool sent: " + Encoding.ASCII.GetString(recBuf));
-            if (recBuf.Length > 0)
-                OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
+            OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
 
             try
             {

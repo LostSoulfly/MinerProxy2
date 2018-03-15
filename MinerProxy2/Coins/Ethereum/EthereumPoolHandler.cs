@@ -26,8 +26,8 @@ namespace MinerProxy2.Coins
 
         public void DoPoolLogin(PoolClient poolClient)
         {
-            //Log.Information("Sending login to pool");
-            //_pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _poolInfo.GetCurrentPool().poolWallet + "." + _poolInfo.GetCurrentPool().poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
+            Log.Information("Sending login to pool");
+            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _poolInfo.GetCurrentPool().poolWallet + "." + _poolInfo.GetCurrentPool().poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
 
         }
 
@@ -77,7 +77,7 @@ namespace MinerProxy2.Coins
 
                         case 2:
                             Log.Information("Server sent Auth success");
-                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
 
                         case 3:

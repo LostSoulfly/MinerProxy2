@@ -3,9 +3,11 @@ using MinerProxy2.Miners;
 using MinerProxy2.Network.Sockets;
 using MinerProxy2.Pools;
 using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Timers;
 
 namespace MinerProxy2.Network
 {
@@ -20,6 +22,9 @@ namespace MinerProxy2.Network
         private string host;
         private int port;
         private bool poolConnected;
+
+        private Timer statsTimer;
+
         //public string poolWallet { get { return poolInstance.GetCurrentPool().poolWallet; } }
         //public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
         public byte[] currentWork = new byte[0];
@@ -42,6 +47,8 @@ namespace MinerProxy2.Network
             poolClient = new Client(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
             poolClient.OnServerConnected += PoolClient_OnServerConnected;
             poolClient.OnServerDataReceived += PoolClient_OnServerDataReceived;
+            poolClient.OnServerDisconnected += PoolClient_OnServerDisconnected;
+            poolClient.OnServerError += PoolClient_OnServerError;
             poolClient.Connect();
 
             coinHandler.SetMinerServer(minerServer);
@@ -54,16 +61,51 @@ namespace MinerProxy2.Network
 
             minerServer.ListenForMiners();
         }
-        
+
+        private void StartPoolStats()
+        {
+            statsTimer = new Timer(30000);
+            statsTimer.AutoReset = true;
+            
+            statsTimer.Elapsed += delegate
+            {
+                TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
+                Log.Information("Server connection uptime: " + time.ToString("hh\\:mm\\:ss"));
+            };
+
+            statsTimer.Start();
+
+        }
+
+        private void StopPoolStats()
+        {
+            statsTimer.Stop();
+        }
+
+        private void PoolClient_OnServerError(object sender, ServerErrorArgs e)
+        {
+            Log.Error(e.exception, "Server error!");
+            poolConnected = false;
+            StopPoolStats();
+        }
+
+        private void PoolClient_OnServerDisconnected(object sender, ServerDisonnectedArgs e)
+        {
+            poolConnected = false;
+            StopPoolStats();
+        }
+
         private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
         {
-            Log.Information(Encoding.ASCII.GetString(e.Data));
+            //Log.Information(Encoding.ASCII.GetString(e.Data));
             poolHandler.PoolDataReceived(e.Data, this);
         }
         
         private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
         {
             Log.Debug("Pool connected: " + e.socket.RemoteEndPoint.ToString());
+            poolInstance.poolConnectedTime = DateTime.Now;
+            StartPoolStats();
             if (!poolConnected)
             {
                 poolConnected = true;

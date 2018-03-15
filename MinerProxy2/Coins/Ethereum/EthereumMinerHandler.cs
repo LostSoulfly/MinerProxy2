@@ -50,7 +50,7 @@ namespace MinerProxy2.Coins
                 //Log.Information("Split: " + s);
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
-                    Log.Information("dyn.id: " + dyn.id);
+                    //Log.Information("dyn.id: " + dyn.id);
                     switch ((int)dyn.id)
                     {
                         case 0:
@@ -63,7 +63,7 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 3:
-                            Log.Information("Client requesting work: " + Encoding.ASCII.GetString(_pool.currentWork));
+                            Log.Information("Client requested work."); // + Encoding.ASCII.GetString(_pool.currentWork));
                             if (_pool.currentWork.Length > 0)
                             {
                                 _minerServer.SendToMiner(_pool.currentWork, connection);
