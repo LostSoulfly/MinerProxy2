@@ -59,6 +59,13 @@ namespace MinerProxy2.Coins
 
                         case 2:
                             Log.Information("Miner sending eth_submitLogin");
+
+                            string worker = dyn.@params[0];
+
+                            if (worker.Contains("."))
+                                worker = worker.Split(".")[1];
+
+                            _minerManager.AddMiner(new Miner(worker, connection));
                             _minerServer.SendToMiner(Encoding.ASCII.GetBytes("{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":true}\r\n"), connection);
                             break;
 

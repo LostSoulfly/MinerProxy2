@@ -9,14 +9,22 @@ namespace MinerProxy2.Miners
         public long acceptedShares { get; set; }
         public long rejectedShares { get; set; }
         public long hashrate { get; set; }
-        public string endPoint { get; set; }
-        public string connectionName { get; set; }
         public string workerName { get; set; }
-        public bool connectionAlive { get; set; }
+        //public bool connectionAlive { get; set; }
         public bool noRigName { get; set; }
-        public byte[] currentWork { get; set; }
+        //public byte[] currentWork { get; set; }
         public TcpConnection connection { get; set; }
         public DateTime connectionStartTime;
         public DateTime lastCalculatedTime;
+        public DateTime shareSubmittedTime;
+
+        public Miner(string workerName, TcpConnection connection)
+        {
+            this.connection = connection;
+            this.workerName = workerName;
+            //connectionAlive = true;
+            connectionStartTime = DateTime.Now;
+        }
+
     }
 }

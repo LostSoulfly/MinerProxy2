@@ -42,5 +42,11 @@ namespace MinerProxy2.Miners
         {
             return minerList.Find(item => item.connection == connection);
         }
+
+        public Miner GetOldestMinerShareSubmitted()
+        {
+            Miner miner = minerList.OrderBy(m => m.shareSubmittedTime).First();
+            return miner;
+        }
     }
 }
