@@ -94,7 +94,7 @@ namespace MinerProxy2.Coins
                         case 4:
                             Log.Information("Share accepted by pool");
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
-                            Miner miner = _minerManager.GetNextRejectedShare();
+                            Miner miner = _minerManager.GetNextAcceptedShare();
 
                             if (miner != null)
                             {
