@@ -19,7 +19,9 @@ namespace MinerProxy2.Miners
                 Miner existing = GetMiner(miner.connection);
 
                 if (existing == null)
+                {
                     minerList.Add(miner);
+                }
             }
         }
 
@@ -63,9 +65,9 @@ namespace MinerProxy2.Miners
 
         public void AddSubmittedShare(Miner miner)
         {
-            miner.shareSubmittedTime = DateTime.Now;
+            miner.shareSubmittedTimes.Add(DateTime.Now);
             miner.submittedShares++;
-            Log.Debug("Miner " + miner.connection.endPoint + " shares: {0}/{1}", miner.submittedShares, miner.rejectedShares);
+            Log.Information("Miner " + miner.connection.endPoint + " shares: {0}/{1}/{2}", miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
         }
 
         public long GetAverageHashrate()
@@ -85,26 +87,25 @@ namespace MinerProxy2.Miners
             return minerList.Find(item => item.connection == connection);
         }
 
-        public Miner GetNextAcceptedShare()
+        public Miner GetNextShare(bool accepted)
         {
-            Miner miner = minerList.OrderBy(m => m.shareSubmittedTime).First();
-            Log.Debug("GetNextAcceptedShare: " + miner.connection.endPoint);
-            miner.acceptedShares++;
+            Miner miner = minerList.OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
+            Log.Verbose("GetNextShare: {0}: {1}!", miner.connection.endPoint, accepted ? "Accepted" : "Rejected");
+
+            if (accepted)
+                miner.acceptedShares++;
+            else
+                miner.rejectedShares++;
+
+            Log.Information("Miner " + miner.connection.endPoint + " shares: {0}/{1}/{2}", miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
+
             return miner;
         }
-
-        public Miner GetNextRejectedShare()
-        {
-            Miner miner = minerList.OrderBy(m => m.shareSubmittedTime).First();
-            Log.Debug("GetNextRejectedShare: " + miner.connection.endPoint);
-            miner.rejectedShares++;
-            return miner;
-        }
-
+        
         public void ResetMinerShareSubmittedTime(Miner miner)
         {
-            Log.Debug("Resetting miner last submit time: " + miner.connection.endPoint);
-            miner.shareSubmittedTime = new DateTime();
+            Log.Debug("Resetting miner last submit time: {0} ({1})", miner.connection.endPoint, miner.shareSubmittedTimes.First().ToShortTimeString());
+            miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
         }
     }
 }

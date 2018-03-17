@@ -64,7 +64,7 @@ namespace MinerProxy2.Coins
                     switch ((int)dyn.id)
                     {
                         case 0:
-                            Log.Information("Server sent new work");
+                            Log.Debug("Server sent new work");
                             byte[] work = Encoding.ASCII.GetBytes(s);
                             //_pool.currentWork = new byte[work.Length];
                             _pool.currentWork = work;
@@ -78,12 +78,12 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 2:
-                            Log.Information("Server sent Auth success");
+                            Log.Information("Authorized with {0}", poolClient.poolEndPoint);
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
 
                         case 3:
-                            Log.Information("Server sent eth_getWork");
+                            Log.Debug("Server sent eth_getWork");
 
                             if (_pool.currentWork != Encoding.ASCII.GetBytes(s))
                                 _minerServer.BroadcastToMiners(data);
@@ -91,30 +91,31 @@ namespace MinerProxy2.Coins
                             _pool.currentWork = Encoding.ASCII.GetBytes(s);
                             break;
 
+                        case 10: //claymore id 10
                         case 4:
-                            Log.Information("Share accepted by pool");
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
-                            Miner miner = _minerManager.GetNextAcceptedShare();
+                            Miner miner = _minerManager.GetNextShare(true);
 
                             if (miner != null)
                             {
                                 _minerServer.SendToMiner(Encoding.ASCII.GetBytes(s), miner.connection);
                                 _minerManager.ResetMinerShareSubmittedTime(miner);
+                                Log.Information("{0}'s share was accepted!", miner.connection.endPoint);
                             }
                             break;
 
                         case 5:
-                            Log.Information("Case 5: " + s);
+                            Log.Debug("Case 5: " + s);
                             break;
 
                         case 6:
-                            Log.Information("Hashrate accepted by pool");
+                            Log.Debug("Hashrate accepted by pool");
                             _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             
                             break;
 
                         default:
-                            Log.Information("Unhandled: " + s);
+                            Log.Warning("Unhandled: " + s);
                             break;
                     }
                 } /* else if (dyn.error != null && dyn.result == null)
@@ -129,7 +130,7 @@ namespace MinerProxy2.Coins
 
         public void PoolDisconnected(PoolClient poolClient)
         {
-            Log.Information("Pool disconnected: " + poolClient.poolEndPoint);
+            Log.Warning("Pool disconnected: " + poolClient.poolEndPoint);
         }
 
         public void PoolError(Exception exception, PoolClient poolClient)

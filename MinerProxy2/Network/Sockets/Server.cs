@@ -62,7 +62,7 @@ namespace MinerProxy2.Network.Sockets
         {
             try
             {
-                Log.Debug("Disconnecting " + connection.endPoint);
+                Log.Information("Disconnecting {0}", connection.endPoint);
                 connection.socket.Shutdown(SocketShutdown.Both);
                 connection.socket.Close();
             }
@@ -133,7 +133,7 @@ namespace MinerProxy2.Network.Sockets
 
         public void BroadcastToMiners(byte[] data)
         {
-            Log.Debug("Server instance broadcasting data to all miners..");
+            //Log.Debug("Server instance broadcasting data to all miners..");
             
             foreach (TcpConnection connection in clientSockets)
             { 

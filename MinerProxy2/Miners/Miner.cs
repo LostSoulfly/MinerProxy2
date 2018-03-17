@@ -1,5 +1,6 @@
 ﻿using MinerProxy2.Network.Sockets;
 using System;
+using System.Collections.Generic;
 
 namespace MinerProxy2.Miners
 {
@@ -16,13 +17,14 @@ namespace MinerProxy2.Miners
         public TcpConnection connection { get; set; }
         public DateTime connectionStartTime;
         public DateTime lastCalculatedTime;
-        public DateTime shareSubmittedTime;
+        public List<DateTime> shareSubmittedTimes;
 
         public Miner(string workerName, TcpConnection connection)
         {
             this.connection = connection;
             this.workerName = workerName;
             //connectionAlive = true;
+            shareSubmittedTimes = new List<DateTime>();
             connectionStartTime = DateTime.Now;
         }
 

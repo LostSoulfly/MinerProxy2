@@ -46,7 +46,7 @@ namespace MinerProxy2.Network.Sockets
 
         public void Close()
         {
-            Log.Debug("Close()");
+            Log.Debug("Client Close()");
             clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();
         }
@@ -54,7 +54,7 @@ namespace MinerProxy2.Network.Sockets
         public void Reconnect()
         {
             Close();
-            Log.Information("Reconnecting to pool..");
+            Log.Warning("Reconnecting to pool..");
             Connect();
         }
 
@@ -82,7 +82,7 @@ namespace MinerProxy2.Network.Sockets
         
         public void SendToPool(byte[] data)
         {
-            Log.Debug("Client SendToPool: " + Encoding.ASCII.GetString(data));
+            //Log.Debug("Client SendToPool: " + Encoding.ASCII.GetString(data));
             // Begin sending the data to the remote device.
             try
             {

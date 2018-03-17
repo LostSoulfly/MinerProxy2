@@ -87,10 +87,10 @@ namespace MinerProxy2.Network
         public void SubmitShareToPool(byte[] data, Miner miner)
         {
            
-            Log.Debug("Miner submitting share: " + miner.connection.endPoint);
+            Log.Verbose("Miner submitting share: " + miner.connection.endPoint);
             if (submittedShares.Any(item => item == data))
             {
-                Log.Debug("Share already exists, not sending to pool.");
+                Log.Warning("Share already exists, not sending to pool.");
                 return;
             }
 
@@ -121,7 +121,7 @@ namespace MinerProxy2.Network
         
         private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
         {
-            Log.Debug("Pool connected: " + e.socket.RemoteEndPoint.ToString());
+            Log.Information("Pool connected: {0}.", e.socket.RemoteEndPoint.ToString());
             poolInstance.poolConnectedTime = DateTime.Now;
             StartPoolStats();
             if (!poolConnected)

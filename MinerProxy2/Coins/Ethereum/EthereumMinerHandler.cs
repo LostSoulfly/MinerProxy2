@@ -58,7 +58,7 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 2:
-                            Log.Information("Miner sending eth_submitLogin");
+                            Log.Debug("Miner sending eth_submitLogin");
 
                             string worker = dyn.@params[0];
 
@@ -70,7 +70,7 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 3:
-                            Log.Information("Client requested work."); // + Encoding.ASCII.GetString(_pool.currentWork));
+                            Log.Debug("{0} requested work.", connection.endPoint); // + Encoding.ASCII.GetString(_pool.currentWork));
                             if (_pool.currentWork.Length > 0)
                             {
                                 _minerServer.SendToMiner(_pool.currentWork, connection);
@@ -80,18 +80,19 @@ namespace MinerProxy2.Coins
                             }
                             break;
 
+                        case 10: //claymore id 10
                         case 4:
-                            Log.Information("Miner found a share: " + connection.endPoint);
+                            Log.Information("{0} found a share!", connection.endPoint);
                             _pool.SubmitShareToPool(Encoding.ASCII.GetBytes(s), _minerManager.GetMiner(connection));
                             break;
 
                         case 6:
-                            Log.Information("Miner sending hashrate: " + connection.endPoint);
+                            Log.Debug("Miner sending hashrate: " + connection.endPoint);
                             _pool.SendToPool(Encoding.ASCII.GetBytes(s));
                             break;
 
                         default:
-                            Log.Information("Unhandled: " + s);
+                            Log.Warning("Unhandled: " + s);
                             break;
                     }
                 } /* else if (dyn.error != null && dyn.result == null)
