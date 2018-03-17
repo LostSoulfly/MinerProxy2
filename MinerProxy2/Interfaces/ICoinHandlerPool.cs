@@ -1,4 +1,5 @@
-﻿using MinerProxy2.Network;
+﻿using MinerProxy2.Miners;
+using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
 using MinerProxy2.Pools;
 using System;
@@ -10,6 +11,8 @@ namespace MinerProxy2.Interfaces
         void SetPoolClient(PoolClient pool);
 
         void SetMinerServer(MinerServer minerServer);
+
+        void SetMinerManager(MinerManager minerManager);
 
         void SetPoolInfo(PoolInstance poolInfo);
 

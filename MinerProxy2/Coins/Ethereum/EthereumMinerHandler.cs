@@ -82,7 +82,7 @@ namespace MinerProxy2.Coins
 
                         case 4:
                             Log.Information("Miner found a share: " + connection.endPoint);
-                            _pool.SendToPool(Encoding.ASCII.GetBytes(s));
+                            _pool.SubmitShareToPool(Encoding.ASCII.GetBytes(s), _minerManager.GetMiner(connection));
                             break;
 
                         case 6:

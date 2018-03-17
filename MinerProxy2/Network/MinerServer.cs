@@ -11,24 +11,35 @@ namespace MinerProxy2.Network
         private readonly Server minerServer;
         public ICoinHandlerMiner _coinHandler;
         private readonly PoolClient _pool;
-        private MinerManager minerManager;
+        private MinerManager _minerManager;
 
         private int port;
 
-        public MinerServer(int port, PoolClient pool, ICoinHandlerMiner coinHandler)
+        public MinerServer(int port, PoolClient pool, MinerManager minerManager, ICoinHandlerMiner coinHandler)
         {
             Log.Information("MinerServer initialized: " + pool.poolEndPoint);
+
+            this._minerManager = minerManager;
+
             _pool = pool;
             _coinHandler = coinHandler;
             coinHandler.SetMinerServer(this);
             coinHandler.SetPoolClient(_pool);
 
-            minerManager = new MinerManager();
 
             this.port = port;
             minerServer = new Server();
             minerServer.OnClientDataReceived += MinerServer_OnClientDataReceived;
             minerServer.OnClientConnected += MinerServer_OnClientConnected;
+            minerServer.OnClientDisconnected += MinerServer_OnClientDisconnected;
+        }
+
+        private void MinerServer_OnClientDisconnected(object sender, ClientDisonnectedArgs e)
+        {
+            Miner miner = _minerManager.GetMiner(e.connection);
+
+            if (miner != null)
+                _minerManager.RemoveMiner(miner);
         }
 
         public void ListenForMiners()

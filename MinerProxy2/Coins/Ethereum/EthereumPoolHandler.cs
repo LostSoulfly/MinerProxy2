@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.IO;
+using MinerProxy2.Miners;
 
 namespace MinerProxy2.Coins
 {
@@ -17,6 +18,7 @@ namespace MinerProxy2.Coins
         private MinerServer _minerServer;
         private PoolClient _pool;
         private PoolInstance _poolInfo;
+        private MinerManager _minerManager;
 
         public void BroadcastToMiners(byte[] data)
         {
@@ -91,7 +93,14 @@ namespace MinerProxy2.Coins
 
                         case 4:
                             Log.Information("Share accepted by pool");
-                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            Miner miner = _minerManager.GetNextRejectedShare();
+
+                            if (miner != null)
+                            {
+                                _minerServer.SendToMiner(Encoding.ASCII.GetBytes(s), miner.connection);
+                                _minerManager.ResetMinerShareSubmittedTime(miner);
+                            }
                             break;
 
                         case 5:
@@ -99,8 +108,9 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 6:
-                            Log.Information("Hashrate accepted by pool?");
+                            Log.Information("Hashrate accepted by pool");
                             _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            
                             break;
 
                         default:
@@ -135,6 +145,11 @@ namespace MinerProxy2.Coins
         public void SendToPool(byte[] data)
         {
             _pool.SendToPool(data);
+        }
+
+        public void SetMinerManager(MinerManager minerManager)
+        {
+            this._minerManager = minerManager;
         }
 
         public void SetMinerServer(MinerServer minerServer)

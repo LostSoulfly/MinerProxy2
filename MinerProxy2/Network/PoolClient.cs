@@ -40,9 +40,9 @@ namespace MinerProxy2.Network
             this.host = poolInstance.mainPool.poolAddress;
             this.port = poolInstance.mainPool.poolPort;
             this.poolEndPoint = this.host + ":" + this.port;
+            this.minerManager = new MinerManager();
 
-
-            minerServer = new MinerServer(poolInstance.GetCurrentPool().localListenPort, this, coinHandler);
+            minerServer = new MinerServer(poolInstance.GetCurrentPool().localListenPort, this, minerManager, coinHandler);
 
             poolClient = new Client(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
             poolClient.OnServerConnected += PoolClient_OnServerConnected;
@@ -53,9 +53,11 @@ namespace MinerProxy2.Network
 
             coinHandler.SetMinerServer(minerServer);
             coinHandler.SetPoolClient(this);
+            coinHandler.SetMinerManager(minerManager);
 
             poolHandler.SetMinerServer(minerServer);
             poolHandler.SetPoolClient(this);
+            poolHandler.SetMinerManager(minerManager);
 
             poolHandler.SetPoolInfo(poolInstance);
 
@@ -82,6 +84,21 @@ namespace MinerProxy2.Network
             statsTimer.Stop();
         }
 
+        public void SubmitShareToPool(byte[] data, Miner miner)
+        {
+           
+            Log.Debug("Miner submitting share: " + miner.connection.endPoint);
+            if (submittedShares.Any(item => item == data))
+            {
+                Log.Debug("Share already exists, not sending to pool.");
+                return;
+            }
+
+
+            minerManager.AddSubmittedShare(miner);
+            SendToPool(data);
+        }
+
         private void PoolClient_OnServerError(object sender, ServerErrorArgs e)
         {
             Log.Error(e.exception, "Server error!");
@@ -93,6 +110,7 @@ namespace MinerProxy2.Network
         {
             poolConnected = false;
             StopPoolStats();
+            ClearSubmittedShares();
         }
 
         private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
