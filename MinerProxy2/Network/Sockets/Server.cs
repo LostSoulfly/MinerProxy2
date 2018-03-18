@@ -62,7 +62,7 @@ namespace MinerProxy2.Network.Sockets
         {
             try
             {
-                Log.Information("Disconnecting {0}", connection.endPoint);
+                Log.Verbose("Disconnecting {0}", connection.endPoint);
                 connection.socket.Shutdown(SocketShutdown.Both);
                 connection.socket.Close();
             }
@@ -89,7 +89,7 @@ namespace MinerProxy2.Network.Sockets
             clientSockets.Add(tcpConnection);
             OnClientConnected?.Invoke(this, new ClientConnectedArgs(tcpConnection));
             socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
-            //Log.Information("Client connected, waiting for request...");
+            Log.Verbose("Miner connected, waiting for request.");
             serverSocket.BeginAccept(AcceptCallback, null);
         }
 
@@ -106,7 +106,7 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (SocketException ex)
             {
-                //Log.Information(ex, "Client forcefully disconnected");
+                Log.Verbose(ex, "Client forcefully disconnected: {0}", tcpConnection.endPoint);
                 // Don't shutdown because the socket may be disposed and its disconnected anyway.
                 OnClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 Disconnect(tcpConnection);
@@ -126,40 +126,26 @@ namespace MinerProxy2.Network.Sockets
             catch (Exception ex)
             {
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
-                Log.Error(ex, "BeginReceive Error");
+                Log.Error(ex, "Server BeginReceive Error");
                 Disconnect(tcpConnection);
             }
         }
 
         public void BroadcastToMiners(byte[] data)
         {
-            //Log.Debug("Server instance broadcasting data to all miners..");
+            Log.Verbose("Broadcasting to all miners: {0}", Encoding.ASCII.GetString(data));
             
             foreach (TcpConnection connection in clientSockets)
-            { 
-                try
-                {
-                    byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
-
-                    if (!(endCharacter.SequenceEqual(Encoding.ASCII.GetBytes(Environment.NewLine))))
-                    {
-                        data = data.Concat(Encoding.ASCII.GetBytes(Environment.NewLine)).ToArray();
-                    }
-
-                    connection.socket.Send(data);
-                }
-                catch (Exception ex)
-                {
-                Log.Error(ex, "BroadcastToMiners");
-                Disconnect(connection);
-                //todo disconnect/remove client
+            {
+                this.Send(data, connection);
             }
-        }
             
         }
 
         public bool Send(byte[] data, TcpConnection connection)
         {
+            Log.Verbose("Sending {0}: {1}", connection.endPoint, Encoding.ASCII.GetString(data));
+
             try
             {
                 byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
@@ -169,7 +155,9 @@ namespace MinerProxy2.Network.Sockets
                     data = data.Concat(Encoding.ASCII.GetBytes(Environment.NewLine)).ToArray();
                 }
 
-                connection.socket.Send(data);
+                
+                connection.socket.BeginSend(data, 0, data.Length, SocketFlags.None,
+                    new AsyncCallback(SendCallback), connection);
                 return true;
             }
             catch (Exception ex)
@@ -178,6 +166,23 @@ namespace MinerProxy2.Network.Sockets
                 Log.Error(ex, "Send");
                 Disconnect(connection);
                 return false;
+            }
+        }
+
+        private void SendCallback(IAsyncResult ar)
+        {
+            TcpConnection client = (TcpConnection)ar.AsyncState;
+            try
+            {
+                
+                // Complete sending the data to the remote device.
+                int bytesSent = client.socket.EndSend(ar);
+                Log.Verbose("Sent {0} bytes to {1}", bytesSent, client.endPoint);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Server SendCallback");
+                Disconnect(client);
             }
         }
 

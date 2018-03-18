@@ -3,6 +3,7 @@ using MinerProxy2.Miners;
 using MinerProxy2.Network.Connections;
 using MinerProxy2.Network.Sockets;
 using Serilog;
+using System.Text;
 
 namespace MinerProxy2.Network
 {
@@ -10,7 +11,7 @@ namespace MinerProxy2.Network
     {
         private readonly Server minerServer;
         public ICoinHandlerMiner _coinHandler;
-        private readonly PoolClient _pool;
+        private readonly PoolClient _poolClient;
         private MinerManager _minerManager;
 
         private int port;
@@ -21,10 +22,10 @@ namespace MinerProxy2.Network
 
             this._minerManager = minerManager;
 
-            _pool = pool;
+            _poolClient = pool;
             _coinHandler = coinHandler;
-            coinHandler.SetMinerServer(this);
-            coinHandler.SetPoolClient(_pool);
+            _coinHandler.SetMinerServer(this);
+            _coinHandler.SetPoolClient(_poolClient);
 
 
             this.port = port;
@@ -32,6 +33,12 @@ namespace MinerProxy2.Network
             minerServer.OnClientDataReceived += MinerServer_OnClientDataReceived;
             minerServer.OnClientConnected += MinerServer_OnClientConnected;
             minerServer.OnClientDisconnected += MinerServer_OnClientDisconnected;
+            minerServer.OnClientError += MinerServer_OnClientError;
+        }
+
+        private void MinerServer_OnClientError(object sender, ClientErrorArgs e)
+        {
+            _minerManager.RemoveMiner(_minerManager.GetMiner(e.connection));
         }
 
         private void MinerServer_OnClientDisconnected(object sender, ClientDisonnectedArgs e)
@@ -51,12 +58,23 @@ namespace MinerProxy2.Network
         public void SendToPool(byte[] data)
         {
             Log.Debug("MinerServer SendToPool");
-            _pool.SendToPool(data);
+            _poolClient.SendToPool(data);
+        }
+
+        public void SendToPool(string data)
+        {
+            Log.Debug("MinerServer SendToPool");
+            _poolClient.SendToPool(Encoding.ASCII.GetBytes(data));
         }
 
         public void SendToMiner(byte[] data, TcpConnection connection)
         {
             minerServer.Send(data, connection);
+        }
+
+        public void SendToMiner(string data, TcpConnection connection)
+        {
+            minerServer.Send(Encoding.ASCII.GetBytes(data), connection);
         }
 
         public void BroadcastToMiners(byte[] data)
@@ -65,9 +83,15 @@ namespace MinerProxy2.Network
             minerServer.BroadcastToMiners(data);
         }
 
+        public void BroadcastToMiners(string data)
+        {
+            //Log.Debug("MinerServer broadcast");
+            minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(data));
+        }
+
         private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)
         {
-            Log.Information(e.connection.endPoint.ToString() + " has connected!");
+            Log.Information("{0} has connected!" , e.connection.endPoint.ToString());
             //_coinHandler.MinerConnected
         }
 

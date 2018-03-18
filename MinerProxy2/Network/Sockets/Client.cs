@@ -46,9 +46,12 @@ namespace MinerProxy2.Network.Sockets
 
         public void Close()
         {
-            Log.Debug("Client Close()");
-            clientSocket.Shutdown(SocketShutdown.Both);
-            clientSocket.Close();
+            try
+            {
+                Log.Verbose("Client Close()");
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Close();
+            } catch { }
         }
 
         public void Reconnect()
@@ -68,7 +71,7 @@ namespace MinerProxy2.Network.Sockets
                 // Complete the connection.
                 socket.EndConnect(ar);
 
-                Log.Information("Socket connected to {0}", socket.RemoteEndPoint.ToString());
+                Log.Verbose("Socket connected to {0}", socket.RemoteEndPoint.ToString());
 
                 OnServerConnected?.Invoke(this, new ServerConnectedArgs(socket));
 
@@ -82,7 +85,7 @@ namespace MinerProxy2.Network.Sockets
         
         public void SendToPool(byte[] data)
         {
-            //Log.Debug("Client SendToPool: " + Encoding.ASCII.GetString(data));
+            Log.Verbose("Client SendToPool: {0}", Encoding.ASCII.GetString(data));
             // Begin sending the data to the remote device.
             try
             {
@@ -110,11 +113,11 @@ namespace MinerProxy2.Network.Sockets
 
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
-                Log.Debug("Sent {0} bytes to server.", bytesSent);
+                Log.Verbose("Sent {0} bytes to {1}.", bytesSent, client.RemoteEndPoint.ToString());
             }
             catch (Exception exception)
             {
-                Log.Error(exception, "SendCallback");
+                Log.Error(exception, "Client SendCallback");
                 Reconnect();
             }
         }

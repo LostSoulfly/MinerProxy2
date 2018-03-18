@@ -10,12 +10,13 @@ namespace MinerProxy2.Miners
     {
         public readonly object MinerManagerLock = new object();
         public List<Miner> minerList = new List<Miner>();
+        public int ConnectedMiners { get { return minerList.Count; } }
 
         public void AddMiner(Miner miner)
         {
             lock (MinerManagerLock)
             {
-                Log.Information("Adding Miner " + miner.connection.endPoint);
+                Log.Information("Adding new miner {0} ", miner.workerIdentifier);
                 Miner existing = GetMiner(miner.connection);
 
                 if (existing == null)
@@ -29,7 +30,7 @@ namespace MinerProxy2.Miners
         {
             lock (MinerManagerLock)
             {
-                Log.Information("Removing Miner " + miner.connection.endPoint);
+                Log.Information("Removing {0}", miner.workerIdentifier);
                 try
                 {
                     minerList.Remove(miner);
@@ -40,7 +41,7 @@ namespace MinerProxy2.Miners
                 }
             }
         }
-
+        
         public long GetSubmittedShareTotal()
         {
             long submittedShares = 0;
@@ -67,7 +68,7 @@ namespace MinerProxy2.Miners
         {
             miner.shareSubmittedTimes.Add(DateTime.Now);
             miner.submittedShares++;
-            Log.Information("Miner " + miner.connection.endPoint + " shares: {0}/{1}/{2}", miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
+            Log.Information("{0}'s shares: {1}/{2}/{3}", miner.workerIdentifier, miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
         }
 
         public long GetAverageHashrate()
@@ -83,28 +84,32 @@ namespace MinerProxy2.Miners
 
         public Miner GetMiner(TcpConnection connection)
         {
-            Log.Debug("GetMiner Miner " + connection.endPoint);
-            return minerList.Find(item => item.connection == connection);
+            Miner miner = minerList.Find(item => item.connection == connection);
+
+            if (miner != null)
+                Log.Verbose("GetMiner {0} -> {1}", connection.endPoint, miner.workerIdentifier);
+
+            return miner;
         }
 
         public Miner GetNextShare(bool accepted)
         {
             Miner miner = minerList.OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
-            Log.Verbose("GetNextShare: {0}: {1}!", miner.connection.endPoint, accepted ? "Accepted" : "Rejected");
+            Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
-            if (accepted)
+            if (accepted) { 
                 miner.acceptedShares++;
-            else
+            }else
                 miner.rejectedShares++;
 
-            Log.Information("Miner " + miner.connection.endPoint + " shares: {0}/{1}/{2}", miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
+            Log.Information("{0}'s shares: {1}/{2}/{3}", miner.workerIdentifier, miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
 
             return miner;
         }
         
         public void ResetMinerShareSubmittedTime(Miner miner)
         {
-            Log.Debug("Resetting miner last submit time: {0} ({1})", miner.connection.endPoint, miner.shareSubmittedTimes.First().ToShortTimeString());
+            Log.Debug("Resetting {0} last submit time. ({1})", miner.workerIdentifier, miner.shareSubmittedTimes.First().ToLongTimeString());
             miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
         }
     }

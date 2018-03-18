@@ -12,6 +12,8 @@ namespace MinerProxy2.Pools
         public bool useDotBeforeWorkerName;
         public DateTime poolConnectedTime;
         public int numberOfConnects;
+
+        public long submittedSharesCount, acceptedSharesCount, rejectedSharesCount;
         //failure attempts, then switch
         //retry main pool in seconds
 

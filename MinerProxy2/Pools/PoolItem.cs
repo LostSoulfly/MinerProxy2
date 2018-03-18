@@ -10,6 +10,7 @@
         public int donationPercent { get; set; }
         public string poolWorkerName { get; set; }
         public string poolWallet { get; set; }
+        public string poolEndPoint { get { return poolAddress + ":" + poolPort; } }
 
         public PoolItem(string host, int port, int localListenPort, string poolWorkerName, string poolWallet, string coin, int donation)
         {

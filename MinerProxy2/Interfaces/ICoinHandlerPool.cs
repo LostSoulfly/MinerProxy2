@@ -13,9 +13,7 @@ namespace MinerProxy2.Interfaces
         void SetMinerServer(MinerServer minerServer);
 
         void SetMinerManager(MinerManager minerManager);
-
-        void SetPoolInfo(PoolInstance poolInfo);
-
+        
         void BroadcastToMiners(byte[] data);
 
         void SendToMiner(byte[] data, TcpConnection connection);

@@ -13,6 +13,13 @@ namespace MinerProxy2.Miners
         public string workerName { get; set; }
         //public bool connectionAlive { get; set; }
         public bool noRigName { get; set; }
+        public string workerIdentifier { get
+            {
+                if (workerName != null)
+                    return workerName;
+
+                return connection.endPoint.ToString();
+            } }
         //public byte[] currentWork { get; set; }
         public TcpConnection connection { get; set; }
         public DateTime connectionStartTime;

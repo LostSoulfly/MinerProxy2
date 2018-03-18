@@ -17,7 +17,6 @@ namespace MinerProxy2.Coins
     {
         private MinerServer _minerServer;
         private PoolClient _pool;
-        private PoolInstance _poolInfo;
         private MinerManager _minerManager;
 
         public void BroadcastToMiners(byte[] data)
@@ -28,47 +27,41 @@ namespace MinerProxy2.Coins
 
         public void DoPoolLogin(PoolClient poolClient)
         {
-            Log.Information("Sending login to pool");
-            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _poolInfo.GetCurrentPool().poolWallet + "." + _poolInfo.GetCurrentPool().poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
+            Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);
+            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
 
         }
 
         public void PoolConnected(PoolClient poolClient)
         {
-            Log.Information("Pool connected: " + poolClient.poolEndPoint);
+            Log.Information("{0} connected: ", poolClient.poolEndPoint);
         }
 
         public void PoolDataReceived(byte[] data, PoolClient poolClient)
         {
-            //process pool data here
-            //such as pushing work to all miners
-            //or letting miners know the share they submitted was accepted/rejected.
-            //Log.Information("Pool " + poolClient.poolEndPoint + " sent: " + Encoding.ASCII.GetString(data));
+            
+            Log.Verbose("Pool {0} sent: {1}", poolClient.poolEndPoint, Encoding.ASCII.GetString(data));
+            
+            string split = Encoding.ASCII.GetString(data);
 
-            //This is just for testing with 1 miner.
-            //_minerServer.BroadcastToMiners(data);
-
-            string test = Encoding.ASCII.GetString(data);
-
-            foreach (string s in test.Split('\r', '\n'))
+            foreach (string s in split.Split('\r', '\n'))
             {
                 if (s.Length <= 1)
                     continue;
 
                 dynamic dyn = JsonConvert.DeserializeObject(s);
-
-                //Log.Information("Split: " + s);
+                
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
                     //Log.Information("dyn.id: " + dyn.id);
                     switch ((int)dyn.id)
                     {
                         case 0:
-                            Log.Debug("Server sent new work");
+                            //Log.Debug("{0} sent new target", poolClient.poolEndPoint);
+                            Log.Verbose("{0} sent new target: {1}", poolClient.poolEndPoint, s);
                             byte[] work = Encoding.ASCII.GetBytes(s);
-                            //_pool.currentWork = new byte[work.Length];
-                            _pool.currentWork = work;
-                            //Log.Debug("currentWork: " + _pool.currentWork.Length);
+                            _pool.currentPoolWork = work;
+                            Log.Verbose("currentPoolWork length: {0}", _pool.currentPoolWork.Length);
                             
                             _minerServer.BroadcastToMiners(work);
                             break;
@@ -78,29 +71,32 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 2:
-                            Log.Information("Authorized with {0}", poolClient.poolEndPoint);
+                            Log.Information("Authorized with {0}!", poolClient.poolEndPoint);
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
 
                         case 3:
-                            Log.Debug("Server sent eth_getWork");
+                            //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
+                            Log.Verbose("{0} sent new work: {1}", poolClient.poolEndPoint, s);
 
-                            if (_pool.currentWork != Encoding.ASCII.GetBytes(s))
-                                _minerServer.BroadcastToMiners(data);
+                            if (_pool.currentPoolWork != Encoding.ASCII.GetBytes(s))
+                                _minerServer.BroadcastToMiners(s);
 
-                            _pool.currentWork = Encoding.ASCII.GetBytes(s);
+                            _pool.currentPoolWork = Encoding.ASCII.GetBytes(s);
                             break;
 
                         case 10: //claymore id 10
                         case 4:
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            //Doesn't detect rejected shares yet
                             Miner miner = _minerManager.GetNextShare(true);
 
                             if (miner != null)
                             {
                                 _minerServer.SendToMiner(Encoding.ASCII.GetBytes(s), miner.connection);
+                                _pool.acceptedSharesCount++;
+                                Log.Information("{0}'s share was accepted!", miner.workerIdentifier);
                                 _minerManager.ResetMinerShareSubmittedTime(miner);
-                                Log.Information("{0}'s share was accepted!", miner.connection.endPoint);
                             }
                             break;
 
@@ -109,13 +105,13 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 6:
-                            Log.Debug("Hashrate accepted by pool");
+                            Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
                             _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             
                             break;
 
                         default:
-                            Log.Warning("Unhandled: " + s);
+                            Log.Warning("EthPoolHandler Unhandled: {0}", s);
                             break;
                     }
                 } /* else if (dyn.error != null && dyn.result == null)
@@ -130,7 +126,7 @@ namespace MinerProxy2.Coins
 
         public void PoolDisconnected(PoolClient poolClient)
         {
-            Log.Warning("Pool disconnected: " + poolClient.poolEndPoint);
+            Log.Warning("Pool {0} disconnected.", poolClient.poolEndPoint);
         }
 
         public void PoolError(Exception exception, PoolClient poolClient)
@@ -161,11 +157,6 @@ namespace MinerProxy2.Coins
         public void SetPoolClient(PoolClient pool)
         {
             _pool = pool;
-        }
-
-        public void SetPoolInfo(PoolInstance poolInfo)
-        {
-            this._poolInfo = poolInfo;
         }
     }
 }

@@ -18,17 +18,17 @@ namespace MinerProxy2
             //initialize settings
             //Pass PoolManager to settings for populating it
 
-
+            Serilog.Core.LoggingLevelSwitch logLevel = new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Debug);
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
+                .MinimumLevel.ControlledBy(logLevel)
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                 .WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "log.txt")
+                //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "verbose.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
                 .CreateLogger();
 
             Helpers.Logging.MinerProxyHeader();
             
-
             ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
             ICoinHandlerPool poolHandler = (ICoinHandlerPool)new EthereumPoolHandler();
 
@@ -36,8 +36,8 @@ namespace MinerProxy2
             int port = 4444; //9009;
             
 
-            PoolInstance poolInstance = new PoolInstance(server, port, 9000, "MProxy", "0x3Ff3CF71689C7f2f8F5c1b7Fc41e030009ff7332", "ETH");
-            PoolClient pool = new PoolClient(poolInstance, poolHandler, coinHandler);
+            PoolInstance ethPoolInstance = new PoolInstance(server, port, 9000, "MProxy", "0x3Ff3CF71689C7f2f8F5c1b7Fc41e030009ff7332", "ETH");
+            PoolClient ethereumPool = new PoolClient(ethPoolInstance, poolHandler, coinHandler);
 
             Console.ReadLine();
         }
