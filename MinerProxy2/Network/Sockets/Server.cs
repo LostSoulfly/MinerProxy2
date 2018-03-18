@@ -127,7 +127,13 @@ namespace MinerProxy2.Network.Sockets
             catch (ObjectDisposedException ex)
             {
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
-                Log.Error(ex, "Server BeginReceive Error");
+                Log.Error(ex, "Server ObjectDisposed BeginReceive Error");
+                Disconnect(tcpConnection);
+            }
+            catch (SocketException ex)
+            {
+                OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
+                Log.Error(ex, "Server SocketException BeginReceive Error");
                 Disconnect(tcpConnection);
             }
         }
