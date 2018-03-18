@@ -1,4 +1,5 @@
-﻿using MinerProxy2.Interfaces;
+﻿using MinerProxy2.Helpers;
+using MinerProxy2.Interfaces;
 using MinerProxy2.Miners;
 using MinerProxy2.Network.Sockets;
 using MinerProxy2.Pools;
@@ -178,6 +179,12 @@ namespace MinerProxy2.Network
         {
             //Log.Debug("PoolClient SendToPool");
             this.poolClient.SendToPool(data);
+        }
+
+        public void SendToPool(string data)
+        {
+            //Log.Debug("PoolClient SendToPool");
+            this.poolClient.SendToPool(data.GetBytes());
         }
 
         public bool HasShareBeenSubmitted(byte[] share)
