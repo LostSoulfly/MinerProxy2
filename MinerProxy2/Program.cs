@@ -18,13 +18,13 @@ namespace MinerProxy2
             //initialize settings
             //Pass PoolManager to settings for populating it
 
-            Serilog.Core.LoggingLevelSwitch logLevel = new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Debug);
+            Serilog.Core.LoggingLevelSwitch logLevel = new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Verbose);
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(logLevel)
-                .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-                .WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "log.txt")
-                //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "verbose.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
+                .WriteTo.Console(theme: AnsiConsoleTheme.Code, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
+                //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "log.txt")
+                .WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "verbose.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
                 .CreateLogger();
 
             Helpers.Logging.MinerProxyHeader();
