@@ -15,6 +15,8 @@ namespace MinerProxy2.Network.Sockets
 
         private string host;
         private int port;
+        private bool clientConnected;
+        private bool isDisconnecting;
 
         public event EventHandler<ServerDataReceivedArgs> OnServerDataReceived;
 
@@ -48,14 +50,21 @@ namespace MinerProxy2.Network.Sockets
         {
             try
             {
+                isDisconnecting = true;
+                clientConnected = false;
                 Log.Verbose("Client Close()");
                 clientSocket.Shutdown(SocketShutdown.Both);
                 clientSocket.Close();
             } catch { }
+
+            isDisconnecting = false;
         }
 
         public void Reconnect()
         {
+            if (isDisconnecting)
+                return;
+
             Close();
             Log.Warning("Reconnecting to pool..");
             Connect();
@@ -70,14 +79,14 @@ namespace MinerProxy2.Network.Sockets
 
                 // Complete the connection.
                 socket.EndConnect(ar);
-
+                clientConnected = true;
                 Log.Verbose("Socket connected to {0}", socket.RemoteEndPoint.ToString());
 
                 OnServerConnected?.Invoke(this, new ServerConnectedArgs(socket));
 
                 socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
             }
-            catch (Exception exception)
+            catch (ObjectDisposedException exception)
             {
                 Log.Error(exception, "ConnectCallback");
             }
@@ -85,6 +94,9 @@ namespace MinerProxy2.Network.Sockets
         
         public void SendToPool(byte[] data)
         {
+            if (!clientConnected)
+                return;
+
             Log.Verbose("Client SendToPool: {0}", Encoding.ASCII.GetString(data));
             // Begin sending the data to the remote device.
             try
@@ -115,7 +127,7 @@ namespace MinerProxy2.Network.Sockets
                 int bytesSent = client.EndSend(ar);
                 Log.Verbose("Sent {0} bytes to {1}.", bytesSent, client.RemoteEndPoint.ToString());
             }
-            catch (Exception exception)
+            catch (ObjectDisposedException exception)
             {
                 Log.Error(exception, "Client SendCallback");
                 Reconnect();
@@ -124,29 +136,39 @@ namespace MinerProxy2.Network.Sockets
 
         private void Receive(Socket socket)
         {
+            if (isDisconnecting)
+                return;
+
             try
             {
                 // Begin receiving the data from the remote device.
-                socket.BeginReceive(buffer, 0, BUFFER_SIZE, 0,
-                    new AsyncCallback(ReceiveCallback), socket);
+                    socket.BeginReceive(buffer, 0, BUFFER_SIZE, 0,
+                        new AsyncCallback(ReceiveCallback), socket);
             }
             catch (Exception exception)
             {
-                Log.Error(exception, "Receive");
-                OnServerError?.Invoke(this, new ServerErrorArgs(exception, socket));
-                Reconnect();
+                if (!isDisconnecting)
+                {
+                    Log.Error(exception, "Receive");
+                    OnServerError?.Invoke(this, new ServerErrorArgs(exception, socket));
+                    Reconnect();
+                }
             }
         }
 
         private void ReceiveCallback(IAsyncResult AR)
         {
+
+            if (isDisconnecting)
+                return;
+
             Socket socket = (Socket)AR.AsyncState;
             int received;
             try
             {
                 received = socket.EndReceive(AR);
             }
-            catch (SocketException ex)
+            catch (ObjectDisposedException ex)
             {
                 //Log.Error(ex, "Client forcefully disconnected");
                 // Don't shutdown because the socket may be disposed and its disconnected anyway.
@@ -160,9 +182,12 @@ namespace MinerProxy2.Network.Sockets
 
             if (recBuf.Length == 0)
             {
-                Log.Error("Pool receive buffer was empty; need to reconnect.. " + received);
-                Reconnect();
-                return;
+                if (!isDisconnecting)
+                {
+                    Log.Error("Pool receive buffer was empty; need to reconnect.. " + received);
+                    Reconnect();
+                    return;
+                } else { return; }
             }
 
             OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
@@ -171,11 +196,14 @@ namespace MinerProxy2.Network.Sockets
             {
                 socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
             }
-            catch (Exception ex)
+            catch (ObjectDisposedException ex)
             {
-                OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
-                Log.Error(ex, "Pool BeginReceive Error");
-                Reconnect();
+                if (!isDisconnecting)
+                {
+                    OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
+                    Log.Error(ex, "Pool BeginReceive Error");
+                    Reconnect();
+                } else { return; }
             }
         }
     }

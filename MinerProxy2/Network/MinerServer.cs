@@ -39,6 +39,7 @@ namespace MinerProxy2.Network
         private void MinerServer_OnClientError(object sender, ClientErrorArgs e)
         {
             _minerManager.RemoveMiner(_minerManager.GetMiner(e.connection));
+            _poolClient.CheckPoolConnection();
         }
 
         private void MinerServer_OnClientDisconnected(object sender, ClientDisonnectedArgs e)
@@ -47,8 +48,10 @@ namespace MinerProxy2.Network
 
             if (miner != null)
                 _minerManager.RemoveMiner(miner);
-        }
 
+            _poolClient.CheckPoolConnection();
+        }
+        
         public void ListenForMiners()
         {
             Log.Information("Starting MinerServer on " + port);
@@ -91,6 +94,7 @@ namespace MinerProxy2.Network
 
         private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)
         {
+            _poolClient.CheckPoolConnection();
             Log.Information("{0} has connected!" , e.connection.endPoint.ToString());
             //_coinHandler.MinerConnected
         }

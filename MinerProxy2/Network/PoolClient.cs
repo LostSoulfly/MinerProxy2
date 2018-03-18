@@ -60,10 +60,11 @@ namespace MinerProxy2.Network
             poolHandler.SetMinerServer(minerServer);
             poolHandler.SetPoolClient(this);
             poolHandler.SetMinerManager(minerManager);
-
-            //TODO: add option to wait for miner connections before connecting to pool
-            poolClient.Connect();
+            
+            //this.Start();
             minerServer.ListenForMiners();
+
+            Log.Information("Waiting for miners before connecting to {0}..", poolEndPoint);
         }
 
         private void StartPoolStats()
@@ -74,7 +75,7 @@ namespace MinerProxy2.Network
             statsTimer.Elapsed += delegate
             {
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
-                Log.Information("{0} uptime: {1}. Miners: {2} Total Shares: {3}/{4}/{5}",
+                Log.Information("{0} uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
                     this.poolEndPoint, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
             };
 
@@ -82,9 +83,48 @@ namespace MinerProxy2.Network
 
         }
 
+        public void Stop()
+        {
+            if (poolConnected)
+            {
+                Log.Information("Disconnecting from {0}.", this.poolEndPoint);
+                poolConnected = false;
+                poolClient.Close();
+            }
+
+            StopPoolStats();
+            ClearSubmittedSharesHistory();
+        }
+
+        public void Start()
+        {
+            Log.Information("Connecting to {0}.", this.poolEndPoint);
+            poolClient.Connect();
+        }
+
+        public bool CheckPoolConnection()
+        {
+            if (poolConnected && minerManager.ConnectedMiners == 0)
+            {
+                Stop();
+                Log.Information("Waiting for miners before reconnecting to {0}..", poolEndPoint);
+                return false;
+            }
+
+            if (poolConnected)
+                return true;
+
+            Start();
+            return false;
+        }
+
         private void StopPoolStats()
         {
-            statsTimer.Stop();
+            if (statsTimer == null)
+                return;
+
+            if (statsTimer.Enabled)
+                statsTimer.Stop();
         }
 
         public void SubmitShareToPool(byte[] data, Miner miner)
@@ -106,6 +146,7 @@ namespace MinerProxy2.Network
             Log.Error(e.exception, "Server error!");
             poolConnected = false;
             StopPoolStats();
+            CheckPoolConnection();
         }
 
         private void PoolClient_OnServerDisconnected(object sender, ServerDisonnectedArgs e)

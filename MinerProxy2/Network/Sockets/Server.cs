@@ -106,11 +106,11 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (SocketException ex)
             {
-                Log.Verbose(ex, "Client forcefully disconnected: {0}", tcpConnection.endPoint);
-                // Don't shutdown because the socket may be disposed and its disconnected anyway.
+                if (ex.ErrorCode != 10054)
+                    Log.Error(ex, "Client forcefully disconnected {1}: {0}", tcpConnection.endPoint, ex.ErrorCode);
+
                 OnClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 Disconnect(tcpConnection);
-                Log.Error(ex, "Server ReceiveCallback");
                 return;
             }
 
@@ -123,7 +123,7 @@ namespace MinerProxy2.Network.Sockets
             {
                 current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
             }
-            catch (Exception ex)
+            catch (ObjectDisposedException ex)
             {
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Log.Error(ex, "Server BeginReceive Error");
@@ -160,7 +160,7 @@ namespace MinerProxy2.Network.Sockets
                     new AsyncCallback(SendCallback), connection);
                 return true;
             }
-            catch (Exception ex)
+            catch (ObjectDisposedException ex)
             {
                 //Remove miner?
                 Log.Error(ex, "Send");
