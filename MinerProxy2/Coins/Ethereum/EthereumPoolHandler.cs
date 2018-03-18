@@ -10,6 +10,7 @@ using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using MinerProxy2.Miners;
+using MinerProxy2.Helpers;
 
 namespace MinerProxy2.Coins
 {
@@ -28,7 +29,7 @@ namespace MinerProxy2.Coins
         public void DoPoolLogin(PoolClient poolClient)
         {
             Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);
-            _pool.SendToPool(Encoding.ASCII.GetBytes("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n"));
+            _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
 
         }
 
@@ -39,17 +40,16 @@ namespace MinerProxy2.Coins
 
         public void PoolDataReceived(byte[] data, PoolClient poolClient)
         {
+            Log.Verbose("Pool {0} sent: {1}", poolClient.poolEndPoint, data.GetString());
             
-            Log.Verbose("Pool {0} sent: {1}", poolClient.poolEndPoint, Encoding.ASCII.GetString(data));
-            
-            string split = Encoding.ASCII.GetString(data);
+            string split = data.GetString();
 
             foreach (string s in split.Split('\r', '\n'))
             {
                 if (s.Length <= 1)
                     continue;
 
-                dynamic dyn = JsonConvert.DeserializeObject(s);
+                dynamic dyn = JsonConvert.DeserializeObject(s.CheckForNewLine());
                 
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
@@ -59,7 +59,7 @@ namespace MinerProxy2.Coins
                         case 0:
                             //Log.Debug("{0} sent new target", poolClient.poolEndPoint);
                             Log.Verbose("{0} sent new target: {1}", poolClient.poolEndPoint, s);
-                            byte[] work = Encoding.ASCII.GetBytes(s);
+                            byte[] work = s.GetBytes();
                             _pool.currentPoolWork = work;
                             Log.Verbose("currentPoolWork length: {0}", _pool.currentPoolWork.Length);
                             
@@ -79,21 +79,21 @@ namespace MinerProxy2.Coins
                             //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
                             Log.Verbose("{0} sent new work: {1}", poolClient.poolEndPoint, s);
 
-                            if (_pool.currentPoolWork != Encoding.ASCII.GetBytes(s))
+                            if (_pool.currentPoolWork != s.GetBytes())
                                 _minerServer.BroadcastToMiners(s);
 
-                            _pool.currentPoolWork = Encoding.ASCII.GetBytes(s);
+                            _pool.currentPoolWork = s.GetBytes();
                             break;
 
                         case int i when (i >= 10):
                         case 4:
-                            //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            
                             //Doesn't detect rejected shares yet
                             Miner miner = _minerManager.GetNextShare(true);
 
                             if (miner != null)
                             {
-                                _minerServer.SendToMiner(Encoding.ASCII.GetBytes(s), miner.connection);
+                                _minerServer.SendToMiner(s, miner.connection);
                                 _pool.acceptedSharesCount++;
                                 Log.Information("{0}'s share was accepted!", miner.workerIdentifier);
                                 _minerManager.ResetMinerShareSubmittedTime(miner);
@@ -106,7 +106,7 @@ namespace MinerProxy2.Coins
 
                         case 6:
                             Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
-                            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
+                            _minerServer.BroadcastToMiners(s);
                             
                             break;
 

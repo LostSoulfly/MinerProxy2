@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using MinerProxy2.Helpers;
+using Serilog;
 using System;
 using System.Linq;
 using System.Net.Sockets;
@@ -97,16 +98,11 @@ namespace MinerProxy2.Network.Sockets
             if (!clientConnected)
                 return;
 
-            Log.Verbose("Client SendToPool: {0}", Encoding.ASCII.GetString(data));
+            Log.Verbose("Client SendToPool: {0}", data.GetString());
             // Begin sending the data to the remote device.
             try
             {
-                byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
-
-                if (!(endCharacter.SequenceEqual(Encoding.ASCII.GetBytes(Environment.NewLine))))
-                {
-                    data = data.Concat(Encoding.ASCII.GetBytes(Environment.NewLine)).ToArray();
-                }
+                data = data.CheckForNewLine();
 
                 this.clientSocket.BeginSend(data, 0, data.Length, SocketFlags.None,
                     new AsyncCallback(SendCallback), clientSocket);

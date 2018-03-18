@@ -1,4 +1,5 @@
-﻿using MinerProxy2.Interfaces;
+﻿using MinerProxy2.Helpers;
+using MinerProxy2.Interfaces;
 using MinerProxy2.Miners;
 using MinerProxy2.Network.Connections;
 using MinerProxy2.Network.Sockets;
@@ -67,7 +68,7 @@ namespace MinerProxy2.Network
         public void SendToPool(string data)
         {
             Log.Debug("MinerServer SendToPool");
-            _poolClient.SendToPool(Encoding.ASCII.GetBytes(data));
+            _poolClient.SendToPool(data.GetBytes());
         }
 
         public void SendToMiner(byte[] data, TcpConnection connection)
@@ -77,7 +78,7 @@ namespace MinerProxy2.Network
 
         public void SendToMiner(string data, TcpConnection connection)
         {
-            minerServer.Send(Encoding.ASCII.GetBytes(data), connection);
+            minerServer.Send(data.GetBytes(), connection);
         }
 
         public void BroadcastToMiners(byte[] data)
@@ -89,7 +90,7 @@ namespace MinerProxy2.Network
         public void BroadcastToMiners(string data)
         {
             //Log.Debug("MinerServer broadcast");
-            minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(data));
+            minerServer.BroadcastToMiners(data.GetBytes());
         }
 
         private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)

@@ -1,4 +1,5 @@
-﻿using MinerProxy2.Network.Sockets;
+﻿using MinerProxy2.Helpers;
+using MinerProxy2.Network.Sockets;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -45,21 +46,23 @@ namespace MinerProxy2.Miners
         public long GetSubmittedShareTotal()
         {
             long submittedShares = 0;
-            foreach (Miner m in minerList)
-            {
-                submittedShares += m.acceptedShares;
-            }
+            minerList.ForEach<Miner>(m => submittedShares += m.submittedShares);
 
             return submittedShares;
+        }
+
+        public long GetAcceptedShareTotal()
+        {
+            long acceptedShares = 0;
+            minerList.ForEach<Miner>(m => acceptedShares += m.acceptedShares);
+
+            return acceptedShares;
         }
 
         public long GetRejectedShareTotal()
         {
             long rejectedShares = 0;
-            foreach (Miner m in minerList)
-            {
-                rejectedShares += m.rejectedShares;
-            }
+            minerList.ForEach<Miner>(m => rejectedShares += m.rejectedShares);
 
             return rejectedShares;
         }
@@ -109,7 +112,7 @@ namespace MinerProxy2.Miners
         
         public void ResetMinerShareSubmittedTime(Miner miner)
         {
-            Log.Debug("Resetting {0} last submit time. ({1})", miner.workerIdentifier, miner.shareSubmittedTimes.First().ToLongTimeString());
+            Log.Debug("Resetting {0} last submit time. ({1})", miner.workerIdentifier, miner.shareSubmittedTimes.First().ToReadableTime());
             miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
         }
     }

@@ -1,4 +1,5 @@
-﻿using MinerProxy2.Interfaces;
+﻿using MinerProxy2.Helpers;
+using MinerProxy2.Interfaces;
 using MinerProxy2.Miners;
 using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
@@ -22,7 +23,7 @@ namespace MinerProxy2.Coins
 
         public void BroadcastToMiners(string data)
         {
-            _minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(data));
+            _minerServer.BroadcastToMiners(data.GetBytes());
         }
 
         public void MinerConnected(TcpConnection connection)
@@ -40,14 +41,14 @@ namespace MinerProxy2.Coins
             if (miner == null)
                 Log.Verbose("{0}: Miner does not exist.", connection.endPoint);
 
-            string test = Encoding.ASCII.GetString(data);
+            string test = data.GetString();
 
             foreach (string s in test.Split('\r', '\n'))
             {
                 if (s.Length <= 1)
                     continue;
 
-                dynamic dyn = JsonConvert.DeserializeObject(s);
+                dynamic dyn = JsonConvert.DeserializeObject(s.CheckForNewLine());
                 
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
@@ -69,7 +70,7 @@ namespace MinerProxy2.Coins
 
                             _minerManager.AddMiner(miner);
                             Log.Debug("{0} has authenticated!", miner.workerIdentifier);
-                            _minerServer.SendToMiner(Encoding.ASCII.GetBytes("{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":true}\r\n"), connection);
+                            _minerServer.SendToMiner("{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":true}\r\n".GetBytes(), connection);
                             break;
 
                         case 3:
@@ -79,23 +80,24 @@ namespace MinerProxy2.Coins
                                 _minerServer.SendToMiner(_pool.currentPoolWork, connection);
                             } else
                             {
-                                _pool.SendToPool(Encoding.ASCII.GetBytes(s));
+                                _pool.SendToPool(s.GetBytes());
                             }
                             break;
 
                         case int i when (i >= 10):
                         case 4:
                             Log.Information("{0} found a share!", miner.workerIdentifier);
-                            _pool.SubmitShareToPool(Encoding.ASCII.GetBytes(s), _minerManager.GetMiner(connection));
+                            _pool.SubmitShareToPool(s.GetBytes(), _minerManager.GetMiner(connection));
                             break;
 
                         case 6:
                             Log.Verbose("{0} sending hashrate.", miner.workerIdentifier);
-                            _pool.SendToPool(Encoding.ASCII.GetBytes(s));
+                            _pool.SendToPool(s.GetBytes());
                             break;
 
                         default:
                             Log.Warning("MinerHandler Unhandled {0} ", s);
+                            _pool.SendToPool(s.GetBytes());
                             break;
                     }
                 } /* else if (dyn.error != null && dyn.result == null)
@@ -132,7 +134,7 @@ namespace MinerProxy2.Coins
 
         public void SendToMiner(string data, TcpConnection connection)
         {
-            _minerServer.SendToMiner(Encoding.ASCII.GetBytes(data), connection);
+            _minerServer.SendToMiner(data.GetBytes(), connection);
         }
 
         public void SendToPool(byte[] data)

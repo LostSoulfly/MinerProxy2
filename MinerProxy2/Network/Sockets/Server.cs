@@ -1,4 +1,5 @@
-﻿using MinerProxy2.Network.Connections;
+﻿using MinerProxy2.Helpers;
+using MinerProxy2.Network.Connections;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -133,7 +134,7 @@ namespace MinerProxy2.Network.Sockets
 
         public void BroadcastToMiners(byte[] data)
         {
-            Log.Verbose("Broadcasting to all miners: {0}", Encoding.ASCII.GetString(data));
+            Log.Verbose("Broadcasting to all miners: {0}", data.GetString());
             
             foreach (TcpConnection connection in clientSockets)
             {
@@ -144,18 +145,12 @@ namespace MinerProxy2.Network.Sockets
 
         public bool Send(byte[] data, TcpConnection connection)
         {
-            Log.Verbose("Sending {0}: {1}", connection.endPoint, Encoding.ASCII.GetString(data));
+            Log.Verbose("Sending {0}: {1}", connection.endPoint, data.GetString());
 
             try
             {
-                byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
+                data = data.CheckForNewLine();
 
-                if (!(endCharacter.SequenceEqual(Encoding.ASCII.GetBytes(Environment.NewLine))))
-                {
-                    data = data.Concat(Encoding.ASCII.GetBytes(Environment.NewLine)).ToArray();
-                }
-
-                
                 connection.socket.BeginSend(data, 0, data.Length, SocketFlags.None,
                     new AsyncCallback(SendCallback), connection);
                 return true;
