@@ -85,7 +85,7 @@ namespace MinerProxy2.Coins
                             _pool.currentPoolWork = Encoding.ASCII.GetBytes(s);
                             break;
 
-                        case 10: //claymore id 10
+                        case int i when (i >= 10):
                         case 4:
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             //Doesn't detect rejected shares yet

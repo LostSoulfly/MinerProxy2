@@ -83,7 +83,7 @@ namespace MinerProxy2.Coins
                             }
                             break;
 
-                        case 10: //claymore id 10
+                        case int i when (i >= 10):
                         case 4:
                             Log.Information("{0} found a share!", miner.workerIdentifier);
                             _pool.SubmitShareToPool(Encoding.ASCII.GetBytes(s), _minerManager.GetMiner(connection));
