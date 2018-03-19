@@ -166,8 +166,14 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (ObjectDisposedException ex)
             {
-                //Log.Error(ex, "Client forcefully disconnected");
-                // Don't shutdown because the socket may be disposed and its disconnected anyway.
+                Log.Debug(ex, "Client ObjectDisposed exception");
+                OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
+                Reconnect();
+                return;
+            }
+            catch (SocketException ex)
+            {
+                Log.Debug(ex, "Client forcefully disconnected");
                 OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
                 Reconnect();
                 return;
@@ -180,7 +186,8 @@ namespace MinerProxy2.Network.Sockets
             {
                 if (!isDisconnecting)
                 {
-                    Log.Error("Pool receive buffer was empty; need to reconnect.. " + received);
+                    OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
+                    Log.Verbose("Pool receive buffer was empty; need to reconnect.. " + received);
                     Reconnect();
                     return;
                 } else { return; }
