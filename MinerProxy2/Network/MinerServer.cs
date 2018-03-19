@@ -21,17 +21,17 @@ namespace MinerProxy2.Network
 
         public MinerServer(int port, PoolClient pool, MinerManager minerManager, ICoinHandlerMiner coinHandler)
         {
-            Log.Information("MinerServer initialized: " + pool.poolEndPoint);
+            Log.Debug("MinerServer initialized for {0}", pool.poolEndPoint);
 
             this._minerManager = minerManager;
+            this.port = port;
 
             _poolClient = pool;
             _coinHandler = coinHandler;
             _coinHandler.SetMinerServer(this);
             _coinHandler.SetPoolClient(_poolClient);
+            
 
-
-            this.port = port;
             minerServer = new Server();
             minerServer.OnClientDataReceived += MinerServer_OnClientDataReceived;
             minerServer.OnClientConnected += MinerServer_OnClientConnected;
@@ -41,13 +41,21 @@ namespace MinerProxy2.Network
 
         private void MinerServer_OnClientError(object sender, ClientErrorArgs e)
         {
-            _minerManager.RemoveMiner(_minerManager.GetMiner(e.connection));
+            Miner miner = _minerManager.GetMiner(e.connection);
+
+            Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
+
+            if (miner != null)
+                _minerManager.RemoveMiner(miner);
+
             _poolClient.CheckPoolConnection();
         }
 
         private void MinerServer_OnClientDisconnected(object sender, ClientDisonnectedArgs e)
         {
             Miner miner = _minerManager.GetMiner(e.connection);
+
+            Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
 
             if (miner != null)
                 _minerManager.RemoveMiner(miner);
@@ -57,7 +65,7 @@ namespace MinerProxy2.Network
         
         public void ListenForMiners()
         {
-            Log.Information("Starting MinerServer on " + port);
+            Log.Information("{0} MinerServer listening on {1}.", _poolClient.poolEndPoint, this.port);
             minerServer.Start(port);
         }
 
@@ -85,21 +93,19 @@ namespace MinerProxy2.Network
 
         public void BroadcastToMiners(byte[] data)
         {
-            //Log.Debug("MinerServer broadcast");
             minerServer.BroadcastToMiners(data);
         }
 
         public void BroadcastToMiners(string data)
         {
-            //Log.Debug("MinerServer broadcast");
             minerServer.BroadcastToMiners(data.GetBytes());
         }
 
         private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)
         {
             _poolClient.CheckPoolConnection();
-            Log.Information("{0} has connected!" , e.connection.endPoint.ToString());
-            //_coinHandler.MinerConnected
+            Log.Information("{0} has connected for {1} on port {2}" , e.connection.endPoint.ToString(), _poolClient.poolEndPoint, this.port);
+            _coinHandler.MinerConnected(e.connection);
         }
 
         private void MinerServer_OnClientDataReceived(object sender, ClientDataReceivedArgs e)

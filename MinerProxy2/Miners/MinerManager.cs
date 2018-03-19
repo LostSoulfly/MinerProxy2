@@ -17,7 +17,7 @@ namespace MinerProxy2.Miners
         {
             lock (MinerManagerLock)
             {
-                Log.Information("Adding new miner {0} ", miner.workerIdentifier);
+                Log.Verbose("Adding new miner {0} ", miner.workerIdentifier);
                 Miner existing = GetMiner(miner.connection);
 
                 if (existing == null)
@@ -31,7 +31,7 @@ namespace MinerProxy2.Miners
         {
             lock (MinerManagerLock)
             {
-                Log.Information("Removing {0}", miner.workerIdentifier);
+                Log.Debug("Removing {0}", miner.workerIdentifier);
                 try
                 {
                     minerList.Remove(miner);
@@ -71,7 +71,6 @@ namespace MinerProxy2.Miners
         {
             miner.shareSubmittedTimes.Add(DateTime.Now);
             miner.submittedShares++;
-            Log.Information("{0}'s shares: {1}/{2}/{3}", miner.workerIdentifier, miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
         }
 
         public long GetAverageHashrate()
@@ -98,14 +97,12 @@ namespace MinerProxy2.Miners
         public Miner GetNextShare(bool accepted)
         {
             Miner miner = minerList.OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
-            Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
+            Log.Debug("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
             if (accepted) { 
                 miner.acceptedShares++;
             }else
                 miner.rejectedShares++;
-
-            Log.Information("{0}'s shares: {1}/{2}/{3}", miner.workerIdentifier, miner.submittedShares, miner.acceptedShares, miner.rejectedShares);
 
             return miner;
         }
