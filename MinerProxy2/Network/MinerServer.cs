@@ -17,6 +17,8 @@ namespace MinerProxy2.Network
 
         private int port;
 
+        public int GetNumberOfConnections { get { return minerServer.GetNumberOfConnections; } }
+
         public MinerServer(int port, PoolClient pool, MinerManager minerManager, ICoinHandlerMiner coinHandler)
         {
             Log.Information("MinerServer initialized: " + pool.poolEndPoint);

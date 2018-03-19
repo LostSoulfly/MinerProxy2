@@ -105,10 +105,15 @@ namespace MinerProxy2.Network
 
         public bool CheckPoolConnection()
         {
-            if (poolConnected && minerManager.ConnectedMiners == 0)
+            if (poolConnected && minerServer.GetNumberOfConnections == 0)
             {
                 Stop();
                 Log.Information("Waiting for miners before reconnecting to {0}..", poolEndPoint);
+                return false;
+            }
+
+            if (minerServer.GetNumberOfConnections == 0)
+            {
                 return false;
             }
 
@@ -116,7 +121,7 @@ namespace MinerProxy2.Network
                 return true;
 
             Start();
-            return false;
+            return true;
         }
 
         private void StopPoolStats()
