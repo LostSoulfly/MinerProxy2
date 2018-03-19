@@ -28,7 +28,7 @@ namespace MinerProxy2.Coins
 
         public void MinerConnected(TcpConnection connection)
         {
-            Log.Information("{0} connected.", connection.endPoint);
+            Log.Verbose("{0} connected.", connection.endPoint);
             if (_pool.currentPoolWork != null)
                 _minerServer.SendToMiner(_pool.currentPoolWork, connection);
            //_minerManager.AddMiner();
@@ -69,7 +69,7 @@ namespace MinerProxy2.Coins
                             miner = new Miner(worker, connection);
 
                             _minerManager.AddMiner(miner);
-                            Log.Debug("{0} has authenticated!", miner.workerIdentifier);
+                            Log.Debug("{0} has authenticated for {1}!", miner.workerIdentifier, _pool.poolEndPoint);
                             _minerServer.SendToMiner("{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":true}\r\n".GetBytes(), connection);
                             break;
 

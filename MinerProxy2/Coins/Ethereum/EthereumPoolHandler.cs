@@ -97,6 +97,8 @@ namespace MinerProxy2.Coins
                                 _pool.acceptedSharesCount++;
                                 Log.Information("{0}'s share was accepted!", miner.workerIdentifier);
                                 _minerManager.ResetMinerShareSubmittedTime(miner);
+
+                                miner.PrintShares();
                             }
                             break;
 
