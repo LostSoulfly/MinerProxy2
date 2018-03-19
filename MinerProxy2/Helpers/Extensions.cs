@@ -41,10 +41,16 @@ namespace MinerProxy2.Helpers
             TimeSpan ts = DateTime.Now - value;
             //var ts = new TimeSpan(DateTime.Now - value);
             double delta = ts.TotalSeconds;
+            double deltaMs = ts.TotalMilliseconds;
 
             if (append.Length > 0)
                 append = " " + append;
 
+
+            if (deltaMs <= 1000)
+            {
+                return ts.TotalMilliseconds + "ms" + append;
+            }
             if (delta < 60)
             {
                 return ts.Seconds == 1 ? "one second" + append : ts.Seconds + " seconds" + append;
@@ -105,5 +111,6 @@ namespace MinerProxy2.Helpers
             }
             return list;
         }
+        
     }
 }
