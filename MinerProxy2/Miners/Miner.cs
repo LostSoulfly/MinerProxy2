@@ -35,5 +35,11 @@ namespace MinerProxy2.Miners
             connectionStartTime = DateTime.Now;
         }
 
+        public void PrintShares()
+        {
+
+            Serilog.Log.Information("{0}'s shares: {1}/{2}/{3}", workerIdentifier, submittedShares, acceptedShares, rejectedShares);
+        }
+
     }
 }
