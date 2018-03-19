@@ -1,4 +1,7 @@
-﻿using MinerProxy2.Helpers;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using MinerProxy2.Helpers;
 using MinerProxy2.Interfaces;
 using MinerProxy2.Miners;
 using MinerProxy2.Network.Sockets;
@@ -7,32 +10,36 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Timers;
 
 namespace MinerProxy2.Network
 {
     public class PoolClient
     {
-        private Client poolClient;
-        private MinerServer minerServer;
-        private MinerManager minerManager = new MinerManager();
-        private PoolInstance poolInstance;
-        private ICoinHandlerPool poolHandler;
+        private readonly object submittedShareLock = new object();
         private ICoinHandlerMiner coinHandler;
+        private MinerManager minerManager = new MinerManager();
+        private MinerServer minerServer;
+        private Client poolClient;
         private bool poolConnected;
-        public string poolWallet { get { return poolInstance.GetCurrentPool().poolWallet; } }
-        public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
-        public string poolEndPoint { get { return poolInstance.GetCurrentPool().poolEndPoint; } }
-        public long acceptedSharesCount { get { return poolInstance.acceptedSharesCount; } set { poolInstance.acceptedSharesCount = value; } }
-        public long submittedSharesCount { get { return poolInstance.submittedSharesCount; } set { poolInstance.submittedSharesCount = value; } }
-        public long rejectedSharesCount { get { return poolInstance.rejectedSharesCount; } set { poolInstance.rejectedSharesCount = value; } }
+        private ICoinHandlerPool poolHandler;
+        private PoolInstance poolInstance;
+        private Timer statsTimer;
+        private List<byte[]> submittedSharesHistory = new List<byte[]>();
+
         public byte[] currentPoolWork = new byte[0];
 
-        private Timer statsTimer;
-        
-        private List<byte[]> submittedSharesHistory = new List<byte[]>();
-        private readonly object submittedShareLock = new object();
+        public long acceptedSharesCount { get { return poolInstance.acceptedSharesCount; } set { poolInstance.acceptedSharesCount = value; } }
+
+        public string poolEndPoint { get { return poolInstance.GetCurrentPool().poolEndPoint; } }
+
+        public string poolWallet { get { return poolInstance.GetCurrentPool().poolWallet; } }
+
+        public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
+
+        public long rejectedSharesCount { get { return poolInstance.rejectedSharesCount; } set { poolInstance.rejectedSharesCount = value; } }
+
+        public long submittedSharesCount { get { return poolInstance.submittedSharesCount; } set { poolInstance.submittedSharesCount = value; } }
 
         public PoolClient(PoolInstance poolInstance, ICoinHandlerPool pool, ICoinHandlerMiner miner)
         {
@@ -51,28 +58,61 @@ namespace MinerProxy2.Network
             poolClient.OnServerDataReceived += PoolClient_OnServerDataReceived;
             poolClient.OnServerDisconnected += PoolClient_OnServerDisconnected;
             poolClient.OnServerError += PoolClient_OnServerError;
-            
+
             //setup coin miner handler
             coinHandler.SetMinerServer(minerServer);
             coinHandler.SetPoolClient(this);
             coinHandler.SetMinerManager(minerManager);
-            
+
             //setup coin Pool handler
             poolHandler.SetMinerServer(minerServer);
             poolHandler.SetPoolClient(this);
             poolHandler.SetMinerManager(minerManager);
-            
+
             //this.Start();
             minerServer.ListenForMiners();
 
             Log.Information("Waiting for miners before connecting to {0}..", poolEndPoint);
         }
 
+        private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
+        {
+            Log.Verbose("Pool connected: {0}.", e.socket.RemoteEndPoint.ToString());
+            poolInstance.poolConnectedTime = DateTime.Now;
+            StartPoolStats();
+            if (!poolConnected)
+            {
+                poolConnected = true;
+                poolHandler.DoPoolLogin(this);
+            }
+        }
+
+        private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
+        {
+            //Log.Information(Encoding.ASCII.GetString(e.Data));
+            poolHandler.PoolDataReceived(e.Data, this);
+        }
+
+        private void PoolClient_OnServerDisconnected(object sender, ServerDisonnectedArgs e)
+        {
+            poolConnected = false;
+            StopPoolStats();
+            ClearSubmittedSharesHistory();
+        }
+
+        private void PoolClient_OnServerError(object sender, ServerErrorArgs e)
+        {
+            Log.Error(e.exception, "Server error!");
+            poolConnected = false;
+            StopPoolStats();
+            CheckPoolConnection();
+        }
+
         private void StartPoolStats()
         {
             statsTimer = new Timer(60000);
             statsTimer.AutoReset = true;
-            
+
             statsTimer.Elapsed += delegate
             {
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
@@ -81,26 +121,15 @@ namespace MinerProxy2.Network
             };
 
             statsTimer.Start();
-
         }
 
-        public void Stop()
+        private void StopPoolStats()
         {
-            if (poolConnected)
-            {
-                Log.Information("Disconnecting from {0}.", this.poolEndPoint);
-                poolConnected = false;
-                poolClient.Close();
-            }
+            if (statsTimer == null)
+                return;
 
-            StopPoolStats();
-            ClearSubmittedSharesHistory();
-        }
-
-        public void Start()
-        {
-            Log.Information("Connecting to {0}.", this.poolEndPoint);
-            poolClient.Connect();
+            if (statsTimer.Enabled)
+                statsTimer.Stop();
         }
 
         public bool CheckPoolConnection()
@@ -124,13 +153,58 @@ namespace MinerProxy2.Network
             return true;
         }
 
-        private void StopPoolStats()
+        public void ClearSubmittedSharesHistory()
         {
-            if (statsTimer == null)
-                return;
+            Log.Debug("Clearing submitted shares history.");
+            lock (submittedShareLock) { submittedSharesHistory.Clear(); }
+        }
 
-            if (statsTimer.Enabled)
-                statsTimer.Stop();
+        public bool HasShareBeenSubmitted(byte[] share)
+        {
+            bool submitted;
+
+            lock (submittedShareLock)
+            {
+                //search the list to see if this share has been
+                submitted = submittedSharesHistory.Any(item => item == share);
+
+                //If it wasn't found in the list, we add it
+                if (!submitted)
+                    submittedSharesHistory.Add(share);
+            }
+
+            return submitted;
+        }
+
+        public void SendToPool(byte[] data)
+        {
+            //Log.Debug("PoolClient SendToPool");
+            this.poolClient.SendToPool(data);
+        }
+
+        public void SendToPool(string data)
+        {
+            //Log.Debug("PoolClient SendToPool");
+            this.poolClient.SendToPool(data.GetBytes());
+        }
+
+        public void Start()
+        {
+            Log.Information("Connecting to {0}.", this.poolEndPoint);
+            poolClient.Connect();
+        }
+
+        public void Stop()
+        {
+            if (poolConnected)
+            {
+                Log.Information("Disconnecting from {0}.", this.poolEndPoint);
+                poolConnected = false;
+                poolClient.Close();
+            }
+
+            StopPoolStats();
+            ClearSubmittedSharesHistory();
         }
 
         public void SubmitShareToPool(byte[] data, Miner miner)
@@ -146,74 +220,5 @@ namespace MinerProxy2.Network
             minerManager.AddSubmittedShare(miner);
             SendToPool(data);
         }
-
-        private void PoolClient_OnServerError(object sender, ServerErrorArgs e)
-        {
-            Log.Error(e.exception, "Server error!");
-            poolConnected = false;
-            StopPoolStats();
-            CheckPoolConnection();
-        }
-
-        private void PoolClient_OnServerDisconnected(object sender, ServerDisonnectedArgs e)
-        {
-            poolConnected = false;
-            StopPoolStats();
-            ClearSubmittedSharesHistory();
-        }
-
-        private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
-        {
-            //Log.Information(Encoding.ASCII.GetString(e.Data));
-            poolHandler.PoolDataReceived(e.Data, this);
-        }
-        
-        private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
-        {
-            Log.Verbose("Pool connected: {0}.", e.socket.RemoteEndPoint.ToString());
-            poolInstance.poolConnectedTime = DateTime.Now;
-            StartPoolStats();
-            if (!poolConnected)
-            {
-                poolConnected = true;
-                poolHandler.DoPoolLogin(this);
-            }
-        }
-
-        public void SendToPool(byte[] data)
-        {
-            //Log.Debug("PoolClient SendToPool");
-            this.poolClient.SendToPool(data);
-        }
-
-        public void SendToPool(string data)
-        {
-            //Log.Debug("PoolClient SendToPool");
-            this.poolClient.SendToPool(data.GetBytes());
-        }
-
-        public bool HasShareBeenSubmitted(byte[] share)
-        {
-            bool submitted;
-
-            lock (submittedShareLock)
-            {
-                //search the list to see if this share has been 
-                submitted = submittedSharesHistory.Any(item => item == share);
-
-                //If it wasn't found in the list, we add it
-                if (!submitted)
-                    submittedSharesHistory.Add(share);
-            }
-
-            return submitted;
-        }
-
-        public void ClearSubmittedSharesHistory()
-        {
-            Log.Debug("Clearing submitted shares history.");
-            lock (submittedShareLock) { submittedSharesHistory.Clear(); }
-        }
-
     }
 }

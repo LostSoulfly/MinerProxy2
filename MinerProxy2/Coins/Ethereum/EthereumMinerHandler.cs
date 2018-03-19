@@ -1,4 +1,7 @@
-﻿using MinerProxy2.Helpers;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using MinerProxy2.Helpers;
 using MinerProxy2.Interfaces;
 using MinerProxy2.Miners;
 using MinerProxy2.Network;
@@ -6,15 +9,14 @@ using MinerProxy2.Network.Sockets;
 using Newtonsoft.Json;
 using Serilog;
 using System;
-using System.Text;
 
 namespace MinerProxy2.Coins
 {
     internal class EthereumMinerHandler : ICoinHandlerMiner
     {
-        private PoolClient _pool;
-        private MinerServer _minerServer;
         private MinerManager _minerManager;
+        private MinerServer _minerServer;
+        private PoolClient _pool;
 
         public void BroadcastToMiners(byte[] data)
         {
@@ -31,7 +33,7 @@ namespace MinerProxy2.Coins
             Log.Verbose("{0} connected.", connection.endPoint);
             if (_pool.currentPoolWork != null)
                 _minerServer.SendToMiner(_pool.currentPoolWork, connection);
-           //_minerManager.AddMiner();
+            //_minerManager.AddMiner();
         }
 
         public void MinerDataReceived(byte[] data, TcpConnection connection)
@@ -49,7 +51,7 @@ namespace MinerProxy2.Coins
                     continue;
 
                 dynamic dyn = JsonConvert.DeserializeObject(s.CheckForNewLine());
-                
+
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
                     //Log.Information("dyn.id: " + dyn.id);
@@ -78,7 +80,8 @@ namespace MinerProxy2.Coins
                             if (_pool.currentPoolWork.Length > 0)
                             {
                                 _minerServer.SendToMiner(_pool.currentPoolWork, connection);
-                            } else
+                            }
+                            else
                             {
                                 _pool.SendToPool(s.GetBytes());
                             }
@@ -105,9 +108,7 @@ namespace MinerProxy2.Coins
                 Log.Error("Server sent Error: " + dyn.error.code + ": " + dyn.error.message);
             }
             */
-
             }
-            
         }
 
         public void MinerDisconnected(TcpConnection connection)

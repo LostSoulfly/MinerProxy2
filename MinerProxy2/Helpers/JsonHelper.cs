@@ -1,25 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using System;
 using System.Linq;
-using System.Text;
 
 namespace MinerProxy2.Helpers
 {
     public static class JsonHelper
     {
-        public static bool DoesJsonObjectExist(dynamic json)
-        {
-            try
-            {
-                if (ReferenceEquals(null, json))
-                    {
-                    return false;
-                }
-            } catch { return false; }
-
-            return true;
-        }
-
         public static byte[] CheckForNewLine(byte[] data)
         {
             byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
@@ -37,6 +25,20 @@ namespace MinerProxy2.Helpers
             //Yeah, this is crappy, but it was quick and easy
             //TODO rewrite without converting to bytes and back
             return CheckForNewLine(data.GetBytes()).GetString();
+        }
+
+        public static bool DoesJsonObjectExist(dynamic json)
+        {
+            try
+            {
+                if (ReferenceEquals(null, json))
+                {
+                    return false;
+                }
+            }
+            catch { return false; }
+
+            return true;
         }
     }
 }

@@ -1,24 +1,22 @@
-﻿using MinerProxy2.Interfaces;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using MinerProxy2.Helpers;
+using MinerProxy2.Interfaces;
+using MinerProxy2.Miners;
 using MinerProxy2.Network;
 using MinerProxy2.Network.Sockets;
-using MinerProxy2.Pools;
+using Newtonsoft.Json;
 using Serilog;
 using System;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System.Collections.Generic;
-using System.IO;
-using MinerProxy2.Miners;
-using MinerProxy2.Helpers;
 
 namespace MinerProxy2.Coins
 {
     public class EthereumPoolHandler : ICoinHandlerPool
     {
+        private MinerManager _minerManager;
         private MinerServer _minerServer;
         private PoolClient _pool;
-        private MinerManager _minerManager;
 
         public void BroadcastToMiners(byte[] data)
         {
@@ -30,7 +28,6 @@ namespace MinerProxy2.Coins
         {
             Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);
             _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
-
         }
 
         public void PoolConnected(PoolClient poolClient)
@@ -41,7 +38,7 @@ namespace MinerProxy2.Coins
         public void PoolDataReceived(byte[] data, PoolClient poolClient)
         {
             Log.Verbose("Pool {0} sent: {1}", poolClient.poolEndPoint, data.GetString());
-            
+
             string split = data.GetString();
 
             foreach (string s in split.Split('\r', '\n'))
@@ -50,7 +47,7 @@ namespace MinerProxy2.Coins
                     continue;
 
                 dynamic dyn = JsonConvert.DeserializeObject(s.CheckForNewLine());
-                
+
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
                     //Log.Information("dyn.id: " + dyn.id);
@@ -62,7 +59,7 @@ namespace MinerProxy2.Coins
                             byte[] work = s.GetBytes();
                             _pool.currentPoolWork = work;
                             Log.Verbose("currentPoolWork length: {0}", _pool.currentPoolWork.Length);
-                            
+
                             _minerServer.BroadcastToMiners(work);
                             break;
 
@@ -87,7 +84,7 @@ namespace MinerProxy2.Coins
 
                         case int i when (i >= 10):
                         case 4:
-                            
+
                             //Doesn't detect rejected shares yet
                             Miner miner = _minerManager.GetNextShare(true);
 
@@ -109,7 +106,7 @@ namespace MinerProxy2.Coins
                         case 6:
                             Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
                             _minerServer.BroadcastToMiners(s);
-                            
+
                             break;
 
                         default:
@@ -121,9 +118,7 @@ namespace MinerProxy2.Coins
                 Log.Error("Server sent Error: " + dyn.error.code + ": " + dyn.error.message);
             }
             */
-
             }
-
         }
 
         public void PoolDisconnected(PoolClient poolClient)

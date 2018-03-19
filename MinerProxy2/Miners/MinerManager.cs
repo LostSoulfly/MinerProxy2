@@ -1,4 +1,7 @@
-﻿using MinerProxy2.Helpers;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using MinerProxy2.Helpers;
 using MinerProxy2.Network.Sockets;
 using Serilog;
 using System;
@@ -27,28 +30,10 @@ namespace MinerProxy2.Miners
             }
         }
 
-        public void RemoveMiner(Miner miner)
+        public void AddSubmittedShare(Miner miner)
         {
-            lock (MinerManagerLock)
-            {
-                Log.Debug("Removing {0}", miner.workerIdentifier);
-                try
-                {
-                    minerList.Remove(miner);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "RemoveMiner");
-                }
-            }
-        }
-        
-        public long GetSubmittedShareTotal()
-        {
-            long submittedShares = 0;
-            minerList.ForEach<Miner>(m => submittedShares += m.submittedShares);
-
-            return submittedShares;
+            miner.shareSubmittedTimes.Add(DateTime.Now);
+            miner.submittedShares++;
         }
 
         public long GetAcceptedShareTotal()
@@ -59,29 +44,10 @@ namespace MinerProxy2.Miners
             return acceptedShares;
         }
 
-        public long GetRejectedShareTotal()
-        {
-            long rejectedShares = 0;
-            minerList.ForEach<Miner>(m => rejectedShares += m.rejectedShares);
-
-            return rejectedShares;
-        }
-
-        public void AddSubmittedShare(Miner miner)
-        {
-            miner.shareSubmittedTimes.Add(DateTime.Now);
-            miner.submittedShares++;
-        }
-
         public long GetAverageHashrate()
         {
             //average the hashrate of all connected miners
             return 0;
-        }
-
-        public void UpdateMinerHashrate(long hashrate, Miner miner)
-        {
-            miner.hashrate = hashrate;
         }
 
         public Miner GetMiner(TcpConnection connection)
@@ -99,18 +65,57 @@ namespace MinerProxy2.Miners
             Miner miner = minerList.OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
             Log.Debug("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
-            if (accepted) { 
+            if (accepted)
+            {
                 miner.acceptedShares++;
-            }else
+            }
+            else
                 miner.rejectedShares++;
 
             return miner;
         }
-        
+
+        public long GetRejectedShareTotal()
+        {
+            long rejectedShares = 0;
+            minerList.ForEach<Miner>(m => rejectedShares += m.rejectedShares);
+
+            return rejectedShares;
+        }
+
+        public long GetSubmittedShareTotal()
+        {
+            long submittedShares = 0;
+            minerList.ForEach<Miner>(m => submittedShares += m.submittedShares);
+
+            return submittedShares;
+        }
+
+        public void RemoveMiner(Miner miner)
+        {
+            lock (MinerManagerLock)
+            {
+                Log.Debug("Removing {0}", miner.workerIdentifier);
+                try
+                {
+                    minerList.Remove(miner);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "RemoveMiner");
+                }
+            }
+        }
+
         public void ResetMinerShareSubmittedTime(Miner miner)
         {
             Log.Debug("Resetting {0} last submit time. ({1})", miner.workerIdentifier, miner.shareSubmittedTimes.First().ToReadableTime());
             miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
+        }
+
+        public void UpdateMinerHashrate(long hashrate, Miner miner)
+        {
+            miner.hashrate = hashrate;
         }
     }
 }

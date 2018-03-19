@@ -1,16 +1,12 @@
-﻿using MinerProxy2.Pools;
-using System.Collections.Generic;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
 
 namespace MinerProxy2.Config
 {
     public static class Settings
     {
-        //load settings file
-
-        public static PoolManager poolManager = new PoolManager();
-        public static bool logging { get; set; }
         public static bool debug { get; set; }
         public static int donationPercent { get; set; }
-        public static List<string> allowedIPAddresses = new List<string>();
+        public static bool logging { get; set; }
     }
 }

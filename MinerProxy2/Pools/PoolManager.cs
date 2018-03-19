@@ -1,4 +1,7 @@
-﻿namespace MinerProxy2.Pools
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+namespace MinerProxy2.Pools
 {
     public class PoolManager
     {

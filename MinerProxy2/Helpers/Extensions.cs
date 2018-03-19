@@ -1,4 +1,7 @@
-﻿using System;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,20 +11,6 @@ namespace MinerProxy2.Helpers
 {
     public static class Extensions
     {
-        public static string GetString(this byte[] data)
-        {
-            string result = Encoding.ASCII.GetString(data);
-            
-            return result;
-        }
-
-        public static byte[] GetBytes(this string data)
-        {
-            byte[] result = Encoding.ASCII.GetBytes(data);
-
-            return result;
-        }
-
         public static byte[] CheckForNewLine(this byte[] data)
         {
             byte[] result = JsonHelper.CheckForNewLine(data);
@@ -36,6 +25,44 @@ namespace MinerProxy2.Helpers
             return result;
         }
 
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> array, Action<T> act)
+        {
+            foreach (var i in array)
+                act(i);
+            return array;
+        }
+
+        public static IEnumerable<T> ForEach<T>(this IEnumerable arr, Action<T> act)
+        {
+            return arr.Cast<T>().ForEach<T>(act);
+        }
+
+        public static IEnumerable<RT> ForEach<T, RT>(this IEnumerable<T> array, Func<T, RT> func)
+        {
+            var list = new List<RT>();
+            foreach (var i in array)
+            {
+                var obj = func(i);
+                if (obj != null)
+                    list.Add(obj);
+            }
+            return list;
+        }
+
+        public static byte[] GetBytes(this string data)
+        {
+            byte[] result = Encoding.ASCII.GetBytes(data);
+
+            return result;
+        }
+
+        public static string GetString(this byte[] data)
+        {
+            string result = Encoding.ASCII.GetString(data);
+
+            return result;
+        }
+
         public static string ToReadableTime(this DateTime value, string append = "")
         {
             TimeSpan ts = DateTime.Now - value;
@@ -45,7 +72,6 @@ namespace MinerProxy2.Helpers
 
             if (append.Length > 0)
                 append = " " + append;
-
 
             if (deltaMs <= 1000)
             {
@@ -87,30 +113,5 @@ namespace MinerProxy2.Helpers
             var years = Convert.ToInt32(Math.Floor((double)ts.Days / 365));
             return years <= 1 ? "one year" + append : years + " years" + append;
         }
-
-        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> array, Action<T> act)
-        {
-            foreach (var i in array)
-                act(i);
-            return array;
-        }
-
-        public static IEnumerable<T> ForEach<T>(this IEnumerable arr, Action<T> act)
-        {
-            return arr.Cast<T>().ForEach<T>(act);
-        }
-
-        public static IEnumerable<RT> ForEach<T, RT>(this IEnumerable<T> array, Func<T, RT> func)
-        {
-            var list = new List<RT>();
-            foreach (var i in array)
-            {
-                var obj = func(i);
-                if (obj != null)
-                    list.Add(obj);
-            }
-            return list;
-        }
-        
     }
 }

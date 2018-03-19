@@ -1,4 +1,7 @@
-﻿using MinerProxy2.Coins;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using MinerProxy2.Coins;
 using MinerProxy2.Interfaces;
 using MinerProxy2.Network;
 using MinerProxy2.Pools;
@@ -28,13 +31,13 @@ namespace MinerProxy2
                 .CreateLogger();
 
             Helpers.Logging.MinerProxyHeader();
-            
+
             ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
             ICoinHandlerPool poolHandler = (ICoinHandlerPool)new EthereumPoolHandler();
 
             string server = "us1.ethermine.org";
             int port = 4444;
-            
+
             PoolInstance ethPoolInstance = new PoolInstance(server, port, 9000, "MProxy", "0x3Ff3CF71689C7f2f8F5c1b7Fc41e030009ff7332", "ETH");
             PoolClient ethereumPool = new PoolClient(ethPoolInstance, poolHandler, coinHandler);
 

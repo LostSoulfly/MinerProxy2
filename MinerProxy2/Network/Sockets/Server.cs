@@ -1,73 +1,32 @@
-﻿using MinerProxy2.Helpers;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using MinerProxy2.Helpers;
 using MinerProxy2.Network.Connections;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace MinerProxy2.Network.Sockets
 {
     public class Server
     {
-        private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
         private const int BUFFER_SIZE = 2048;
         private readonly byte[] buffer = new byte[BUFFER_SIZE];
-
-        public event EventHandler<ClientDataReceivedArgs> OnClientDataReceived;
-
-        public event EventHandler<ClientErrorArgs> OnClientError;
-
-        public event EventHandler<ClientConnectedArgs> OnClientConnected;
-
-        public event EventHandler<ClientDisonnectedArgs> OnClientDisconnected;
+        private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
+        private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         public int GetNumberOfConnections { get { return clientSockets.Count; } }
 
-        /// <summary>
-        /// Begin listening for new clients on port specified.
-        /// </summary>
-        public bool Start(int port)
-        {
-            try
-            {
-                serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
-                serverSocket.Listen(0);
-                serverSocket.BeginAccept(AcceptCallback, null);
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Server failed to start.");
-                return false;
-            }
+        public event EventHandler<ClientConnectedArgs> OnClientConnected;
 
-            return true;
-        }
+        public event EventHandler<ClientDataReceivedArgs> OnClientDataReceived;
 
-        /// <summary>
-        /// Close all connected client (we do not need to shutdown the server socket as its connections
-        /// are already closed with the clients) and stop the server.
-        /// </summary>
-        public void Stop()
-        {
-            clientSockets.ForEach<TcpConnection>(Disconnect);
+        public event EventHandler<ClientDisonnectedArgs> OnClientDisconnected;
 
-            serverSocket.Close();
-        }
-
-        public void Disconnect(TcpConnection connection)
-        {
-            try
-            {
-                Log.Verbose("Disconnecting {0}", connection.endPoint);
-                connection.socket.Shutdown(SocketShutdown.Both);
-                connection.socket.Close();
-            }
-            catch { } finally { clientSockets.Remove(connection); }
-        }
+        public event EventHandler<ClientErrorArgs> OnClientError;
 
         private void AcceptCallback(IAsyncResult AR)
         {
@@ -96,6 +55,14 @@ namespace MinerProxy2.Network.Sockets
             socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
             Log.Verbose("New miner connected, waiting for request.");
             serverSocket.BeginAccept(AcceptCallback, null);
+        }
+
+        private TcpConnection GetTcpConnection(Socket socket)
+        {
+            var tcpConnection = clientSockets.Find(x => x.socket.RemoteEndPoint == socket.RemoteEndPoint);
+            if (tcpConnection != null) { return tcpConnection; }
+
+            return null;
         }
 
         private void ReceiveCallback(IAsyncResult AR)
@@ -136,7 +103,7 @@ namespace MinerProxy2.Network.Sockets
                 Disconnect(tcpConnection);
                 return;
             }
-            
+
             OnClientDataReceived?.Invoke(this, new ClientDataReceivedArgs(recBuf, tcpConnection));
 
             try
@@ -157,12 +124,39 @@ namespace MinerProxy2.Network.Sockets
             }
         }
 
+        private void SendCallback(IAsyncResult ar)
+        {
+            TcpConnection client = (TcpConnection)ar.AsyncState;
+            try
+            {
+                // Complete sending the data to the remote device.
+                int bytesSent = client.socket.EndSend(ar);
+                Log.Verbose("Sent {0} bytes to {1}", bytesSent, client.endPoint);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Server SendCallback");
+                Disconnect(client);
+            }
+        }
+
         public void BroadcastToMiners(byte[] data)
         {
             Log.Verbose("Broadcasting to all miners: {0}", data.GetString());
 
             clientSockets.ForEach<TcpConnection>(s => this.Send(data, s));
-            
+        }
+
+        public void Disconnect(TcpConnection connection)
+        {
+            try
+            {
+                Log.Verbose("Disconnecting {0}", connection.endPoint);
+                connection.socket.Shutdown(SocketShutdown.Both);
+                connection.socket.Close();
+            }
+            catch { }
+            finally { clientSockets.Remove(connection); }
         }
 
         public bool Send(byte[] data, TcpConnection connection)
@@ -193,29 +187,35 @@ namespace MinerProxy2.Network.Sockets
             }
         }
 
-        private void SendCallback(IAsyncResult ar)
+        /// <summary>
+        /// Begin listening for new clients on port specified.
+        /// </summary>
+        public bool Start(int port)
         {
-            TcpConnection client = (TcpConnection)ar.AsyncState;
             try
             {
-                
-                // Complete sending the data to the remote device.
-                int bytesSent = client.socket.EndSend(ar);
-                Log.Verbose("Sent {0} bytes to {1}", bytesSent, client.endPoint);
+                serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+                serverSocket.Listen(0);
+                serverSocket.BeginAccept(AcceptCallback, null);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Log.Error(exception, "Server SendCallback");
-                Disconnect(client);
+                Log.Fatal(ex, "Server failed to start.");
+                return false;
             }
+
+            return true;
         }
 
-        private TcpConnection GetTcpConnection(Socket socket)
+        /// <summary>
+        /// Close all connected client (we do not need to shutdown the server socket as its
+        /// connections are already closed with the clients) and stop the server.
+        /// </summary>
+        public void Stop()
         {
-            var tcpConnection = clientSockets.Find(x => x.socket.RemoteEndPoint == socket.RemoteEndPoint);
-            if (tcpConnection != null) { return tcpConnection; }
+            clientSockets.ForEach<TcpConnection>(Disconnect);
 
-            return null;
+            serverSocket.Close();
         }
     }
 }

@@ -1,19 +1,21 @@
-﻿using System;
+﻿/* MinerProxy2 programmed by LostSoulfly.
+   GNU General Public License v3.0 */
+
+using System;
 using System.Collections.Generic;
 
 namespace MinerProxy2.Pools
 {
     public class PoolInstance
     {
-        public List<PoolItem> failoverPools = new List<PoolItem>();
-        public readonly PoolItem mainPool;
         private PoolItem currentPool;
-        public bool passwordAsWorkerName;
-        public bool useDotBeforeWorkerName;
-        public DateTime poolConnectedTime;
+        public readonly PoolItem mainPool;
+        public List<PoolItem> failoverPools = new List<PoolItem>();
         public int numberOfConnects;
-
+        public bool passwordAsWorkerName;
+        public DateTime poolConnectedTime;
         public long submittedSharesCount, acceptedSharesCount, rejectedSharesCount;
+        public bool useDotBeforeWorkerName;
         //failure attempts, then switch
         //retry main pool in seconds
 
