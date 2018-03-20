@@ -49,6 +49,11 @@ namespace MinerProxy2.Helpers
             return list;
         }
 
+        public static string TrimNewLine(this string s)
+        {
+            return s.TrimEnd('\r', '\n', '\t');
+        }
+
         public static byte[] GetBytes(this string data)
         {
             byte[] result = Encoding.ASCII.GetBytes(data);

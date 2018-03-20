@@ -50,7 +50,9 @@ namespace MinerProxy2.Coins
                 if (s.Length <= 1)
                     continue;
 
-                dynamic dyn = JsonConvert.DeserializeObject(s.CheckForNewLine());
+                dynamic dyn = new object();
+
+                try { dyn = JsonConvert.DeserializeObject(s.TrimNewLine()); } catch (Exception ex) { Log.Error(ex, "DeserializeObject Json error"); return; }
 
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
@@ -66,7 +68,17 @@ namespace MinerProxy2.Coins
                             string worker = dyn.@params[0];
 
                             if (worker.Contains("."))
+                            {
                                 worker = worker.Split(".")[1];
+                            }
+                            else if (worker != _pool.poolWallet)
+                            {
+                                worker = "DevFee";
+                            }
+                            else
+                            {
+                                worker = connection.endPoint.ToString();
+                            }
 
                             miner = new Miner(worker, connection);
 
@@ -87,7 +99,7 @@ namespace MinerProxy2.Coins
                             }
                             break;
 
-                        case int i when (i >= 10):
+                        case int i when (i >= 10): //this is for Claymore's newer versions
                         case 4:
                             Log.Information("{0} found a share!", miner.workerIdentifier);
                             _pool.SubmitShareToPool(s.GetBytes(), _minerManager.GetMiner(connection));

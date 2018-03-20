@@ -107,10 +107,12 @@ namespace MinerProxy2.Miners
             }
         }
 
-        public void ResetMinerShareSubmittedTime(Miner miner)
+        public string ResetMinerShareSubmittedTime(Miner miner)
         {
-            Log.Debug("Resetting {0} last submit time. ({1})", miner.workerIdentifier, miner.shareSubmittedTimes.First().ToReadableTime());
+            string ts = miner.shareSubmittedTimes.First().ToReadableTime();
+            Log.Debug("Resetting {0} last submit time. ({1})", miner.workerIdentifier, ts);
             miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
+            return ts;
         }
 
         public void UpdateMinerHashrate(long hashrate, Miner miner)

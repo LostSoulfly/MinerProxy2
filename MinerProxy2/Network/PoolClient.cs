@@ -96,15 +96,15 @@ namespace MinerProxy2.Network
         private void PoolClient_OnServerDisconnected(object sender, ServerDisonnectedArgs e)
         {
             poolConnected = false;
-            StopPoolStats();
-            ClearSubmittedSharesHistory();
+            Stop();
+            CheckPoolConnection();
         }
 
         private void PoolClient_OnServerError(object sender, ServerErrorArgs e)
         {
             Log.Error(e.exception, "Server error!");
             poolConnected = false;
-            StopPoolStats();
+            Stop();
             CheckPoolConnection();
         }
 
@@ -116,8 +116,9 @@ namespace MinerProxy2.Network
             statsTimer.Elapsed += delegate
             {
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
-                Log.Information("{0} uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
-                    this.poolEndPoint, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
+                Log.Information("[{0}] uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
+                    this.poolWorkerName, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
+                minerManager.minerList.ForEach<Miner>(m => m.PrintShares());
             };
 
             statsTimer.Start();
@@ -134,6 +135,8 @@ namespace MinerProxy2.Network
 
         public bool CheckPoolConnection()
         {
+            Log.Debug("{0} number of connections: {1}", poolWorkerName, minerServer.GetNumberOfConnections);
+
             if (poolConnected && minerServer.GetNumberOfConnections == 0)
             {
                 Stop();
@@ -196,14 +199,16 @@ namespace MinerProxy2.Network
 
         public void Stop()
         {
+            StopPoolStats();
+
             if (poolConnected)
             {
                 Log.Information("Disconnecting from {0}.", this.poolEndPoint);
                 poolConnected = false;
                 poolClient.Close();
+                return;
             }
 
-            StopPoolStats();
             ClearSubmittedSharesHistory();
         }
 

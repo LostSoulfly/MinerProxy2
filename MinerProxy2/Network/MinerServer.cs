@@ -43,7 +43,7 @@ namespace MinerProxy2.Network
         private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)
         {
             _poolClient.CheckPoolConnection();
-            Log.Information("{0} has connected for {1} on port {2}", e.connection.endPoint.ToString(), _poolClient.poolEndPoint, this.port);
+            Log.Information("{0} has connected for [{1}] on port {2}", e.connection.endPoint.ToString(), _poolClient.poolWorkerName, this.port);
             _coinHandler.MinerConnected(e.connection);
         }
 

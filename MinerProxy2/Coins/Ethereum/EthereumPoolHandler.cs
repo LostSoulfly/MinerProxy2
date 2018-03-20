@@ -92,10 +92,9 @@ namespace MinerProxy2.Coins
                             {
                                 _minerServer.SendToMiner(s, miner.connection);
                                 _pool.acceptedSharesCount++;
-                                Log.Information("{0}'s share was accepted!", miner.workerIdentifier);
-                                _minerManager.ResetMinerShareSubmittedTime(miner);
+                                Log.Information("{0}'s share was accepted! ({1})", miner.workerIdentifier, _minerManager.ResetMinerShareSubmittedTime(miner));
 
-                                miner.PrintShares();
+                                //miner.PrintShares();
                             }
                             break;
 
