@@ -81,16 +81,16 @@ namespace MinerProxy2.Network.Sockets
                 if (ex.ErrorCode != 10054)
                     Log.Debug(ex, "Client forcefully disconnected {1}: {0}", tcpConnection.endPoint, ex.ErrorCode);
 
-                OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Disconnect(tcpConnection);
+                OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 return;
             }
             catch (ObjectDisposedException ex)
             {
                 Log.Debug(ex, "ObjectDisposedException Server ReceiveCallBack");
 
-                OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Disconnect(tcpConnection);
+                OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 return;
             }
 
@@ -99,8 +99,8 @@ namespace MinerProxy2.Network.Sockets
 
             if (recBuf.Length == 0)
             {
-                OnClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 Disconnect(tcpConnection);
+                OnClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 return;
             }
 
@@ -112,15 +112,15 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (ObjectDisposedException ex)
             {
+                Disconnect(tcpConnection);
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Log.Debug(ex, "Server ObjectDisposed BeginReceive Error");
-                Disconnect(tcpConnection);
             }
             catch (SocketException ex)
             {
+                Disconnect(tcpConnection);
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Log.Debug(ex, "Server SocketException BeginReceive Error");
-                Disconnect(tcpConnection);
             }
         }
 
@@ -135,8 +135,8 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (Exception exception)
             {
-                Log.Error(exception, "Server SendCallback");
                 Disconnect(client);
+                Log.Error(exception, "Server SendCallback");
             }
         }
 
@@ -173,16 +173,16 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (ObjectDisposedException ex)
             {
+                Disconnect(connection);
                 Log.Debug(ex, "ObjectDisposedException Server Send");
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, connection));
-                Disconnect(connection);
                 return false;
             }
             catch (SocketException ex)
             {
+                Disconnect(connection);
                 Log.Debug(ex, "SocketException Server Send");
                 OnClientError?.Invoke(this, new ClientErrorArgs(ex, connection));
-                Disconnect(connection);
                 return false;
             }
         }
