@@ -76,7 +76,6 @@ namespace MinerProxy2.Network.Sockets
                 {
                     Log.Error(exception, "Receive");
                     OnServerError?.Invoke(this, new ServerErrorArgs(exception, socket));
-                    Reconnect();
                 }
             }
         }
@@ -96,14 +95,14 @@ namespace MinerProxy2.Network.Sockets
             {
                 Log.Debug(ex, "Client ObjectDisposed exception");
                 OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
-                Reconnect();
+
                 return;
             }
             catch (SocketException ex)
             {
                 Log.Debug(ex, "Client forcefully disconnected");
                 OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
-                Reconnect();
+
                 return;
             }
 
@@ -114,9 +113,9 @@ namespace MinerProxy2.Network.Sockets
             {
                 if (!isDisconnecting)
                 {
-                    OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
                     Log.Verbose("Pool receive buffer was empty; need to reconnect.. " + received);
-                    Reconnect();
+                    OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
+
                     return;
                 }
                 else { return; }
@@ -134,7 +133,6 @@ namespace MinerProxy2.Network.Sockets
                 {
                     OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
                     Log.Error(ex, "Pool BeginReceive Error");
-                    Reconnect();
                 }
                 else { return; }
             }
@@ -153,7 +151,6 @@ namespace MinerProxy2.Network.Sockets
             catch (ObjectDisposedException exception)
             {
                 Log.Error(exception, "Client SendCallback");
-                Reconnect();
             }
         }
 
@@ -207,7 +204,6 @@ namespace MinerProxy2.Network.Sockets
             catch (Exception ex)
             {
                 Log.Error(ex, "SendToPool");
-                Reconnect();
             }
         }
     }
