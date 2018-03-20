@@ -72,7 +72,7 @@ namespace MinerProxy2.Network
             //this.Start();
             minerServer.ListenForMiners();
 
-            Log.Information("Waiting for miners before connecting to {0}..", poolEndPoint);
+            Log.Information("{0} waiting for miners..", poolEndPoint);
         }
 
         private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)

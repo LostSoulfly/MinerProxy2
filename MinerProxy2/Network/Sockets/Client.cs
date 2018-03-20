@@ -156,11 +156,11 @@ namespace MinerProxy2.Network.Sockets
 
         public void Close()
         {
+            isDisconnecting = true;
+            clientConnected = false;
+            Log.Verbose("Client Close()");
             try
             {
-                isDisconnecting = true;
-                clientConnected = false;
-                Log.Verbose("Client Close()");
                 clientSocket.Shutdown(SocketShutdown.Both);
                 clientSocket.Close();
             }
@@ -189,7 +189,7 @@ namespace MinerProxy2.Network.Sockets
 
         public void SendToPool(byte[] data)
         {
-            if (!clientConnected)
+            if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 return;
 
             Log.Verbose("Client SendToPool: {0}", data.GetString());

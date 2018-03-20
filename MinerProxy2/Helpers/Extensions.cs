@@ -49,11 +49,6 @@ namespace MinerProxy2.Helpers
             return list;
         }
 
-        public static string TrimNewLine(this string s)
-        {
-            return s.TrimEnd('\r', '\n', '\t');
-        }
-
         public static byte[] GetBytes(this string data)
         {
             byte[] result = Encoding.ASCII.GetBytes(data);
@@ -117,6 +112,11 @@ namespace MinerProxy2.Helpers
             }
             var years = Convert.ToInt32(Math.Floor((double)ts.Days / 365));
             return years <= 1 ? "one year" + append : years + " years" + append;
+        }
+
+        public static string TrimNewLine(this string s)
+        {
+            return s.TrimEnd('\r', '\n', '\t');
         }
     }
 }
