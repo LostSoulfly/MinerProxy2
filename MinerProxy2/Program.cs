@@ -25,7 +25,7 @@ namespace MinerProxy2
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(logLevel)
-                .WriteTo.Console(theme: SystemConsoleTheme.Literate, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
+                .WriteTo.Console(theme: SystemConsoleTheme.Literate, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
                 //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "log.txt")
                 .WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "error.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error)
                 .CreateLogger();
