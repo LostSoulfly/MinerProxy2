@@ -76,6 +76,25 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 2:
+
+                            if (JsonHelper.DoesJsonObjectExist(dyn.error) && !JsonHelper.DoesJsonObjectExist(dyn.result))
+                            {
+                                Log.Fatal("Server error for {0}: {1} {2}", poolClient.poolEndPoint, Convert.ToString(dyn.error.code), Convert.ToString(dyn.error.message));
+                                _pool.Stop();
+                                _minerServer.StopListening();
+                                return;
+                            }
+                            else if (JsonHelper.DoesJsonObjectExist(dyn.result))
+                            {
+                                if (dyn.result == false)
+                                {
+                                    Log.Fatal("Server error2 for {0}: {1} {2}", poolClient.poolEndPoint, Convert.ToString(dyn.error.code), Convert.ToString(dyn.error.message));
+                                    _pool.Stop();
+                                    _minerServer.StopListening();
+                                    return;
+                                }
+                            }
+
                             Log.Information("Authorized with {0}!", poolClient.poolEndPoint);
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
@@ -93,14 +112,18 @@ namespace MinerProxy2.Coins
                         case int i when (i >= 10):
                         case 4:
 
-                            //Doesn't detect rejected shares yet
-                            Miner miner = _minerManager.GetNextShare(true);
+                            bool result = false;
+
+                            if (JsonHelper.DoesJsonObjectExist(dyn.result))
+                                result = dyn.result;
+
+                            Miner miner = _minerManager.GetNextShare(result);
 
                             if (miner != null)
                             {
                                 _minerServer.SendToMiner(s, miner.connection);
                                 _pool.acceptedSharesCount++;
-                                Log.Information("{0}'s share was accepted! ({1})", miner.workerIdentifier, _minerManager.ResetMinerShareSubmittedTime(miner));
+                                Log.Information("{0}'s share was {1}! ({2})", miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
 
                                 //miner.PrintShares();
                             }

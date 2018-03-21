@@ -84,6 +84,7 @@ namespace MinerProxy2.Network
             {
                 poolConnected = true;
                 poolHandler.DoPoolLogin(this);
+                poolHandler.DoPoolGetWork(this);
             }
         }
 
@@ -116,6 +117,7 @@ namespace MinerProxy2.Network
             statsTimer.Elapsed += delegate
             {
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
+                Log.Debug("Current hashrate: {0}", minerManager.GetCurrentTotalHashrate());
                 Log.Information("[{0}] uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
                     this.poolWorkerName, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
                 minerManager.minerList.ForEach<Miner>(m => m.PrintShares());
@@ -205,6 +207,7 @@ namespace MinerProxy2.Network
             {
                 Log.Information("Disconnecting from {0}.", this.poolEndPoint);
                 poolConnected = false;
+                currentPoolWork = new byte[0];
                 poolClient.Close();
                 return;
             }
