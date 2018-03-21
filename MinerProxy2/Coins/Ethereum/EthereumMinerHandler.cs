@@ -68,17 +68,11 @@ namespace MinerProxy2.Coins
                             string worker = dyn.@params[0];
 
                             if (worker.Contains("."))
-                            {
                                 worker = worker.Split(".")[1];
-                            }
                             else if (worker != _pool.poolWallet)
-                            {
                                 worker = "DevFee";
-                            }
                             else
-                            {
                                 worker = connection.endPoint.ToString();
-                            }
 
                             miner = new Miner(worker, connection);
 
@@ -89,14 +83,12 @@ namespace MinerProxy2.Coins
 
                         case 3:
                             Log.Verbose("{0} requested work.", miner.workerIdentifier); // + Encoding.ASCII.GetString(_pool.currentWork));
+
                             if (_pool.currentPoolWork.Length > 0)
-                            {
                                 _minerServer.SendToMiner(_pool.currentPoolWork, connection);
-                            }
                             else
-                            {
                                 _pool.SendToPool(s.GetBytes());
-                            }
+
                             break;
 
                         case int i when (i >= 10): //this is for Claymore's newer versions
@@ -106,8 +98,12 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 6:
-                            Log.Verbose("{0} sending hashrate.", miner.workerIdentifier);
-                            _pool.SendToPool(s.GetBytes());
+                            string hash = dyn.@params[0];
+                            long hashrate = Convert.ToInt64(hash, 16);
+                            miner.hashrate = hashrate;
+                            Log.Verbose("{0} sending hashrate: {1}", miner.workerIdentifier, hashrate.ToString("#,##0,Mh/s").Replace(",", "."));
+
+                            //_pool.SendToPool(s.GetBytes());
                             break;
 
                         default:
