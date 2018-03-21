@@ -33,7 +33,9 @@ namespace MinerProxy2.Coins
         public void DoPoolLogin(PoolClient poolClient)
         {
             Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);
-            _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
+            _pool.SendToPool("{\"worker\": \"" + _pool.poolWorkerName + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
+
+            //_pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
         }
 
         public void PoolConnected(PoolClient poolClient)
