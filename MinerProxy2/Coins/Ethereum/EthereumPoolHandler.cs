@@ -24,6 +24,12 @@ namespace MinerProxy2.Coins
             _minerServer.BroadcastToMiners(data);
         }
 
+        public void DoPoolGetWork(PoolClient poolClient)
+        {
+            Log.Debug("Requesting first work from pool..");
+            _pool.SendToPool("{\"worker\": \"\", \"jsonrpc\": \"2.0\", \"params\": [], \"id\": 3, \"method\": \"eth_getWork\"}\n");
+        }
+
         public void DoPoolLogin(PoolClient poolClient)
         {
             Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);

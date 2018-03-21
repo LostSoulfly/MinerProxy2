@@ -12,6 +12,8 @@ namespace MinerProxy2.Interfaces
     {
         void BroadcastToMiners(byte[] data);
 
+        void DoPoolGetWork(PoolClient poolClient);
+
         void DoPoolLogin(PoolClient poolClient);
 
         void PoolConnected(PoolClient poolClient);
