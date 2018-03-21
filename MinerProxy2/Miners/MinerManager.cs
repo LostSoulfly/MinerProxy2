@@ -44,10 +44,11 @@ namespace MinerProxy2.Miners
             return acceptedShares;
         }
 
-        public long GetAverageHashrate()
+        public string GetCurrentTotalHashrate()
         {
-            //average the hashrate of all connected miners
-            return 0;
+            long total = 0;
+            minerList.ForEach<Miner>(m => total += m.hashrate);
+            return total.ToString("#,##0,Mh/s").Replace(",", ".");
         }
 
         public Miner GetMiner(TcpConnection connection)
