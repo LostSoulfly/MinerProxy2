@@ -114,5 +114,10 @@ namespace MinerProxy2.Network
             Log.Debug("MinerServer SendToPool");
             _poolClient.SendToPool(data.GetBytes());
         }
+
+        public void StopListening()
+        {
+            minerServer.Stop();
+        }
     }
 }
