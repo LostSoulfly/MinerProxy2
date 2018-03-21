@@ -16,8 +16,9 @@ namespace MinerProxy2.Network.Sockets
         private const int BUFFER_SIZE = 2048;
         private readonly byte[] buffer = new byte[BUFFER_SIZE];
         private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
+        private bool isDisconnecting;
+        private bool serverListening;
         private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
         public int GetNumberOfConnections { get { return clientSockets.Count; } }
 
         public event EventHandler<ClientConnectedArgs> OnClientConnected;
@@ -30,6 +31,9 @@ namespace MinerProxy2.Network.Sockets
 
         private void AcceptCallback(IAsyncResult AR)
         {
+            if (!serverListening || isDisconnecting)
+                return;
+
             Socket socket;
 
             try
@@ -67,6 +71,9 @@ namespace MinerProxy2.Network.Sockets
 
         private void ReceiveCallback(IAsyncResult AR)
         {
+            if (!serverListening || isDisconnecting)
+                return;
+
             TcpConnection tcpConnection = (TcpConnection)AR.AsyncState;
             Socket current = tcpConnection.socket;
             //TcpConnection tcpConnection = GetTcpConnection(current);
@@ -126,6 +133,9 @@ namespace MinerProxy2.Network.Sockets
 
         private void SendCallback(IAsyncResult ar)
         {
+            if (!serverListening || isDisconnecting)
+                return;
+
             TcpConnection client = (TcpConnection)ar.AsyncState;
             try
             {
@@ -157,10 +167,14 @@ namespace MinerProxy2.Network.Sockets
             }
             catch { }
             finally { clientSockets.Remove(connection); }
+            isDisconnecting = false;
         }
 
         public bool Send(byte[] data, TcpConnection connection)
         {
+            if (!serverListening || isDisconnecting)
+                return false;
+
             Log.Verbose("Sending {0}: {1}", connection.endPoint, data.GetString());
 
             try
@@ -195,6 +209,8 @@ namespace MinerProxy2.Network.Sockets
             try
             {
                 serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+                serverListening = true;
+                isDisconnecting = false;
                 serverSocket.Listen(0);
                 serverSocket.BeginAccept(AcceptCallback, null);
             }
@@ -213,9 +229,16 @@ namespace MinerProxy2.Network.Sockets
         /// </summary>
         public void Stop()
         {
-            clientSockets.ForEach<TcpConnection>(Disconnect);
+            //clientSockets.ForEach<TcpConnection>(Disconnect);
+            serverListening = false;
+            isDisconnecting = true;
+            for (int i = clientSockets.Count - 1; i >= 0; i--)
+            {
+                Disconnect(clientSockets[i]);
+            }
 
             serverSocket.Close();
+            isDisconnecting = false;
         }
     }
 }
