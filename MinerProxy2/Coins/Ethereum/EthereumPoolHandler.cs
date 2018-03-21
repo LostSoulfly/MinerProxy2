@@ -26,16 +26,16 @@ namespace MinerProxy2.Coins
 
         public void DoPoolGetWork(PoolClient poolClient)
         {
-            Log.Debug("Requesting first work from pool..");
-            _pool.SendToPool("{\"worker\": \"\", \"jsonrpc\": \"2.0\", \"params\": [], \"id\": 3, \"method\": \"eth_getWork\"}\n");
+           //Log.Debug("Requesting first work from pool..");
+            //_pool.SendToPool("{\"worker\": \"\", \"jsonrpc\": \"2.0\", \"params\": [], \"id\": 3, \"method\": \"eth_getWork\"}\n");
         }
 
         public void DoPoolLogin(PoolClient poolClient)
         {
             Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);
-            _pool.SendToPool("{\"worker\": \"" + _pool.poolWorkerName + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
+            //_pool.SendToPool("{\"worker\": \"" + _pool.poolWorkerName + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
 
-            //_pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
+            _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
         }
 
         public void PoolConnected(PoolClient poolClient)
@@ -109,7 +109,7 @@ namespace MinerProxy2.Coins
                             _pool.currentPoolWork = s.GetBytes();
                             break;
 
-                        case int i when (i >= 10):
+                        case int i when (i >= 10 && i != 999):
                         case 4:
 
                             bool result = false;
@@ -137,6 +137,27 @@ namespace MinerProxy2.Coins
                             Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
                             _minerServer.BroadcastToMiners(s);
 
+                            break;
+
+                        case 999:
+
+                            if (JsonHelper.DoesJsonObjectExist(dyn.error) && !JsonHelper.DoesJsonObjectExist(dyn.result))
+                            {
+                                Log.Fatal("Server error for {0}: {1}", poolClient.poolEndPoint, Convert.ToString(dyn.error));
+                                _pool.Stop();
+                                _minerServer.StopListening();
+                                return;
+                            }
+                            else if (JsonHelper.DoesJsonObjectExist(dyn.result))
+                            {
+                                if (dyn.result == false) //no dyn.error.code
+                                {
+                                    Log.Fatal("Server error2 for {0}: {1}", poolClient.poolEndPoint, Convert.ToString(dyn.error));
+                                    _pool.Stop();
+                                    _minerServer.StopListening();
+                                    return;
+                                }
+                            }
                             break;
 
                         default:
