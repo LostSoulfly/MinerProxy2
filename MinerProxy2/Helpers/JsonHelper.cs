@@ -31,10 +31,11 @@ namespace MinerProxy2.Helpers
         {
             try
             {
-                if (ReferenceEquals(null, json))
-                {
+                if (json is null)
                     return false;
-                }
+
+                if (string.IsNullOrEmpty(Convert.ToString(json)))
+                    return false;
             }
             catch { return false; }
 
