@@ -61,7 +61,7 @@ namespace MinerProxy2.Network.Sockets
 
         private void Receive(Socket socket)
         {
-            if (isDisconnecting)
+            if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 return;
 
             try
@@ -72,7 +72,7 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (Exception exception)
             {
-                if (!isDisconnecting)
+                if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 {
                     Log.Error(exception, "Receive");
                     OnServerError?.Invoke(this, new ServerErrorArgs(exception, socket));
@@ -82,7 +82,7 @@ namespace MinerProxy2.Network.Sockets
 
         private void ReceiveCallback(IAsyncResult AR)
         {
-            if (isDisconnecting)
+            if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 return;
 
             Socket socket = (Socket)AR.AsyncState;
@@ -93,6 +93,9 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (ObjectDisposedException ex)
             {
+                if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
+                    return;
+
                 Log.Debug(ex, "Client ObjectDisposed exception");
                 OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
 
@@ -111,7 +114,7 @@ namespace MinerProxy2.Network.Sockets
 
             if (recBuf.Length == 0)
             {
-                if (!isDisconnecting)
+                if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 {
                     Log.Verbose("Pool receive buffer was empty; need to reconnect.. " + received);
                     OnServerDisconnected?.Invoke(this, new ServerDisonnectedArgs(socket));
@@ -125,11 +128,13 @@ namespace MinerProxy2.Network.Sockets
 
             try
             {
+                if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
+                    return;
                 socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
             }
             catch (ObjectDisposedException ex)
             {
-                if (!isDisconnecting)
+                if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 {
                     OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
                     Log.Error(ex, "Pool BeginReceive Error");
@@ -150,6 +155,9 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (ObjectDisposedException exception)
             {
+                if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
+                    return;
+
                 Log.Error(exception, "Client SendCallback");
             }
         }
@@ -179,7 +187,7 @@ namespace MinerProxy2.Network.Sockets
 
         public void Reconnect()
         {
-            if (isDisconnecting)
+            if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 return;
 
             Close();
