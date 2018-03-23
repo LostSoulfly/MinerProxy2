@@ -38,6 +38,8 @@ namespace MinerProxy2.Coins
 
         public void MinerDataReceived(byte[] data, TcpConnection connection)
         {
+            Log.Verbose("{0} sent: {1}", connection.endPoint, data.GetString());
+
             Miner miner = _minerManager.GetMiner(connection);
 
             if (miner == null)
@@ -56,13 +58,15 @@ namespace MinerProxy2.Coins
 
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
+                    int id = (int)dyn.id;
                     //Log.Information("dyn.id: " + dyn.id);
-                    switch ((int)dyn.id)
+                    switch (id)
                     {
                         case 0:
                             Log.Information("Case 0?");
                             break;
 
+                        case 1:
                         case 2:
 
                             string worker = dyn.@params[0];
@@ -78,9 +82,11 @@ namespace MinerProxy2.Coins
 
                             _minerManager.AddMiner(miner);
                             Log.Debug("{0} has authenticated for {1}!", miner.workerIdentifier, _pool.poolEndPoint);
-                            _minerServer.SendToMiner("{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":true}\r\n".GetBytes(), connection);
+                            _minerServer.SendToMiner("{\"id\":" + id + ",\"jsonrpc\":\"2.0\",\"result\":true}", connection);
+
                             break;
 
+                        case 5:
                         case 3:
                             Log.Verbose("{0} requested work.", miner.workerIdentifier); // + Encoding.ASCII.GetString(_pool.currentWork));
 
