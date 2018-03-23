@@ -26,16 +26,22 @@ namespace MinerProxy2.Coins
 
         public void DoPoolGetWork(PoolClient poolClient)
         {
-           //Log.Debug("Requesting first work from pool..");
+            //Log.Debug("Requesting first work from pool..");
             //_pool.SendToPool("{\"worker\": \"\", \"jsonrpc\": \"2.0\", \"params\": [], \"id\": 3, \"method\": \"eth_getWork\"}\n");
+            //_pool.SendToPool("{\"id\":5,\"jsonrpc\":\"2.0\",\"method\":\"eth_getWork\",\"params\":[]}");
         }
 
         public void DoPoolLogin(PoolClient poolClient)
         {
             Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);
-            //_pool.SendToPool("{\"worker\": \"" + _pool.poolWorkerName + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
 
-            _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}\r\n");
+            //workername login
+            //_pool.SendToPool("{\"worker\": \"" + _pool.poolWorkerName + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "\", \"x\"], \"id\": 2, \"method\": \"eth_submitLogin\"}");
+
+            //Phoenix uses id:1
+            //poolClient.SendToPool("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"eth_submitLogin\",\"worker\":\"eth1.0\",\"params\":[\"0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84.lulz\"]}".CheckForNewLine());
+
+            _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 1, \"method\": \"eth_submitLogin\"}");
         }
 
         public void PoolConnected(PoolClient poolClient)
@@ -72,9 +78,6 @@ namespace MinerProxy2.Coins
                             break;
 
                         case 1:
-                            Log.Information("Case 1: " + s);
-                            break;
-
                         case 2:
 
                             if (JsonHelper.DoesJsonObjectExist(dyn.error) && !JsonHelper.DoesJsonObjectExist(dyn.result))
@@ -99,6 +102,7 @@ namespace MinerProxy2.Coins
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
 
+                        case 5:
                         case 3:
                             //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
                             Log.Verbose("{0} sent new work: {1}", poolClient.poolEndPoint, s);
@@ -128,11 +132,7 @@ namespace MinerProxy2.Coins
                                 //miner.PrintShares();
                             }
                             break;
-
-                        case 5:
-                            Log.Debug("Case 5: " + s);
-                            break;
-
+                            
                         case 6:
                             Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
                             _minerServer.BroadcastToMiners(s);
