@@ -10,21 +10,23 @@ namespace MinerProxy2.Helpers
     {
         public static byte[] CheckForNewLine(byte[] data)
         {
+
+            /*
             byte[] endCharacter = data.Skip(data.Length - 2).Take(2).ToArray();
 
-            if (!(endCharacter.SequenceEqual(Environment.NewLine.GetBytes())))
+            if (!(endCharacter.SequenceEqual("\n".GetBytes())))
             {
                 data = data.Concat(Environment.NewLine.GetBytes()).ToArray();
             }
+            */
 
-            return data;
+            return CheckForNewLine(data.GetString()).GetBytes();
         }
 
         public static string CheckForNewLine(string data)
         {
-            //Yeah, this is crappy, but it was quick and easy
-            //TODO rewrite without converting to bytes and back
-            return CheckForNewLine(data.GetBytes()).GetString();
+            
+            return data.TrimNewLine() + "\n";
         }
 
         public static bool DoesJsonObjectExist(dynamic json)
