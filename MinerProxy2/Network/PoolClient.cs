@@ -25,6 +25,7 @@ namespace MinerProxy2.Network
         private ICoinHandlerPool poolHandler;
         private PoolInstance poolInstance;
         private Timer statsTimer;
+        private Timer getWorkTimer;
         private List<byte[]> submittedSharesHistory = new List<byte[]>();
 
         public byte[] currentPoolWork = new byte[0];
@@ -80,6 +81,7 @@ namespace MinerProxy2.Network
             Log.Verbose("Pool connected: {0}.", e.socket.RemoteEndPoint.ToString());
             poolInstance.poolConnectedTime = DateTime.Now;
             StartPoolStats();
+            StarGetWorkTimer();
             if (!poolConnected)
             {
                 poolConnected = true;
@@ -124,6 +126,29 @@ namespace MinerProxy2.Network
             };
 
             statsTimer.Start();
+        }
+
+        private void StarGetWorkTimer()
+        {
+            getWorkTimer = new Timer(5000);
+            getWorkTimer.AutoReset = true;
+
+            getWorkTimer.Elapsed += delegate
+            {
+                Log.Debug("Requesting work from pool..");
+                poolHandler.DoPoolGetWork(this);
+            };
+
+            getWorkTimer.Start();
+        }
+
+        private void StopGetWorkTimer()
+        {
+            if (getWorkTimer == null)
+                return;
+
+            if (getWorkTimer.Enabled)
+                getWorkTimer.Stop();
         }
 
         private void StopPoolStats()
@@ -202,6 +227,7 @@ namespace MinerProxy2.Network
         public void Stop()
         {
             StopPoolStats();
+            StopGetWorkTimer();
 
             if (poolConnected)
             {

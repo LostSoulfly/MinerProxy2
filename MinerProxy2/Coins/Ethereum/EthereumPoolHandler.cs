@@ -9,6 +9,7 @@ using MinerProxy2.Network.Sockets;
 using Newtonsoft.Json;
 using Serilog;
 using System;
+using System.Linq;
 
 namespace MinerProxy2.Coins
 {
@@ -26,9 +27,9 @@ namespace MinerProxy2.Coins
 
         public void DoPoolGetWork(PoolClient poolClient)
         {
-            //Log.Debug("Requesting first work from pool..");
+            //Log.Debug("Requesting work from pool..");
             //_pool.SendToPool("{\"worker\": \"\", \"jsonrpc\": \"2.0\", \"params\": [], \"id\": 3, \"method\": \"eth_getWork\"}\n");
-            //_pool.SendToPool("{\"id\":5,\"jsonrpc\":\"2.0\",\"method\":\"eth_getWork\",\"params\":[]}");
+            _pool.SendToPool("{\"id\":5,\"jsonrpc\":\"2.0\",\"method\":\"eth_getWork\",\"params\":[]}");
         }
 
         public void DoPoolLogin(PoolClient poolClient)
@@ -105,10 +106,12 @@ namespace MinerProxy2.Coins
                         case 5:
                         case 3:
                             //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
-                            Log.Verbose("{0} sent new work: {1}", poolClient.poolEndPoint, s);
 
-                            if (_pool.currentPoolWork != s.GetBytes())
+                            if (_pool.currentPoolWork.SequenceEqual(s.GetBytes()))
+                            {
+                                Log.Verbose("{0} sent new work: {1}", poolClient.poolEndPoint, s);
                                 _minerServer.BroadcastToMiners(s);
+                            }
 
                             _pool.currentPoolWork = s.GetBytes();
                             break;
