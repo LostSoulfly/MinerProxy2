@@ -68,6 +68,8 @@ namespace MinerProxy2.Coins
                     //Log.Information("dyn.id: " + dyn.id);
                     switch ((int)dyn.id)
                     {
+
+                        /*
                         case 0:
                             //Log.Debug("{0} sent new target", poolClient.poolEndPoint);
                             Log.Verbose("{0} sent new target: {1}", poolClient.poolEndPoint, s);
@@ -77,6 +79,7 @@ namespace MinerProxy2.Coins
 
                             _minerServer.BroadcastToMiners(work);
                             break;
+                        */
 
                         case 1:
                         case 2:
@@ -103,6 +106,7 @@ namespace MinerProxy2.Coins
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
 
+                        case 0:
                         case 5:
                         case 3:
                             //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
