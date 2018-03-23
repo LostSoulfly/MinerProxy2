@@ -81,7 +81,7 @@ namespace MinerProxy2.Network
             Log.Verbose("Pool connected: {0}.", e.socket.RemoteEndPoint.ToString());
             poolInstance.poolConnectedTime = DateTime.Now;
             StartPoolStats();
-            StarGetWorkTimer();
+            StartGetWorkTimer();
             if (!poolConnected)
             {
                 poolConnected = true;
@@ -128,7 +128,7 @@ namespace MinerProxy2.Network
             statsTimer.Start();
         }
 
-        private void StarGetWorkTimer()
+        private void StartGetWorkTimer()
         {
             getWorkTimer = new Timer(5000);
             getWorkTimer.AutoReset = true;
