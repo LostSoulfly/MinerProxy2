@@ -13,16 +13,12 @@ namespace MinerProxy2.Helpers
     {
         public static byte[] CheckForNewLine(this byte[] data)
         {
-            byte[] result = JsonHelper.CheckForNewLine(data);
-
-            return result;
+            return JsonHelper.CheckForNewLine(data);
         }
 
         public static string CheckForNewLine(this string data)
         {
-            string result = JsonHelper.CheckForNewLine(data);
-
-            return result;
+            return JsonHelper.CheckForNewLine(data);
         }
 
         public static IEnumerable<T> ForEach<T>(this IEnumerable<T> array, Action<T> act)
