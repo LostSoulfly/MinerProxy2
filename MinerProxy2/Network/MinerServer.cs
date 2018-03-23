@@ -69,10 +69,15 @@ namespace MinerProxy2.Network
         {
             Miner miner = _minerManager.GetMiner(e.connection);
 
-            Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
 
             if (miner != null)
+            {
+                Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
                 _minerManager.RemoveMiner(miner);
+            } else
+            {
+                Log.Information("{0} has disconnected for {1}", e.connection.endPoint, _poolClient.poolEndPoint);
+            }
 
             _poolClient.CheckPoolConnection();
         }
