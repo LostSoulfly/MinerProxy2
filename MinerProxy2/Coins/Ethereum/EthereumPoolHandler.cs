@@ -68,18 +68,17 @@ namespace MinerProxy2.Coins
                     //Log.Information("dyn.id: " + dyn.id);
                     switch ((int)dyn.id)
                     {
-
-                        /*
+                        
                         case 0:
                             //Log.Debug("{0} sent new target", poolClient.poolEndPoint);
                             Log.Verbose("{0} sent new target: {1}", poolClient.poolEndPoint, s);
                             byte[] work = s.GetBytes();
-                            _pool.currentPoolWork = work;
-                            Log.Verbose("currentPoolWork length: {0}", _pool.currentPoolWork.Length);
+                            _pool.currentPoolTarget = work;
+                            Log.Verbose("currentPoolTarget length: {0}", _pool.currentPoolTarget.Length);
 
                             _minerServer.BroadcastToMiners(work);
                             break;
-                        */
+                        
 
                         case 1:
                         case 2:
@@ -105,8 +104,7 @@ namespace MinerProxy2.Coins
                             Log.Information("Authorized with {0}!", poolClient.poolEndPoint);
                             //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
-
-                        case 0:
+                            
                         case 5:
                         case 3:
                             //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
@@ -120,7 +118,7 @@ namespace MinerProxy2.Coins
                             _pool.currentPoolWork = s.GetBytes();
                             break;
 
-                        case int i when (i >= 10 && i != 999):
+                        case int i when (i >= 7 && i != 999):
                         case 4:
 
                             bool result = false;
