@@ -44,11 +44,18 @@ namespace MinerProxy2.Miners
             return acceptedShares;
         }
 
-        public string GetCurrentTotalHashrate()
+        public string GetCurrentHashrateReadable()
         {
             long total = 0;
             minerList.ForEach<Miner>(m => total += m.hashrate);
             return total.ToString("#,##0,Mh/s").Replace(",", ".");
+        }
+
+        public long GetCurrentHashrateLong()
+        {
+            long total = 0;
+            minerList.ForEach<Miner>(m => total += m.hashrate);
+            return total;
         }
 
         public Miner GetMiner(TcpConnection connection)
@@ -64,7 +71,7 @@ namespace MinerProxy2.Miners
         public Miner GetNextShare(bool accepted)
         {
             Miner miner = minerList.OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
-            Log.Debug("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
+            Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
             if (accepted)
             {
@@ -111,7 +118,7 @@ namespace MinerProxy2.Miners
         public string ResetMinerShareSubmittedTime(Miner miner)
         {
             string ts = miner.shareSubmittedTimes.First().ToReadableTime();
-            Log.Debug("Resetting {0} last submit time. ({1})", miner.workerIdentifier, ts);
+            Log.Verbose("Resetting {0} last submit time. ({1})", miner.workerIdentifier, ts);
             miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
             return ts;
         }
