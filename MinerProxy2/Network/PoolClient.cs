@@ -30,6 +30,8 @@ namespace MinerProxy2.Network
 
         public byte[] currentPoolWork = new byte[0];
 
+        public byte[] currentPoolTarget = new byte[0];
+
         public long acceptedSharesCount { get { return poolInstance.acceptedSharesCount; } set { poolInstance.acceptedSharesCount = value; } }
 
         public string poolEndPoint { get { return poolInstance.GetCurrentPool().poolEndPoint; } }
@@ -119,7 +121,7 @@ namespace MinerProxy2.Network
             statsTimer.Elapsed += delegate
             {
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
-                Log.Debug("Current hashrate: {0}", minerManager.GetCurrentTotalHashrate());
+                Log.Debug("Current hashrate: {0}", minerManager.GetCurrentHashrateReadable());
                 Log.Information("[{0}] uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
                     this.poolWorkerName, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
                 minerManager.minerList.ForEach<Miner>(m => m.PrintShares());
@@ -130,16 +132,17 @@ namespace MinerProxy2.Network
 
         private void StartGetWorkTimer()
         {
-            getWorkTimer = new Timer(5000);
 
+            int tickRate = 500;//(5000 / minerServer.GetNumberOfConnections);
 
             //if (tickRate < 500) tickRate = 500;
 
+            getWorkTimer = new Timer(tickRate);
             getWorkTimer.AutoReset = true;
 
             getWorkTimer.Elapsed += delegate
             {
-                Log.Debug("Requesting work from pool..");
+                //Log.Debug("Requesting work from pool..");
                 poolHandler.DoPoolGetWork(this);
             };
 
@@ -238,6 +241,7 @@ namespace MinerProxy2.Network
                 Log.Information("Disconnecting from {0}.", this.poolEndPoint);
                 poolConnected = false;
                 currentPoolWork = new byte[0];
+                currentPoolTarget = new byte[0];
                 poolClient.Close();
                 return;
             }
