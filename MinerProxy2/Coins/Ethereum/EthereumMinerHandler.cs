@@ -46,6 +46,8 @@ namespace MinerProxy2.Coins
                 Log.Verbose("{0}: Miner does not exist.", connection.endPoint);
 
             string test = data.GetString();
+            int id = -999;
+            string jsonMethod = "";
 
             foreach (string s in test.Split('\r', '\n'))
             {
@@ -57,17 +59,42 @@ namespace MinerProxy2.Coins
                 try { dyn = JsonConvert.DeserializeObject(s.TrimNewLine()); } catch (Exception ex) { Log.Error(ex, "DeserializeObject Json error"); return; }
 
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
-                {
-                    int id = (int)dyn.id;
-                    //Log.Information("dyn.id: " + dyn.id);
-                    switch (id)
+                    id = (int)dyn.id;
+
+                if (JsonHelper.DoesJsonObjectExist(dyn.method))
+                { 
+                    jsonMethod = dyn.method;
+                 
+                    switch (jsonMethod.ToLower())
                     {
-                        case 0:
-                            Log.Information("Case 0?");
+                        case "eth_getwork":
+                            Log.Verbose("{0} requested work.", miner.workerIdentifier); // + Encoding.ASCII.GetString(_pool.currentWork));
+
+
+                            if (_pool.currentPoolWork.Length > 0)
+                                _minerServer.SendToMiner(_pool.currentPoolWork, connection);
+                            else
+                                _pool.SendToPool(s.GetBytes());
+
                             break;
 
-                        case 1:
-                        case 2:
+
+                        case "eth_submitwork":
+                            Log.Information("{0} found a share!", miner.workerIdentifier);
+                            _pool.SubmitShareToPool(s.GetBytes(), _minerManager.GetMiner(connection));
+                            break;
+
+                        case "eth_submithashrate":
+                            string hash = dyn.@params[0];
+                            long hashrate = Convert.ToInt64(hash, 16);
+                            _minerManager.UpdateMinerHashrate(hashrate, miner);
+                            Log.Verbose("{0} sent hashrate: {1}", miner.workerIdentifier, hashrate.ToString("#,##0,Mh/s").Replace(",", "."));
+                            dyn.@params[0] = _minerManager.GetCurrentHashrateLong().ToString("X");
+                            //_pool.SendToPool(s.GetBytes());
+                            break;
+
+                        case "eth_login": // DevFee only?
+                        case "eth_submitlogin":
 
                             string worker = dyn.@params[0];
 
@@ -83,45 +110,30 @@ namespace MinerProxy2.Coins
                             _minerManager.AddMiner(miner);
                             Log.Debug("{0} has authenticated for {1}!", miner.workerIdentifier, _pool.poolEndPoint);
                             _minerServer.SendToMiner("{\"id\":" + id + ",\"jsonrpc\":\"2.0\",\"result\":true}", connection);
+                            //_minerManager.AddMinerId(miner, id);
 
-                            break;
-
-                        case 5:
-                        case 3:
-                            Log.Verbose("{0} requested work.", miner.workerIdentifier); // + Encoding.ASCII.GetString(_pool.currentWork));
-
-                            if (_pool.currentPoolWork.Length > 0)
-                                _minerServer.SendToMiner(_pool.currentPoolWork, connection);
-                            else
-                                _pool.SendToPool(s.GetBytes());
-
-                            break;
-
-                        case int i when (i >= 10): //this is for Claymore's newer versions
-                        case 4:
-                            Log.Information("{0} found a share!", miner.workerIdentifier);
-                            _pool.SubmitShareToPool(s.GetBytes(), _minerManager.GetMiner(connection));
-                            break;
-
-                        case 6:
-                            string hash = dyn.@params[0];
-                            long hashrate = Convert.ToInt64(hash, 16);
-                            miner.hashrate = hashrate;
-                            Log.Verbose("{0} sending hashrate: {1}", miner.workerIdentifier, hashrate.ToString("#,##0,Mh/s").Replace(",", "."));
-
-                            //_pool.SendToPool(s.GetBytes());
                             break;
 
                         default:
-                            Log.Warning("MinerHandler Unhandled {0} ", s);
+                            Log.Warning("MinerHandler Method Unhandled {0} ", s);
                             _pool.SendToPool(s.GetBytes());
                             break;
                     }
-                } /* else if (dyn.error != null && dyn.result == null)
-            {
-                Log.Error("Server sent Error: " + dyn.error.code + ": " + dyn.error.message);
-            }
-            */
+
+                    continue;
+                }
+
+                if (id > -999)
+                {
+                    switch (id)
+                    {
+
+                        default:
+                            Log.Warning("MinerHandler id Unhandled {0} ", s);
+                            _pool.SendToPool(s.GetBytes());
+                            break;
+                    }
+                }
             }
         }
 
@@ -141,6 +153,8 @@ namespace MinerProxy2.Coins
         {
             Log.Information("Miner Stats");
         }
+
+        //private void SendWorkWithId(byte data, )
 
         public void SendToMiner(byte[] data, TcpConnection connection)
         {
