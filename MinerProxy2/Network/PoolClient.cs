@@ -131,6 +131,10 @@ namespace MinerProxy2.Network
         private void StartGetWorkTimer()
         {
             getWorkTimer = new Timer(5000);
+
+
+            //if (tickRate < 500) tickRate = 500;
+
             getWorkTimer.AutoReset = true;
 
             getWorkTimer.Elapsed += delegate
