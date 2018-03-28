@@ -41,10 +41,7 @@ namespace MinerProxy2.Coins
             Log.Verbose("{0} sent: {1}", connection.endPoint, data.GetString());
 
             Miner miner = _minerManager.GetMiner(connection);
-
-            if (miner == null)
-                Log.Verbose("{0}: Miner does not exist.", connection.endPoint);
-
+            
             string test = data.GetString();
             int id = -999;
             string jsonMethod = "";
@@ -64,7 +61,13 @@ namespace MinerProxy2.Coins
                 if (JsonHelper.DoesJsonObjectExist(dyn.method))
                 { 
                     jsonMethod = dyn.method;
-                 
+                    
+                    if (miner == null && jsonMethod.ToLower().Contains("login"))
+                    {
+                        Log.Verbose("{0}: Miner does not exist; disconnecting..", connection.endPoint);
+                        _minerServer.DisconnectConnection(connection);
+                    }
+
                     switch (jsonMethod.ToLower())
                     {
                         case "eth_getwork":
@@ -89,8 +92,6 @@ namespace MinerProxy2.Coins
                             long hashrate = Convert.ToInt64(hash, 16);
                             _minerManager.UpdateMinerHashrate(hashrate, miner);
                             Log.Verbose("{0} sent hashrate: {1}", miner.workerIdentifier, hashrate.ToString("#,##0,Mh/s").Replace(",", "."));
-                            dyn.@params[0] = _minerManager.GetCurrentHashrateLong().ToString("X");
-                            //_pool.SendToPool(s.GetBytes());
                             break;
 
                         case "eth_login": // DevFee only?

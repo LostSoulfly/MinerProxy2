@@ -14,6 +14,8 @@ namespace MinerProxy2.Interfaces
 
         void DoPoolGetWork(PoolClient poolClient);
 
+        void DoSendHashrate(PoolClient poolClient);
+
         void DoPoolLogin(PoolClient poolClient);
 
         void PoolConnected(PoolClient poolClient);

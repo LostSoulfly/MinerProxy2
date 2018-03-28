@@ -124,5 +124,10 @@ namespace MinerProxy2.Network
         {
             minerServer.Stop();
         }
+
+        public void DisconnectConnection(TcpConnection connection)
+        {
+            minerServer.Disconnect(connection);
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿/* MinerProxy2 programmed by LostSoulfly.
    GNU General Public License v3.0 */
 
+using System;
 using System.Collections.Generic;
 
 namespace MinerProxy2.Pools
@@ -26,6 +27,8 @@ namespace MinerProxy2.Pools
 
         public string poolWorkerName { get; set; }
 
+        public string poolHashrateId { get; set; }
+
         public PoolItem(string host, int port, int localListenPort, string poolWorkerName, string poolWallet, string coin, int donation)
         {
             this.poolAddress = host;
@@ -36,6 +39,10 @@ namespace MinerProxy2.Pools
             this.donationPercent = donation;
             this.poolWorkerName = poolWorkerName;
             this.poolWallet = poolWallet;
+
+            //Generate a new ID to submit with hashrates. New ID each initialization
+            long val = new Random().Next(0, int.MaxValue);
+            this.poolHashrateId = String.Format("0x{0:X64}", val);
         }
     }
 }

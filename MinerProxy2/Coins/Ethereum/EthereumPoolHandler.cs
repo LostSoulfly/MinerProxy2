@@ -45,6 +45,14 @@ namespace MinerProxy2.Coins
             _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 1, \"method\": \"eth_submitLogin\"}");
         }
 
+        public void DoSendHashrate(PoolClient poolClient)
+        {
+            string hashrateJson = String.Format("{{ \"id\":6,\"jsonrpc\":\"2.0\",\"method\":\"eth_submitHashrate\",\"params\":[\"{0}\", \"{1}\"]}",
+                _minerManager.GetCurrentHashrateLong().ToString("X"), _pool.poolHashrateId);
+            _pool.SendToPool(hashrateJson);
+
+        }
+
         public void PoolConnected(PoolClient poolClient)
         {
             Log.Information("{0} connected: ", poolClient.poolEndPoint);
