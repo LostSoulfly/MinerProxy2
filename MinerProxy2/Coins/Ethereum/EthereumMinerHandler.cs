@@ -62,10 +62,11 @@ namespace MinerProxy2.Coins
                 { 
                     jsonMethod = dyn.method;
                     
-                    if (miner == null && jsonMethod.ToLower().Contains("login"))
+                    if (miner == null && !jsonMethod.ToLower().Contains("login"))
                     {
                         Log.Verbose("{0}: Miner does not exist; disconnecting..", connection.endPoint);
                         _minerServer.DisconnectConnection(connection);
+                        return;
                     }
 
                     switch (jsonMethod.ToLower())
@@ -73,6 +74,7 @@ namespace MinerProxy2.Coins
                         case "eth_getwork":
                             Log.Verbose("{0} requested work.", miner.workerIdentifier); // + Encoding.ASCII.GetString(_pool.currentWork));
 
+                            _minerManager.AddMinerId(miner, id);
 
                             if (_pool.currentPoolWork.Length > 0)
                                 _minerServer.SendToMiner(_pool.currentPoolWork, connection);

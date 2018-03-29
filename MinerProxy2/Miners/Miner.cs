@@ -2,6 +2,7 @@
    GNU General Public License v3.0 */
 
 using MinerProxy2.Network.Sockets;
+using Serilog;
 using System;
 using System.Collections.Generic;
 
@@ -36,6 +37,8 @@ namespace MinerProxy2.Miners
             }
         }
 
+        public List<int> minerIdList;
+
         public string workerName { get; set; }
 
         public Miner(string workerName, TcpConnection connection)
@@ -45,8 +48,9 @@ namespace MinerProxy2.Miners
             //connectionAlive = true;
             shareSubmittedTimes = new List<DateTime>();
             connectionStartTime = DateTime.Now;
+            minerIdList = new List<int>();
         }
-
+        
         public void PrintShares()
         {
             Serilog.Log.Information("{0}'s shares: {1}/{2}/{3}", workerIdentifier, submittedShares, acceptedShares, rejectedShares);

@@ -127,6 +127,7 @@ namespace MinerProxy2.Network
                 Log.Information("[{0}] uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
                     this.poolWorkerName, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
                 minerManager.minerList.ForEach<Miner>(m => m.PrintShares());
+                poolHandler.DoSendHashrate(this);
             };
 
             statsTimer.Start();
@@ -135,7 +136,7 @@ namespace MinerProxy2.Network
         private void StartGetWorkTimer()
         {
 
-            int tickRate = 500;//(5000 / minerServer.GetNumberOfConnections);
+            int tickRate = 1000;//(5000 / minerServer.GetNumberOfConnections);
 
             //if (tickRate < 500) tickRate = 500;
 

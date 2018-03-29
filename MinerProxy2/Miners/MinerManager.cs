@@ -99,6 +99,21 @@ namespace MinerProxy2.Miners
             return submittedShares;
         }
 
+        public void AddMinerId(Miner miner, int id)
+        {
+            if (miner.minerIdList.Count > 0
+                && miner.minerIdList.Exists(item => item == id))
+                    return;
+
+            Log.Debug("[{0}] adding ID {1}.", miner.workerIdentifier, id);
+            miner.minerIdList.Add(id);
+        }
+
+        public List<int> GetMinerIds(Miner miner)
+        {
+            return miner.minerIdList;
+        }
+
         public void RemoveMiner(Miner miner)
         {
             lock (MinerManagerLock)

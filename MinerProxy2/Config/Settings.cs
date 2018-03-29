@@ -5,8 +5,7 @@ namespace MinerProxy2.Config
 {
     public static class Settings
     {
-        public static bool debug { get; set; }
         public static int donationPercent { get; set; }
-        public static bool logging { get; set; }
+        public static int logLevel { get; set; }
     }
 }

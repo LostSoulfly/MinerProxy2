@@ -42,13 +42,14 @@ namespace MinerProxy2.Coins
             //Phoenix uses id:1
             //poolClient.SendToPool("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"eth_submitLogin\",\"worker\":\"eth1.0\",\"params\":[\"0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84.lulz\"]}".CheckForNewLine());
 
-            _pool.SendToPool("{\"worker\": \"" + "eth1.0" + "\", \"jsonrpc\": \"2.0\", \"params\": [\"" + _pool.poolWallet + "." + _pool.poolWorkerName + "\", \"x\"], \"id\": 1, \"method\": \"eth_submitLogin\"}");
+            _pool.SendToPool(string.Format("{{\"worker\": \"eth1.0\", \"jsonrpc\": \"2.0\", \"params\": [\"{0}.{1}\", \"{2}\"], \"id\": 1, \"method\": \"eth_submitLogin\"}}", _pool.poolWallet, _pool.poolWorkerName, "x"));
         }
 
         public void DoSendHashrate(PoolClient poolClient)
         {
-            string hashrateJson = String.Format("{{ \"id\":6,\"jsonrpc\":\"2.0\",\"method\":\"eth_submitHashrate\",\"params\":[\"{0}\", \"{1}\"]}",
+            string hashrateJson = string.Format("{{\"id\":6,\"jsonrpc\":\"2.0\",\"method\":\"eth_submitHashrate\",\"params\":[\"0x{0}\", \"{1}\"]}}",
                 _minerManager.GetCurrentHashrateLong().ToString("X"), _pool.poolHashrateId);
+            //Log.Debug("HashrateJson: " + hashrateJson);
             _pool.SendToPool(hashrateJson);
 
         }
