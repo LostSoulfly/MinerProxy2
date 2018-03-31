@@ -19,7 +19,7 @@ namespace MinerProxy2.Pools
 
         public string poolAddress { get; set; }
 
-        public string poolEndPoint { get { return poolAddress + ":" + poolPort; } }
+        internal string poolEndPoint { get { return poolAddress + ":" + poolPort; } }
 
         public int poolPort { get; set; }
 
@@ -27,18 +27,21 @@ namespace MinerProxy2.Pools
 
         public string poolWorkerName { get; set; }
 
-        public string poolHashrateId { get; set; }
+        public string poolPassword { get; set; }
 
-        public PoolItem(string host, int port, int localListenPort, string poolWorkerName, string poolWallet, string coin, int donation)
+        internal string poolHashrateId { get; set; }
+        
+        public PoolItem(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin, int donationPercent)
         {
-            this.poolAddress = host;
-            this.poolPort = port;
+            this.poolAddress = poolAddress;
+            this.poolPort = poolPort;
             this.localListenPort = localListenPort;
             this.coin = coin;
             //this.maxMiners = maxMiners;
-            this.donationPercent = donation;
+            this.donationPercent = donationPercent;
             this.poolWorkerName = poolWorkerName;
             this.poolWallet = poolWallet;
+            this.poolPassword = "x";
 
             //Generate a new ID to submit with hashrates. New ID each initialization
             long val = new Random().Next(0, int.MaxValue);

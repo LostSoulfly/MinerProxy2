@@ -9,16 +9,15 @@ namespace MinerProxy2.Pools
     public class PoolInstance
     {
         private PoolItem currentPool;
-        public readonly PoolItem mainPool;
+        internal int numberOfConnects;
+        internal DateTime poolConnectedTime;
+        internal long submittedSharesCount, acceptedSharesCount, rejectedSharesCount;
+        public int protocol;
+        public PoolItem mainPool;
         public List<PoolItem> failoverPools = new List<PoolItem>();
-        public int numberOfConnects;
-        public bool passwordAsWorkerName;
-        public DateTime poolConnectedTime;
-        public long submittedSharesCount, acceptedSharesCount, rejectedSharesCount;
-        public bool useDotBeforeWorkerName;
         //failure attempts, then switch
         //retry main pool in seconds
-
+        
         public PoolInstance(string poolHost, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin)
         {
             mainPool = new PoolItem(poolHost, poolPort, localListenPort, poolWorkerName, poolWallet, coin, 1);

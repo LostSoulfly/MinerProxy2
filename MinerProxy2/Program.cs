@@ -8,6 +8,7 @@ using MinerProxy2.Pools;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System;
+using System.Collections.Generic;
 
 namespace MinerProxy2
 {
@@ -25,34 +26,28 @@ namespace MinerProxy2
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.ControlledBy(logLevel)
-                .WriteTo.Console(theme: SystemConsoleTheme.Literate, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
+                .WriteTo.Console(theme: SystemConsoleTheme.Literate, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
                 //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "log.txt")
-                .WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "verbose.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
+                //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "verbose.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
                 .CreateLogger();
 
             Helpers.Logging.MinerProxyHeader();
 
-            /*
+            
             ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
             ICoinHandlerPool poolHandler = (ICoinHandlerPool)new EthereumPoolHandler();
 
-            string server = "uk.metaverse.farm";
-            int port = 3333;
+            List<PoolInstance> pools;
 
-            PoolInstance ethPoolInstance = new PoolInstance(server, port, 9000, "MProxy", "MPbQqqbkn9en1AL3UMJNUtCBz9fPz4SGU6", "ETH");
-            PoolClient ethereumPool = new PoolClient(ethPoolInstance, poolHandler, coinHandler);
-            */
+            pools = Config.Settings.LoadPoolDirectory();
+            List<PoolClient> poolClients = new List<PoolClient>();
 
-            // ---- second proxy
-
-            
-            ICoinHandlerMiner coinHandler2 = (ICoinHandlerMiner)new EthereumMinerHandler();
-            ICoinHandlerPool poolHandler2 = (ICoinHandlerPool)new EthereumPoolHandler();
-            string server2 = "us1-etc.ethermine.org";
-            int port2 = 4444;
-            PoolInstance ethPoolInstance2 = new PoolInstance(server2, port2, 9000, "MProxyETC", "0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84", "ETC");
-            PoolClient ethereumPool2 = new PoolClient(ethPoolInstance2, poolHandler2, coinHandler2);
-            
+            Log.Debug("Pool count " + pools.Count);
+            foreach (var pool in pools)
+            {
+                PoolClient poolClient = new PoolClient(pool, poolHandler, coinHandler);
+                poolClients.Add(poolClient);
+            }
 
             Console.ReadLine();
         }
