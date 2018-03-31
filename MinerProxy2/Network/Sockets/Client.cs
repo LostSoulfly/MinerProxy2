@@ -15,9 +15,9 @@ namespace MinerProxy2.Network.Sockets
         private int BUFFER_SIZE = 2048;
         private bool clientConnected;
         private Socket clientSocket;
-        private string host;
+        public string host;
         private bool isDisconnecting;
-        private int port;
+        public int port;
 
         public event EventHandler<ServerConnectedArgs> OnServerConnected;
 
@@ -29,21 +29,19 @@ namespace MinerProxy2.Network.Sockets
 
         public Client(string host, int port, int bufferSize = 2048)
         {
+            this.BUFFER_SIZE = bufferSize;
             this.host = host;
             this.port = port;
-            this.BUFFER_SIZE = bufferSize;
-
             //initialize the buffer
             buffer = new byte[BUFFER_SIZE];
         }
 
         private void ConnectCallback(IAsyncResult ar)
         {
+
+            Socket socket = (Socket)ar.AsyncState;
             try
             {
-                // Retrieve the socket from the state object.
-                Socket socket = (Socket)ar.AsyncState;
-
                 // Complete the connection.
                 socket.EndConnect(ar);
                 clientConnected = true;
@@ -55,7 +53,12 @@ namespace MinerProxy2.Network.Sockets
             }
             catch (ObjectDisposedException exception)
             {
-                Log.Error(exception, "ConnectCallback");
+                Log.Verbose(exception, "ConnectCallback");
+            }
+            catch (SocketException socketException)
+            {
+                Log.Verbose("Pool connection error", socketException);
+                OnServerError?.Invoke(this, new ServerErrorArgs(socketException, socket));
             }
         }
 
@@ -180,7 +183,15 @@ namespace MinerProxy2.Network.Sockets
         public void Connect()
         {
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            clientSocket.BeginConnect(host, port,
+                new AsyncCallback(ConnectCallback), clientSocket);
+        }
 
+        public void Connect(string host, int port)
+        {
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            this.host = host;
+            this.port = port;
             clientSocket.BeginConnect(host, port,
                 new AsyncCallback(ConnectCallback), clientSocket);
         }

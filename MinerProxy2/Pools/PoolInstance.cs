@@ -1,6 +1,7 @@
 ﻿/* MinerProxy2 programmed by LostSoulfly.
    GNU General Public License v3.0 */
 
+using Serilog;
 using System;
 using System.Collections.Generic;
 
@@ -9,23 +10,33 @@ namespace MinerProxy2.Pools
     public class PoolInstance
     {
         private PoolItem currentPool;
-        internal int numberOfConnects;
+        internal int numberOfConnectAttempts;
         internal DateTime poolConnectedTime;
         internal long submittedSharesCount, acceptedSharesCount, rejectedSharesCount;
         public int protocol;
+        public bool usePoolFailover;
+        public int localListenPort;
+        public int donationPercent = 2;
+        public int poolStatsIntervalInMs = 60000;
+        public int poolGetWorkIntervalInMs = 1000;
+        public List<string> allowedIPAddresses = new List<string>();
         public PoolItem mainPool;
         public List<PoolItem> failoverPools = new List<PoolItem>();
-        //failure attempts, then switch
-        //retry main pool in seconds
         
-        public PoolInstance(string poolHost, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin)
+        public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin)
         {
-            mainPool = new PoolItem(poolHost, poolPort, localListenPort, poolWorkerName, poolWallet, coin, 1);
+            this.localListenPort = localListenPort;
+            mainPool = new PoolItem(poolAddress, poolPort, poolWorkerName, poolWallet, coin);
         }
 
-        public void AddFailoverPool(string host, int port)
+        public void AddFailoverPool(string poolAddress, int poolPort)
         {
-            failoverPools.Add(new PoolItem(host, port, mainPool.localListenPort, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.coin, mainPool.donationPercent));
+            failoverPools.Add(new PoolItem(poolAddress, poolPort, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.coin));
+        }
+
+        public void AddAllowedIPAddress(string ip)
+        {
+            allowedIPAddresses.Add(ip);
         }
 
         public PoolItem GetCurrentPool()
@@ -38,7 +49,19 @@ namespace MinerProxy2.Pools
 
         public PoolItem GetFailoverPool()
         {
-            //check which pool we're on, then get the next failover or return mainpool
+            this.numberOfConnectAttempts = 0;
+
+            if (!usePoolFailover)
+                return GetCurrentPool();
+
+            int index = failoverPools.FindIndex(p => p == GetCurrentPool()) + 1;
+
+            if (index > failoverPools.Count)
+                currentPool = mainPool;
+            else
+                currentPool = failoverPools[index];
+
+            Log.Information("Switching to failover pool {0}: {1}", index+1, currentPool.poolEndPoint);
 
             return currentPool;
         }

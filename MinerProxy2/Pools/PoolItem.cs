@@ -8,15 +8,8 @@ namespace MinerProxy2.Pools
 {
     public class PoolItem
     {
-        public List<string> allowedIPAddresses = new List<string>();
-
         public string coin { get; set; }
-
-        //public int maxMiners { get; set; }
-        public int donationPercent { get; set; }
-
-        public int localListenPort { get; set; }
-
+        
         public string poolAddress { get; set; }
 
         internal string poolEndPoint { get { return poolAddress + ":" + poolPort; } }
@@ -31,14 +24,12 @@ namespace MinerProxy2.Pools
 
         internal string poolHashrateId { get; set; }
         
-        public PoolItem(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin, int donationPercent)
+        public PoolItem(string poolAddress, int poolPort, string poolWorkerName, string poolWallet, string coin)
         {
             this.poolAddress = poolAddress;
             this.poolPort = poolPort;
-            this.localListenPort = localListenPort;
             this.coin = coin;
             //this.maxMiners = maxMiners;
-            this.donationPercent = donationPercent;
             this.poolWorkerName = poolWorkerName;
             this.poolWallet = poolWallet;
             this.poolPassword = "x";

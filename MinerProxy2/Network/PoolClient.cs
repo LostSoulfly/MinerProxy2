@@ -53,7 +53,7 @@ namespace MinerProxy2.Network
             this.poolInstance = poolInstance;
 
             //Create a new instance of the MinerServer, which creates an instance of Network.Sockets.Server
-            minerServer = new MinerServer(poolInstance.GetCurrentPool().localListenPort, this, minerManager, coinHandler);
+            minerServer = new MinerServer(poolInstance.localListenPort, this, minerManager, coinHandler);
 
             //Create a new instance of the Network.Sockets.Client
             poolClient = new Client(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
@@ -83,6 +83,7 @@ namespace MinerProxy2.Network
         private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
         {
             Log.Verbose("Pool connected: {0}.", e.socket.RemoteEndPoint.ToString());
+            poolInstance.numberOfConnectAttempts = 0;
             poolInstance.poolConnectedTime = DateTime.Now;
             StartPoolStats();
             StartGetWorkTimer();
@@ -109,15 +110,20 @@ namespace MinerProxy2.Network
 
         private void PoolClient_OnServerError(object sender, ServerErrorArgs e)
         {
-            Log.Error(e.exception, "Server error!");
+            //Log.Error(e.exception, "Server error!");
             poolConnected = false;
             Stop();
+            poolInstance.numberOfConnectAttempts++;
+            System.Threading.Thread.Sleep(1000);
+            if (poolInstance.numberOfConnectAttempts >= 5)
+                poolInstance.GetFailoverPool();
+
             CheckPoolConnection();
         }
 
         private void StartPoolStats()
         {
-            statsTimer = new Timer(60000);
+            statsTimer = new Timer(poolInstance.poolStatsIntervalInMs);
             statsTimer.AutoReset = true;
 
             statsTimer.Elapsed += delegate
@@ -136,10 +142,8 @@ namespace MinerProxy2.Network
         private void StartGetWorkTimer()
         {
 
-            int tickRate = 1000;//(5000 / minerServer.GetNumberOfConnections);
-
-            //if (tickRate < 500) tickRate = 500;
-
+            int tickRate = poolInstance.poolGetWorkIntervalInMs;
+            
             getWorkTimer = new Timer(tickRate);
             getWorkTimer.AutoReset = true;
 
@@ -172,7 +176,7 @@ namespace MinerProxy2.Network
 
         public bool CheckPoolConnection()
         {
-            Log.Debug("{0} number of connections: {1}", poolWorkerName, minerServer.GetNumberOfConnections);
+            Log.Verbose("{0} number of connections: {1}", poolWorkerName, minerServer.GetNumberOfConnections);
 
             if (poolConnected && minerServer.GetNumberOfConnections == 0)
             {
@@ -195,7 +199,7 @@ namespace MinerProxy2.Network
 
         public void ClearSubmittedSharesHistory()
         {
-            Log.Debug("Clearing submitted shares history.");
+            Log.Verbose("Clearing submitted shares history.");
             lock (submittedShareLock) { submittedSharesHistory.Clear(); }
         }
 
@@ -231,7 +235,7 @@ namespace MinerProxy2.Network
         public void Start()
         {
             Log.Information("Connecting to {0}.", this.poolEndPoint);
-            poolClient.Connect();
+            poolClient.Connect(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
         }
 
         public void Stop()
