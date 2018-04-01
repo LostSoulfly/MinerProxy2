@@ -63,6 +63,9 @@ namespace MinerProxy2.Coins
         {
             Log.Verbose("Pool {0} sent: {1}", poolClient.poolEndPoint, data.GetString());
 
+            dynamic dynWork;
+            string work;
+
             string split = data.GetString();
 
             foreach (string s in split.Split('\r', '\n'))
@@ -79,13 +82,20 @@ namespace MinerProxy2.Coins
                     {
                         
                         case 0:
-                            //Log.Debug("{0} sent new target", poolClient.poolEndPoint);
-                            Log.Verbose("{0} sent new target: {1}", poolClient.poolEndPoint, s);
-                            byte[] work = s.GetBytes();
-                            _pool.currentPoolTarget = work;
+                            Log.Debug("{0} sent new target", poolClient.poolEndPoint);
+                            //Log.Verbose("{0} sent new target: {1}", poolClient.poolEndPoint, s);
+                            work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+                            _pool.currentPoolTarget = work.GetBytes();
                             Log.Verbose("currentPoolTarget length: {0}", _pool.currentPoolTarget.Length);
 
-                            _minerServer.BroadcastToMiners(work);
+                            foreach (Miner m in _minerManager.minerList)
+                            {
+                                Log.Verbose("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
+                                dyn.id = m.minerID;
+                                _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
+                            }
+
+                            //_minerServer.BroadcastToMiners();
                             break;
                         
 
@@ -118,13 +128,22 @@ namespace MinerProxy2.Coins
                         case 3:
                             //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
 
-                            if (_pool.currentPoolWork.SequenceEqual(s.GetBytes()))
+                            work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+
+                            if (_pool.currentPoolWork.SequenceEqual(work.GetBytes()))
                             {
                                 Log.Verbose("{0} sent new work: {1}", poolClient.poolEndPoint, s);
-                                _minerServer.BroadcastToMiners(s);
+
+                                foreach (Miner m in _minerManager.minerList)
+                                {
+                                    Log.Verbose("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
+                                    dyn.id = m.minerID;
+                                    _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
+                                }
                             }
 
-                            _pool.currentPoolWork = s.GetBytes();
+                            _pool.currentPoolWork = work.GetBytes();
+                            
                             break;
 
                         case int i when (i >= 7 && i != 999):

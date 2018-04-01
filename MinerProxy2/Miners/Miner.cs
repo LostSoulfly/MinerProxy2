@@ -37,7 +37,7 @@ namespace MinerProxy2.Miners
             }
         }
 
-        public List<int> minerIdList;
+        public int minerID;
 
         public string workerName { get; set; }
 
@@ -48,7 +48,6 @@ namespace MinerProxy2.Miners
             //connectionAlive = true;
             shareSubmittedTimes = new List<DateTime>();
             connectionStartTime = DateTime.Now;
-            minerIdList = new List<int>();
         }
         
         public void PrintShares()

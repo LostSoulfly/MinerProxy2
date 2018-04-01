@@ -74,7 +74,7 @@ namespace MinerProxy2.Coins
                         case "eth_getwork":
                             Log.Verbose("{0} requested work.", miner.workerIdentifier); // + Encoding.ASCII.GetString(_pool.currentWork));
 
-                            _minerManager.AddMinerId(miner, id);
+                            _minerManager.AddMinerID(miner, id);
 
                             if (_pool.currentPoolWork.Length > 0)
                                 _minerServer.SendToMiner(_pool.currentPoolWork, connection);

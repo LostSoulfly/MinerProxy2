@@ -42,7 +42,7 @@ namespace MinerProxy2
             pools = Config.Settings.LoadPoolDirectory();
             List<PoolClient> poolClients = new List<PoolClient>();
 
-            Log.Debug("Pool count " + pools.Count);
+            Log.Debug("Pool count: {0}", pools.Count);
             foreach (var pool in pools)
             {
                 PoolClient poolClient = new PoolClient(pool, poolHandler, coinHandler);

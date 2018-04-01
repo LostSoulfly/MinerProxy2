@@ -99,6 +99,7 @@ namespace MinerProxy2.Miners
             return submittedShares;
         }
 
+        /*
         public void AddMinerId(Miner miner, int id)
         {
             if (miner.minerIdList.Count > 0
@@ -112,6 +113,12 @@ namespace MinerProxy2.Miners
         public List<int> GetMinerIds(Miner miner)
         {
             return miner.minerIdList;
+        }
+        */
+
+        public void AddMinerID(Miner miner, int id)
+        {
+            miner.minerID = id;
         }
 
         public void RemoveMiner(Miner miner)
