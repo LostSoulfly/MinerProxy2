@@ -32,7 +32,9 @@ namespace MinerProxy2.Miners
 
         public void AddSubmittedShare(Miner miner)
         {
+            //Log.Debug("shareSubmittedtimes current count (before new share): {0}", miner.shareSubmittedTimes.Count);
             miner.shareSubmittedTimes.Add(DateTime.Now);
+            
             miner.submittedShares++;
         }
 

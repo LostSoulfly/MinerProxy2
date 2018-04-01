@@ -82,19 +82,22 @@ namespace MinerProxy2.Coins
                     {
                         
                         case 0:
-                            Log.Debug("{0} sent new target", poolClient.poolEndPoint);
-                            //Log.Verbose("{0} sent new target: {1}", poolClient.poolEndPoint, s);
+
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
-                            _pool.currentPoolTarget = work.GetBytes();
-                            Log.Verbose("currentPoolTarget length: {0}", _pool.currentPoolTarget.Length);
-
-                            foreach (Miner m in _minerManager.minerList)
+                            if (_pool.currentPoolWork != work)
                             {
-                                Log.Verbose("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
-                                dyn.id = m.minerID;
-                                _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
-                            }
+                                Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
 
+                                foreach (Miner m in _minerManager.minerList)
+                                {
+                                    //Log.Debug("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
+                                    dyn.id = m.minerID;
+                                    _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
+                                }
+
+                                _pool.currentPoolTarget = work;
+                            }
+                            
                             //_minerServer.BroadcastToMiners();
                             break;
                         
@@ -130,19 +133,23 @@ namespace MinerProxy2.Coins
 
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
 
-                            if (_pool.currentPoolWork.SequenceEqual(work.GetBytes()))
+                            if (_pool.currentPoolWork != work)
                             {
-                                Log.Verbose("{0} sent new work: {1}", poolClient.poolEndPoint, s);
+                                Log.Debug("[{0}] sent new work", poolClient.poolWorkerName);
+
+                                _pool.ClearSubmittedSharesHistory();
 
                                 foreach (Miner m in _minerManager.minerList)
                                 {
-                                    Log.Verbose("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
+                                    //Log.Debug("Modifying getWork ID {0} to ID {1} for {3}", (int)dyn.id, m.minerID, m.workerIdentifier);
                                     dyn.id = m.minerID;
                                     _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
                                 }
+
+                                _pool.currentPoolWork = work;
+                                _pool.currentPoolWorkDynamic = dyn;
                             }
 
-                            _pool.currentPoolWork = work.GetBytes();
                             
                             break;
 
@@ -168,7 +175,7 @@ namespace MinerProxy2.Coins
                             
                         case 6:
                             Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
-                            _minerServer.BroadcastToMiners(s);
+                            //_minerServer.BroadcastToMiners(s);
 
                             break;
 

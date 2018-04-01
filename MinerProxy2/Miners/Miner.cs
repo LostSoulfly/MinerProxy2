@@ -30,7 +30,7 @@ namespace MinerProxy2.Miners
         {
             get
             {
-                if (workerName != null)
+                if (!string.IsNullOrWhiteSpace(workerName))
                     return workerName;
 
                 return connection.endPoint.ToString();

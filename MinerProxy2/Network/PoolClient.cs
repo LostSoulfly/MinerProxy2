@@ -28,9 +28,10 @@ namespace MinerProxy2.Network
         private Timer getWorkTimer;
         private List<byte[]> submittedSharesHistory = new List<byte[]>();
 
-        public byte[] currentPoolWork = new byte[0];
+        public string currentPoolWork = string.Empty;
+        public dynamic currentPoolWorkDynamic;
 
-        public byte[] currentPoolTarget = new byte[0];
+        public string currentPoolTarget = string.Empty;
 
         public long acceptedSharesCount { get { return poolInstance.acceptedSharesCount; } set { poolInstance.acceptedSharesCount = value; } }
 
@@ -77,7 +78,7 @@ namespace MinerProxy2.Network
             //this.Start();
             minerServer.ListenForMiners();
 
-            Log.Information("{0} waiting for miners..", poolEndPoint);
+            Log.Information("[{0}] waiting for miners before connecting to pool..", poolWorkerName);
         }
 
         private void PoolClient_OnServerConnected(object sender, ServerConnectedArgs e)
@@ -232,6 +233,11 @@ namespace MinerProxy2.Network
             this.poolClient.SendToPool(data.GetBytes());
         }
 
+        public void DoPoolGetWork()
+        {
+            poolHandler.DoPoolGetWork(this);
+        }
+
         public void Start()
         {
             Log.Information("Connecting to {0}.", this.poolEndPoint);
@@ -247,8 +253,9 @@ namespace MinerProxy2.Network
             {
                 Log.Information("Disconnecting from {0}.", this.poolEndPoint);
                 poolConnected = false;
-                currentPoolWork = new byte[0];
-                currentPoolTarget = new byte[0];
+                currentPoolWork = string.Empty;
+                currentPoolTarget = string.Empty;
+                currentPoolWorkDynamic = null;
                 poolClient.Close();
                 return;
             }
@@ -258,7 +265,7 @@ namespace MinerProxy2.Network
 
         public void SubmitShareToPool(byte[] data, Miner miner)
         {
-            Log.Debug("{0} submitting share.", miner.workerIdentifier);
+            Log.Verbose("{0} submitting share.", miner.workerIdentifier);
             if (submittedSharesHistory.Any(item => item == data))
             {
                 Log.Warning("Share already exists, not sending to pool.");
@@ -269,5 +276,6 @@ namespace MinerProxy2.Network
             minerManager.AddSubmittedShare(miner);
             SendToPool(data);
         }
+        
     }
 }

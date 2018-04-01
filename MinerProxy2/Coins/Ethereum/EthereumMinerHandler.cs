@@ -72,20 +72,26 @@ namespace MinerProxy2.Coins
                     switch (jsonMethod.ToLower())
                     {
                         case "eth_getwork":
-                            Log.Verbose("{0} requested work.", miner.workerIdentifier); // + Encoding.ASCII.GetString(_pool.currentWork));
+                            Log.Verbose("{0} requested work.", miner.workerIdentifier);
 
                             _minerManager.AddMinerID(miner, id);
 
                             if (_pool.currentPoolWork.Length > 0)
-                                _minerServer.SendToMiner(_pool.currentPoolWork, connection);
+                            {
+                                dyn.id = miner.minerID;
+                                dynamic currentWork = _pool.currentPoolWorkDynamic;
+                                currentWork.id = miner.minerID;
+                                _minerServer.SendToMiner(JsonConvert.SerializeObject(currentWork), miner.connection);
+                            }
                             else
-                                _pool.SendToPool(s.GetBytes());
-
+                            {
+                                _pool.DoPoolGetWork();
+                            }
                             break;
 
 
                         case "eth_submitwork":
-                            Log.Information("{0} found a share!", miner.workerIdentifier);
+                            Log.Verbose("{0} found a share!", miner.workerIdentifier);
                             _pool.SubmitShareToPool(s.GetBytes(), _minerManager.GetMiner(connection));
                             break;
 
@@ -111,7 +117,7 @@ namespace MinerProxy2.Coins
                             miner = new Miner(worker, connection);
 
                             _minerManager.AddMiner(miner);
-                            Log.Debug("{0} has authenticated for {1}!", miner.workerIdentifier, _pool.poolEndPoint);
+                            Log.Information("{0} has authenticated for [{1}]!", miner.workerIdentifier, _pool.poolWorkerName);
                             _minerServer.SendToMiner("{\"id\":" + id + ",\"jsonrpc\":\"2.0\",\"result\":true}", connection);
                             //_minerManager.AddMinerId(miner, id);
 
