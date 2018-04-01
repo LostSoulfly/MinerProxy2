@@ -42,6 +42,18 @@ namespace MinerProxy2.Network
 
         private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)
         {
+
+            string remoteAddress = e.connection.endPoint.Address.ToString();
+
+            if (_poolClient.allowedIPAddresses.Count > 0 && !_poolClient.allowedIPAddresses.Contains("0.0.0.0"))
+            {
+                if (!_poolClient.allowedIPAddresses.Contains(remoteAddress))
+                {
+                    Log.Warning("Connection from {0} not allowed; ignoring", remoteAddress);
+                    minerServer.Disconnect(e.connection);
+                }
+            }
+
             _poolClient.CheckPoolConnection();
             Log.Debug("{0} has connected for [{1}] on port {2}", e.connection.endPoint.ToString(), _poolClient.poolWorkerName, this.port);
             _coinHandler.MinerConnected(e.connection);

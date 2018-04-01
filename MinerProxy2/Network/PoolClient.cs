@@ -42,6 +42,8 @@ namespace MinerProxy2.Network
         public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
 
         public string poolHashrateId { get { return poolInstance.GetCurrentPool().poolHashrateId; } }
+        
+        public List<string> allowedIPAddresses { get { return poolInstance.allowedIPAddresses; } }
 
         public long rejectedSharesCount { get { return poolInstance.rejectedSharesCount; } set { poolInstance.rejectedSharesCount = value; } }
 
@@ -130,7 +132,7 @@ namespace MinerProxy2.Network
             statsTimer.Elapsed += delegate
             {
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
-                Log.Debug("Current hashrate: {0}", minerManager.GetCurrentHashrateReadable());
+                Log.Debug("Current total hashrate: {0}", minerManager.GetCurrentHashrateReadable());
                 Log.Information("[{0}] uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
                     this.poolWorkerName, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
                 minerManager.minerList.ForEach<Miner>(m => m.PrintShares());

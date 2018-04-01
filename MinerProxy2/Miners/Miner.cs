@@ -52,7 +52,7 @@ namespace MinerProxy2.Miners
         
         public void PrintShares()
         {
-            Serilog.Log.Information("{0}'s shares: {1}/{2}/{3}", workerIdentifier, submittedShares, acceptedShares, rejectedShares);
+            Serilog.Log.Information("{0}'s shares: S{1}A{2}R{3}", workerIdentifier, submittedShares, acceptedShares, rejectedShares);
         }
     }
 }
