@@ -124,7 +124,6 @@ namespace MinerProxy2.Coins
                             }
 
                             Log.Information("Authorized with {0}!", poolClient.poolEndPoint);
-                            //_minerServer.BroadcastToMiners(Encoding.ASCII.GetBytes(s));
                             break;
                             
                         case 5:
