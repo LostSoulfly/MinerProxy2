@@ -7,6 +7,7 @@ using MinerProxy2.Miners;
 using MinerProxy2.Network.Connections;
 using MinerProxy2.Network.Sockets;
 using Serilog;
+using System;
 
 namespace MinerProxy2.Network
 {
@@ -51,6 +52,7 @@ namespace MinerProxy2.Network
                 {
                     Log.Warning("Connection from {0} not allowed; ignoring", remoteAddress);
                     minerServer.Disconnect(e.connection);
+                    return;
                 }
             }
 
@@ -67,13 +69,18 @@ namespace MinerProxy2.Network
 
         private void MinerServer_OnClientDisconnected(object sender, ClientDisonnectedArgs e)
         {
-            Miner miner = _minerManager.GetMiner(e.connection);
+            try
+            {
+                Miner miner = _minerManager.GetMiner(e.connection);
 
-            Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
+                Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
 
-            if (miner != null)
-                _minerManager.RemoveMiner(miner);
-
+                if (miner != null)
+                    _minerManager.RemoveMiner(miner);
+            } catch (Exception ex)
+            {
+                Log.Error("OnClientDisconnect", ex);
+            }
             _poolClient.CheckPoolConnection();
         }
 

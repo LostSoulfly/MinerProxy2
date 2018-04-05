@@ -53,7 +53,7 @@ namespace MinerProxy2.Coins
 
                 dynamic dyn = new object();
 
-                try { dyn = JsonConvert.DeserializeObject(s.TrimNewLine()); } catch (Exception ex) { Log.Error(ex, "DeserializeObject Json error"); return; }
+                try { dyn = JsonConvert.DeserializeObject(s.TrimNewLine()); } catch (Exception ex) { Log.Error(ex, "DeserializeObject Json error: " + s); continue; }
 
                 if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                     id = (int)dyn.id;

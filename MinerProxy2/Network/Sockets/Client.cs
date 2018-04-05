@@ -139,7 +139,10 @@ namespace MinerProxy2.Network.Sockets
             {
                 if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 {
-                    OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
+                    if (socket == null)
+                        OnServerError?.Invoke(this, new ServerErrorArgs(ex, socket));
+                    else
+                        OnServerError?.Invoke(this, new ServerErrorArgs(ex, null));
                     Log.Error(ex, "Pool BeginReceive Error");
                 }
                 else { return; }
