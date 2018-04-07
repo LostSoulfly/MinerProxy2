@@ -63,7 +63,6 @@ namespace MinerProxy2.Coins
         {
             Log.Verbose("Pool {0} sent: {1}", poolClient.poolEndPoint, data.GetString());
 
-            dynamic dynWork;
             string work;
 
             string split = data.GetString();

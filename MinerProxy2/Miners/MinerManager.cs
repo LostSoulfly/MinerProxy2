@@ -141,9 +141,17 @@ namespace MinerProxy2.Miners
 
         public string ResetMinerShareSubmittedTime(Miner miner)
         {
-            string ts = miner.shareSubmittedTimes.First().ToReadableTime();
-            Log.Verbose("Resetting {0} last submit time. ({1})", miner.workerIdentifier, ts);
-            miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
+            string ts = string.empty;
+            try
+            {
+                miner.shareSubmittedTimes.First().ToReadableTime();
+                Log.Verbose("Resetting {0} last submit time. ({1})", miner.workerIdentifier, ts);
+                miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
+            } catch (Exception ex)
+            {
+                Log.Error("ResetMinerShareSubmittedTime", ex);
+                ts = "error!";
+            }
             return ts;
         }
 

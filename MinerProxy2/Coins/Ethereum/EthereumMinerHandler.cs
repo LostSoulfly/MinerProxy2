@@ -42,11 +42,10 @@ namespace MinerProxy2.Coins
 
             Miner miner = _minerManager.GetMiner(connection);
             
-            string test = data.GetString();
             int id = -999;
             string jsonMethod = "";
 
-            foreach (string s in test.Split('\r', '\n'))
+            foreach (string s in data.GetString().Split('\r', '\n'))
             {
                 if (s.Length <= 1)
                     continue;
