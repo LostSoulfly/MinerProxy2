@@ -6,6 +6,9 @@ Currently only Ethereum is implemented, but I've been working towards a streamli
 This is a pre-alpha project currently. Many things are not implemented yet. I do not recommend using this proxy in critical deployments until its reliability can be more thoroughly tested and more features are added. I'm opening up the repository for testing and additional insight into its development!
 
 ## How to use (Windows)
+There are no current releases. To use this project in its current state you must compile it.
+
+
 1. [Download the .NET Core Runtime installer](https://www.microsoft.com/net/download/Windows/run), unless you have the SDK already installed.
 
 2. [Download the newest MinerProxy2 release](https://github.com/LostSoulFly/MinerProxy2/releases) and extract it somewhere.
