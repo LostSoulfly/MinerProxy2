@@ -9,6 +9,8 @@ using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using MinerProxy2.Helpers;
 
 namespace MinerProxy2
 {
@@ -32,7 +34,6 @@ namespace MinerProxy2
                 .CreateLogger();
 
             Helpers.Logging.MinerProxyHeader();
-
             
             ICoinHandlerMiner coinHandler = (ICoinHandlerMiner)new EthereumMinerHandler();
             ICoinHandlerPool poolHandler = (ICoinHandlerPool)new EthereumPoolHandler();

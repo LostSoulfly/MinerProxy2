@@ -40,8 +40,12 @@ namespace MinerProxy2.Miners
 
         public long GetAcceptedShareTotal()
         {
-            long acceptedShares = 0;
-            minerList.ForEach<Miner>(m => acceptedShares += m.acceptedShares);
+            long acceptedShares = 0; try
+            {
+                lock (MinerManagerLock)
+                    minerList.ForEach<Miner>(m => acceptedShares += m.acceptedShares);
+            }
+            catch { }
 
             return acceptedShares;
         }
@@ -49,23 +53,40 @@ namespace MinerProxy2.Miners
         public string GetCurrentHashrateReadable()
         {
             long total = 0;
-            minerList.ForEach<Miner>(m => total += m.hashrate);
+            try
+            {
+                lock (MinerManagerLock)
+                    minerList.ForEach<Miner>(m => total += m.hashrate);
+            }
+            catch { }
             return total.ToString("#,##0,Mh/s").Replace(",", ".");
         }
 
         public long GetCurrentHashrateLong()
         {
             long total = 0;
-            minerList.ForEach<Miner>(m => total += m.hashrate);
+            try
+            {
+                lock (MinerManagerLock)
+                    minerList.ForEach<Miner>(m => total += m.hashrate);
+            }
+            catch { }
             return total;
         }
 
         public Miner GetMiner(TcpConnection connection)
         {
-            Miner miner = minerList.Find(item => item.connection == connection);
+            Miner miner;
+            try
+            {
+                miner = minerList.First(item => item.connection.socket == connection.socket);
+            } catch (Exception ex)
+            {
+                //Log.Error("GetMiner", ex);
+                return null;
+            }
 
-            if (miner != null)
-                Log.Verbose("GetMiner {0} -> {1}", connection.endPoint, miner.workerIdentifier);
+            Log.Verbose("GetMiner {0} -> {1}", connection.endPoint, miner.workerIdentifier);
 
             return miner;
         }
@@ -88,7 +109,12 @@ namespace MinerProxy2.Miners
         public long GetRejectedShareTotal()
         {
             long rejectedShares = 0;
-            minerList.ForEach<Miner>(m => rejectedShares += m.rejectedShares);
+            try
+            {
+                lock (MinerManagerLock)
+                    minerList.ForEach<Miner>(m => rejectedShares += m.rejectedShares);
+            }
+            catch { }
 
             return rejectedShares;
         }
@@ -96,7 +122,12 @@ namespace MinerProxy2.Miners
         public long GetSubmittedShareTotal()
         {
             long submittedShares = 0;
-            minerList.ForEach<Miner>(m => submittedShares += m.submittedShares);
+            try
+            {
+                lock (MinerManagerLock)
+                    minerList.ForEach<Miner>(m => submittedShares += m.submittedShares);
+            }
+            catch { }
 
             return submittedShares;
         }
@@ -141,10 +172,10 @@ namespace MinerProxy2.Miners
 
         public string ResetMinerShareSubmittedTime(Miner miner)
         {
-            string ts = string.empty;
+            string ts = string.Empty;
             try
             {
-                miner.shareSubmittedTimes.First().ToReadableTime();
+                ts = miner.shareSubmittedTimes.First().ToReadableTime();
                 Log.Verbose("Resetting {0} last submit time. ({1})", miner.workerIdentifier, ts);
                 miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
             } catch (Exception ex)

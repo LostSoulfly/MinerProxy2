@@ -13,8 +13,8 @@ namespace MinerProxy2.Network.Sockets
 {
     public class Server
     {
-        private const int BUFFER_SIZE = 2048;
-        private readonly byte[] buffer = new byte[BUFFER_SIZE];
+        private const int BUFFER_SIZE = 4096;
+        //private readonly byte[] buffer = new byte[BUFFER_SIZE];
         private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
         private bool isDisconnecting;
         private bool serverListening;
@@ -52,13 +52,13 @@ namespace MinerProxy2.Network.Sockets
             }
 
             IPEndPoint endPoint = socket.RemoteEndPoint as IPEndPoint;
-            TcpConnection tcpConnection = new TcpConnection(endPoint, socket);
+            TcpConnection tcpConnection = new TcpConnection(endPoint, socket, BUFFER_SIZE);
 
             clientSockets.Add(tcpConnection);
             OnClientConnected?.Invoke(this, new ClientConnectedArgs(tcpConnection));
             try
             {
-                socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
+                socket.BeginReceive(tcpConnection.buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
                 //Log.Verbose("New miner connected, waiting for request.");
 
             } catch (ObjectDisposedException ex)
@@ -94,9 +94,8 @@ namespace MinerProxy2.Network.Sockets
             catch (SocketException ex)
             {
                 if (ex.ErrorCode != 10054)
-                    //Log.Debug(ex, "Client forcefully disconnected {1}: {0}", tcpConnection.endPoint, ex.ErrorCode);
+                    OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
 
-                OnClientError?.Invoke(this, new ClientErrorArgs(ex, tcpConnection));
                 Disconnect(tcpConnection);
                 return;
             }
@@ -109,21 +108,26 @@ namespace MinerProxy2.Network.Sockets
                 return;
             }
 
-            byte[] recBuf = new byte[received];
-            Array.Copy(buffer, recBuf, received);
-
-            if (recBuf.Length == 0)
+            if (received == 0)
             {
                 OnClientDisconnected?.Invoke(this, new ClientDisonnectedArgs(tcpConnection));
                 Disconnect(tcpConnection);
                 return;
             }
 
-            OnClientDataReceived?.Invoke(this, new ClientDataReceivedArgs(recBuf, tcpConnection));
+            byte[] packet = new byte[received];
+            Array.Copy(tcpConnection.buffer, packet, packet.Length);
 
+            List<byte[]> packets = Arrays.ProcessBuffer(ref tcpConnection.unusedBuffer, ref tcpConnection.unusedBufferLength, packet, packet.Length, "\n".GetBytes());
+
+            for (int i = 0; i < packets.Count; i++)
+            {
+                OnClientDataReceived?.Invoke(this, new ClientDataReceivedArgs(packets[i], tcpConnection));
+            }
+            
             try
             {
-                current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
+                current.BeginReceive(tcpConnection.buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
             }
             catch (ObjectDisposedException ex)
             {
@@ -183,7 +187,7 @@ namespace MinerProxy2.Network.Sockets
             if (!serverListening || isDisconnecting)
                 return false;
 
-            //Log.Verbose("Sending {0}: {1}", connection.endPoint, data.GetString());
+            Log.Verbose("Sending {0}: {1}", connection.endPoint, data.GetString());
 
             try
             {

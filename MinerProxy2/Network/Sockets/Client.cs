@@ -4,6 +4,7 @@
 using MinerProxy2.Helpers;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace MinerProxy2.Network.Sockets
@@ -12,7 +13,10 @@ namespace MinerProxy2.Network.Sockets
     {
         private readonly object dataLock = new object();
         private byte[] buffer;
-        private int BUFFER_SIZE = 2048;
+        private byte[] unusedBuffer;
+        private int unusedBufferLength;
+        private readonly object bufferLock = new object();
+        private int BUFFER_SIZE = 4096;
         private bool clientConnected;
         private Socket clientSocket;
         public string host;
@@ -27,7 +31,7 @@ namespace MinerProxy2.Network.Sockets
 
         public event EventHandler<ServerErrorArgs> OnServerError;
 
-        public Client(string host, int port, int bufferSize = 2048)
+        public Client(string host, int port, int bufferSize = 4096)
         {
             this.BUFFER_SIZE = bufferSize;
             this.host = host;
@@ -111,11 +115,8 @@ namespace MinerProxy2.Network.Sockets
 
                 return;
             }
-
-            byte[] recBuf = new byte[received];
-            Array.Copy(buffer, recBuf, received);
-
-            if (recBuf.Length == 0)
+            
+            if (received == 0)
             {
                 if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)
                 {
@@ -127,7 +128,18 @@ namespace MinerProxy2.Network.Sockets
                 else { return; }
             }
 
-            OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(recBuf, socket));
+            lock (bufferLock)
+            {
+                byte[] packet = new byte[received];
+                Array.Copy(buffer, packet, packet.Length);
+
+                List<byte[]> packets = Arrays.ProcessBuffer(ref unusedBuffer, ref unusedBufferLength, buffer, received, "\n".GetBytes());
+
+                for (int i = 0; i < packets.Count; i++)
+                {
+                    OnServerDataReceived?.Invoke(this, new ServerDataReceivedArgs(packets[i], socket));
+                }
+            }
 
             try
             {

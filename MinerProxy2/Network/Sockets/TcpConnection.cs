@@ -11,11 +11,16 @@ namespace MinerProxy2.Network.Sockets
         public readonly IPEndPoint endPoint;
         public readonly Socket socket;
         public int uniqueId;
+        public byte[] buffer;
+        public byte[] unusedBuffer;
+        public int unusedBufferLength;
 
-        public TcpConnection(IPEndPoint endPoint, Socket socket)
+        public TcpConnection(IPEndPoint endPoint, Socket socket, int BUFFER_SIZE = 4096)
         {
             this.endPoint = endPoint;
             this.socket = socket;
+            buffer = new byte[BUFFER_SIZE];
+            unusedBuffer = new byte[BUFFER_SIZE];
         }
     }
 }

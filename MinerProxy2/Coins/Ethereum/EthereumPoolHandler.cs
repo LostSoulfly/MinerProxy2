@@ -61,153 +61,157 @@ namespace MinerProxy2.Coins
 
         public void PoolDataReceived(byte[] data, PoolClient poolClient)
         {
-            Log.Verbose("Pool {0} sent: {1}", poolClient.poolEndPoint, data.GetString());
-
+            //Log.Debug("Pool {0} sent: {1}", poolClient.poolEndPoint, data.GetString());
             string work;
 
-            string split = data.GetString();
+            string s = data.GetString();
+            
+            dynamic dyn = JsonConvert.DeserializeObject(s.TrimNewLine());
 
-            foreach (string s in split.Split('\r', '\n'))
+            if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
             {
-                if (s.Length <= 1)
-                    continue;
-
-                dynamic dyn = JsonConvert.DeserializeObject(s.CheckForNewLine());
-
-                if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
+                //This still needs to be converted to dyn.method
+                switch ((int)dyn.id)
                 {
-                    //Log.Information("dyn.id: " + dyn.id);
-                    switch ((int)dyn.id)
-                    {
                         
-                        case 0:
+                    case 0:
 
-                            work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
-                            if (_pool.currentPoolWork != work)
+                        work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+                        if (_pool.currentPoolWork != work)
+                        {
+                            Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
+
+                            lock (_minerManager.MinerManagerLock)
                             {
-                                Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
-
                                 foreach (Miner m in _minerManager.minerList)
                                 {
                                     //Log.Debug("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
                                     dyn.id = m.minerID;
                                     _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
                                 }
-
-                                _pool.currentPoolTarget = work;
                             }
+                            _pool.currentPoolTarget = work;
+                        }
                             
-                            //_minerServer.BroadcastToMiners();
-                            break;
+                        //_minerServer.BroadcastToMiners();
+                        break;
                         
 
-                        case 1:
-                        case 2:
+                    case 1:
+                    case 2:
 
-                            if (JsonHelper.DoesJsonObjectExist(dyn.error) && !JsonHelper.DoesJsonObjectExist(dyn.result))
+                        if (JsonHelper.DoesJsonObjectExist(dyn.error) && !JsonHelper.DoesJsonObjectExist(dyn.result))
+                        {
+                            Log.Fatal("Server error for {0}: {1} {2}", poolClient.poolEndPoint, Convert.ToString(dyn.error.code), Convert.ToString(dyn.error.message));
+                            _pool.Stop();
+                            _minerServer.StopListening();
+                            return;
+                        }
+                        else if (JsonHelper.DoesJsonObjectExist(dyn.result))
+                        {
+                            if (dyn.result == false)
                             {
-                                Log.Fatal("Server error for {0}: {1} {2}", poolClient.poolEndPoint, Convert.ToString(dyn.error.code), Convert.ToString(dyn.error.message));
+                                Log.Fatal("Server error2 for {0}: {1} {2}", poolClient.poolEndPoint, Convert.ToString(dyn.error.code), Convert.ToString(dyn.error.message));
                                 _pool.Stop();
                                 _minerServer.StopListening();
                                 return;
                             }
-                            else if (JsonHelper.DoesJsonObjectExist(dyn.result))
-                            {
-                                if (dyn.result == false)
-                                {
-                                    Log.Fatal("Server error2 for {0}: {1} {2}", poolClient.poolEndPoint, Convert.ToString(dyn.error.code), Convert.ToString(dyn.error.message));
-                                    _pool.Stop();
-                                    _minerServer.StopListening();
-                                    return;
-                                }
-                            }
+                        }
 
-                            Log.Information("Authorized with {0}!", poolClient.poolEndPoint);
-                            break;
+                        Log.Information("Authorized with {0}!", poolClient.poolEndPoint);
+                        break;
                             
-                        case 5:
-                        case 3:
-                            //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
+                    case 5:
+                    case 3:
+                        //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
 
-                            work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+                        if (JsonHelper.DoesJsonObjectExist(dyn.error))
+                        {
+                            Log.Error("Oops");
+                            return;
+                        }
 
-                            if (_pool.currentPoolWork != work)
+                        work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+
+                        if (_pool.currentPoolWork != work)
+                        {
+                            Log.Debug("[{0}] sent new work", poolClient.poolWorkerName);
+
+                            _pool.ClearSubmittedSharesHistory();
+
+                            lock (_minerManager.MinerManagerLock)
                             {
-                                Log.Debug("[{0}] sent new work", poolClient.poolWorkerName);
-
-                                _pool.ClearSubmittedSharesHistory();
-
                                 foreach (Miner m in _minerManager.minerList)
                                 {
                                     //Log.Debug("Modifying getWork ID {0} to ID {1} for {3}", (int)dyn.id, m.minerID, m.workerIdentifier);
                                     dyn.id = m.minerID;
                                     _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
                                 }
-
-                                _pool.currentPoolWork = work;
-                                _pool.currentPoolWorkDynamic = dyn;
                             }
 
+                            _pool.currentPoolWork = work;
+                            _pool.currentPoolWorkDynamic = dyn;
+                        }
+
                             
-                            break;
+                        break;
 
-                        case int i when (i >= 7 && i != 999):
-                        case 4:
+                    case int i when (i >= 7 && i != 999):
+                    case 4:
 
-                            bool result = false;
+                        bool result = false;
 
-                            if (JsonHelper.DoesJsonObjectExist(dyn.result))
-                                result = dyn.result;
+                        if (JsonHelper.DoesJsonObjectExist(dyn.result))
+                            result = dyn.result;
 
-                            Miner miner = _minerManager.GetNextShare(result);
+                        Miner miner = _minerManager.GetNextShare(result);
 
-                            if (miner != null)
-                            {
-                                _minerServer.SendToMiner(s, miner.connection);
-                                _pool.acceptedSharesCount++;
-                                Log.Information("{0}'s share was {1}! ({2})", miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
+                        if (miner != null)
+                        {
+                            _minerServer.SendToMiner(s, miner.connection);
+                            _pool.acceptedSharesCount++;
+                            Log.Information("{0}'s share was {1}! ({2})", miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
 
-                                //miner.PrintShares();
-                            }
-                            break;
+                            //miner.PrintShares();
+                        }
+                        break;
                             
-                        case 6:
-                            Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
-                            //_minerServer.BroadcastToMiners(s);
+                    case 6:
+                        Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
+                        //_minerServer.BroadcastToMiners(s);
 
-                            break;
+                        break;
 
-                        case 999:
+                    case 999:
 
-                            if (JsonHelper.DoesJsonObjectExist(dyn.error) && !JsonHelper.DoesJsonObjectExist(dyn.result))
+                        if (JsonHelper.DoesJsonObjectExist(dyn.error) && !JsonHelper.DoesJsonObjectExist(dyn.result))
+                        {
+                            Log.Fatal("Server error for {0}: {1}", poolClient.poolEndPoint, Convert.ToString(dyn.error));
+                            _pool.Stop();
+                            _minerServer.StopListening();
+                            return;
+                        }
+                        else if (JsonHelper.DoesJsonObjectExist(dyn.result))
+                        {
+                            if (dyn.result == false) //no dyn.error.code
                             {
-                                Log.Fatal("Server error for {0}: {1}", poolClient.poolEndPoint, Convert.ToString(dyn.error));
+                                Log.Fatal("Server error2 for {0}: {1}", poolClient.poolEndPoint, Convert.ToString(dyn.error));
                                 _pool.Stop();
                                 _minerServer.StopListening();
                                 return;
                             }
-                            else if (JsonHelper.DoesJsonObjectExist(dyn.result))
-                            {
-                                if (dyn.result == false) //no dyn.error.code
-                                {
-                                    Log.Fatal("Server error2 for {0}: {1}", poolClient.poolEndPoint, Convert.ToString(dyn.error));
-                                    _pool.Stop();
-                                    _minerServer.StopListening();
-                                    return;
-                                }
-                            }
-                            break;
+                        }
+                        break;
 
-                        default:
-                            Log.Warning("EthPoolHandler Unhandled: {0}", s);
-                            break;
-                    }
-                } /* else if (dyn.error != null && dyn.result == null)
+                    default:
+                        Log.Warning("EthPoolHandler Unhandled: {0}", s);
+                        break;
+                }
+            } /* else if (dyn.error != null && dyn.result == null)
             {
                 Log.Error("Server sent Error: " + dyn.error.code + ": " + dyn.error.message);
             }
             */
-            }
         }
 
         public void PoolDisconnected(PoolClient poolClient)
