@@ -138,7 +138,7 @@ namespace MinerProxy2.Network
 
                 lock (minerManager.MinerManagerLock)
                 {
-                    minerManager.minerList.ForEach<Miner>(m => m.PrintShares());
+                    minerManager.GetMinerList().ForEach<Miner>(m => m.PrintShares());
                 }
                 poolHandler.DoSendHashrate(this);
             };

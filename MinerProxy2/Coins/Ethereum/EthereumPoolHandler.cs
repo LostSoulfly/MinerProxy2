@@ -83,7 +83,7 @@ namespace MinerProxy2.Coins
 
                             lock (_minerManager.MinerManagerLock)
                             {
-                                foreach (Miner m in _minerManager.minerList)
+                                foreach (Miner m in _minerManager.GetMinerList())
                                 {
                                     //Log.Debug("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
                                     dyn.id = m.minerID;
@@ -141,7 +141,7 @@ namespace MinerProxy2.Coins
 
                             lock (_minerManager.MinerManagerLock)
                             {
-                                foreach (Miner m in _minerManager.minerList)
+                                foreach (Miner m in _minerManager.GetMinerList())
                                 {
                                     //Log.Debug("Modifying getWork ID {0} to ID {1} for {3}", (int)dyn.id, m.minerID, m.workerIdentifier);
                                     dyn.id = m.minerID;

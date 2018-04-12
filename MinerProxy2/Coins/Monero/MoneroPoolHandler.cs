@@ -99,7 +99,7 @@ namespace MinerProxy2.Coins.Monero
                                     {
                                         Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
 
-                                        foreach (Miner m in _minerManager.minerList)
+                                        foreach (Miner m in _minerManager.GetMinerList())
                                         {
                                             //Log.Debug("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
                                             dyn.id = m.minerID;

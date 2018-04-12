@@ -13,7 +13,7 @@ namespace MinerProxy2.Miners
     public class MinerManager
     {
         public readonly object MinerManagerLock = new object();
-        public List<Miner> minerList = new List<Miner>();
+        private List<Miner> minerList = new List<Miner>();
         public int ConnectedMiners { get { return minerList.Count; } }
 
         public void AddMiner(Miner miner)
@@ -28,6 +28,11 @@ namespace MinerProxy2.Miners
                     minerList.Add(miner);
                 }
             }
+        }
+
+        public List<Miner> GetMinerList()
+        {
+            return minerList;
         }
 
         public void AddSubmittedShare(Miner miner)
