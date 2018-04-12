@@ -141,7 +141,7 @@ namespace MinerProxy2.Miners
 
         public string ResetMinerShareSubmittedTime(Miner miner)
         {
-            string ts = string.empty;
+            string ts = string.Empty;
             try
             {
                 miner.shareSubmittedTimes.First().ToReadableTime();

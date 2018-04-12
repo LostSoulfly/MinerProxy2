@@ -124,6 +124,7 @@ namespace MinerProxy2.Network
 
         public void SendToMiner(string data, TcpConnection connection)
         {
+            Log.Verbose("SendToMiner: {0}", data);
             minerServer.Send(data.GetBytes(), connection);
         }
 
