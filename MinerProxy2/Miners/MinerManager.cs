@@ -32,7 +32,11 @@ namespace MinerProxy2.Miners
 
         public List<Miner> GetMinerList()
         {
-            return minerList;
+            lock (MinerManagerLock)
+            {
+                List<Miner> list = minerList;
+                return list;
+            }
         }
 
         public void AddSubmittedShare(Miner miner)
