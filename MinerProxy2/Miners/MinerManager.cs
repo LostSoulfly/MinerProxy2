@@ -34,8 +34,7 @@ namespace MinerProxy2.Miners
         {
             lock (MinerManagerLock)
             {
-                List<Miner> list = minerList;
-                return list;
+                return minerList.ToList();
             }
         }
 
@@ -52,7 +51,7 @@ namespace MinerProxy2.Miners
             long acceptedShares = 0; try
             {
                 lock (MinerManagerLock)
-                    minerList.ForEach<Miner>(m => acceptedShares += m.acceptedShares);
+                    GetMinerList().ForEach<Miner>(m => acceptedShares += m.acceptedShares);
             }
             catch { }
 
@@ -65,7 +64,7 @@ namespace MinerProxy2.Miners
             try
             {
                 lock (MinerManagerLock)
-                    minerList.ForEach<Miner>(m => total += m.hashrate);
+                    GetMinerList().ForEach<Miner>(m => total += m.hashrate);
             }
             catch { }
             return total.ToString("#,##0,Mh/s").Replace(",", ".");
@@ -77,7 +76,7 @@ namespace MinerProxy2.Miners
             try
             {
                 lock (MinerManagerLock)
-                    minerList.ForEach<Miner>(m => total += m.hashrate);
+                    GetMinerList().ForEach<Miner>(m => total += m.hashrate);
             }
             catch { }
             return total;
@@ -88,7 +87,7 @@ namespace MinerProxy2.Miners
             Miner miner;
             try
             {
-                miner = minerList.First(item => item.connection.socket == connection.socket);
+                miner = GetMinerList().First(item => item.connection.socket == connection.socket);
             } catch (Exception ex)
             {
                 //Log.Error("GetMiner", ex);
@@ -102,7 +101,7 @@ namespace MinerProxy2.Miners
 
         public Miner GetNextShare(bool accepted)
         {
-            Miner miner = minerList.OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
+            Miner miner = GetMinerList().OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
             Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
             if (accepted)
@@ -121,7 +120,7 @@ namespace MinerProxy2.Miners
             try
             {
                 lock (MinerManagerLock)
-                    minerList.ForEach<Miner>(m => rejectedShares += m.rejectedShares);
+                    GetMinerList().ForEach<Miner>(m => rejectedShares += m.rejectedShares);
             }
             catch { }
 
@@ -134,7 +133,7 @@ namespace MinerProxy2.Miners
             try
             {
                 lock (MinerManagerLock)
-                    minerList.ForEach<Miner>(m => submittedShares += m.submittedShares);
+                    GetMinerList().ForEach<Miner>(m => submittedShares += m.submittedShares);
             }
             catch { }
 
