@@ -32,10 +32,7 @@ namespace MinerProxy2.Miners
 
         public List<Miner> GetMinerList()
         {
-            lock (MinerManagerLock)
-            {
-                return minerList.ToList();
-            }
+            return minerList.ToList();
         }
 
         public void AddSubmittedShare(Miner miner)
@@ -50,7 +47,6 @@ namespace MinerProxy2.Miners
         {
             long acceptedShares = 0; try
             {
-                lock (MinerManagerLock)
                     GetMinerList().ForEach<Miner>(m => acceptedShares += m.acceptedShares);
             }
             catch { }
@@ -63,7 +59,6 @@ namespace MinerProxy2.Miners
             long total = 0;
             try
             {
-                lock (MinerManagerLock)
                     GetMinerList().ForEach<Miner>(m => total += m.hashrate);
             }
             catch { }
@@ -75,7 +70,6 @@ namespace MinerProxy2.Miners
             long total = 0;
             try
             {
-                lock (MinerManagerLock)
                     GetMinerList().ForEach<Miner>(m => total += m.hashrate);
             }
             catch { }
@@ -119,7 +113,6 @@ namespace MinerProxy2.Miners
             long rejectedShares = 0;
             try
             {
-                lock (MinerManagerLock)
                     GetMinerList().ForEach<Miner>(m => rejectedShares += m.rejectedShares);
             }
             catch { }
@@ -132,7 +125,6 @@ namespace MinerProxy2.Miners
             long submittedShares = 0;
             try
             {
-                lock (MinerManagerLock)
                     GetMinerList().ForEach<Miner>(m => submittedShares += m.submittedShares);
             }
             catch { }
