@@ -13,25 +13,24 @@ namespace MinerProxy2.Pools
         internal int numberOfConnectAttempts;
         internal DateTime poolConnectedTime;
         internal long submittedSharesCount, acceptedSharesCount, rejectedSharesCount;
-        public int protocol;
         public bool usePoolFailover;
         public int localListenPort;
         public int donationPercent = 2;
         public int poolStatsIntervalInMs = 60000;
-        public int poolGetWorkIntervalInMs = 1000;
+        public int poolGetWorkIntervalInMs = 1000; //set this higher on slower coins like UBQ/MTP, lower on ETH/ETC
         public List<string> allowedIPAddresses = new List<string>();
         public PoolItem mainPool;
         public List<PoolItem> failoverPools = new List<PoolItem>();
         
-        public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin)
+        public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin, int poolProtocol)
         {
             this.localListenPort = localListenPort;
-            mainPool = new PoolItem(poolAddress, poolPort, poolWorkerName, poolWallet, coin);
+            mainPool = new PoolItem(poolAddress, poolPort, poolWorkerName, poolWallet, coin, poolProtocol);
         }
 
         public void AddFailoverPool(string poolAddress, int poolPort)
         {
-            failoverPools.Add(new PoolItem(poolAddress, poolPort, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.coin));
+            failoverPools.Add(new PoolItem(poolAddress, poolPort, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.coin, mainPool.poolProtocol));
         }
 
         public void AddAllowedIPAddress(string ip)

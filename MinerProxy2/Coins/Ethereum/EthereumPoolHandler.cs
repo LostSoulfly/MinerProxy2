@@ -41,8 +41,10 @@ namespace MinerProxy2.Coins
 
             //Phoenix uses id:1
             //poolClient.SendToPool("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"eth_submitLogin\",\"worker\":\"eth1.0\",\"params\":[\"0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84.lulz\"]}".CheckForNewLine());
-
-            _pool.SendToPool(string.Format("{{\"worker\": \"eth1.0\", \"jsonrpc\": \"2.0\", \"params\": [\"{0}.{1}\", \"{2}\"], \"id\": 1, \"method\": \"eth_submitLogin\"}}", _pool.poolWallet, _pool.poolWorkerName, "x"));
+            if (_pool.poolProtocol == 1)
+                _pool.SendToPool(string.Format("{{\"worker\": \"{1}\", \"jsonrpc\": \"2.0\", \"params\": [\"{0}\", \"{2}\"], \"id\": 1, \"method\": \"eth_submitLogin\"}}", _pool.poolWallet, _pool.poolWorkerName, _pool.poolPassword));
+            else
+                _pool.SendToPool(string.Format("{{\"worker\": \"eth1.0\", \"jsonrpc\": \"2.0\", \"params\": [\"{0}.{1}\", \"{2}\"], \"id\": 1, \"method\": \"eth_submitLogin\"}}", _pool.poolWallet, _pool.poolWorkerName, _pool.poolPassword));
         }
 
         public void DoSendHashrate(PoolClient poolClient)
@@ -76,7 +78,14 @@ namespace MinerProxy2.Coins
                         
                     case 0:
 
-                        work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+                        try
+                        {
+                            work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+                        } catch
+                        {
+                            work = dyn.result[0] + dyn.result[1] + dyn.result[2];
+                        }
+
                         if (_pool.currentPoolWork != work)
                         {
                             Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
@@ -130,8 +139,13 @@ namespace MinerProxy2.Coins
                             Log.Error("Oops");
                             return;
                         }
-
-                        work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+                        try
+                        {
+                            work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
+                        } catch
+                        {
+                            work = dyn.result[0] + dyn.result[1] + dyn.result[2];
+                        }
 
                         if (_pool.currentPoolWork != work)
                         {

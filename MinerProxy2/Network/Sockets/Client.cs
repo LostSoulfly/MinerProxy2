@@ -238,6 +238,7 @@ namespace MinerProxy2.Network.Sockets
             catch (Exception ex)
             {
                 Log.Error(ex, "SendToPool");
+                OnServerError?.Invoke(this, new ServerErrorArgs(ex, clientSocket));
             }
         }
     }

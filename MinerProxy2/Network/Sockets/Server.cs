@@ -187,7 +187,7 @@ namespace MinerProxy2.Network.Sockets
             if (!serverListening || isDisconnecting)
                 return false;
 
-            Log.Verbose("Sending {0}: {1}", connection.endPoint, data.GetString());
+            //Log.Verbose("Sending {0}: {1}", connection.endPoint, data.GetString());
 
             try
             {

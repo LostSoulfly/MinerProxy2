@@ -42,7 +42,11 @@ namespace MinerProxy2.Network
         public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
 
         public string poolHashrateId { get { return poolInstance.GetCurrentPool().poolHashrateId; } }
+
+        public int poolProtocol { get { return poolInstance.GetCurrentPool().poolProtocol; } }
         
+        public string poolPassword { get { return poolInstance.GetCurrentPool().poolPassword; } }
+
         public List<string> allowedIPAddresses { get { return poolInstance.allowedIPAddresses; } }
 
         public long rejectedSharesCount { get { return poolInstance.rejectedSharesCount; } set { poolInstance.rejectedSharesCount = value; } }

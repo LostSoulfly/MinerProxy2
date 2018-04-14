@@ -72,7 +72,7 @@ namespace MinerProxy2.Config
             if (dir.Count == 0)
             { 
                 Log.Information("No pools found; creating default..");
-                PoolInstance etcPool = new PoolInstance("us1-etc.ethermine.org", 4444, 9000, "MProxyETC", "0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84", "ETC");
+                PoolInstance etcPool = new PoolInstance("us1-etc.ethermine.org", 4444, 9000, "MProxyETC", "0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84", "ETC", 0);
                 etcPool.AddFailoverPool(etcPool.mainPool.poolAddress, etcPool.mainPool.poolPort);
                 etcPool.AddAllowedIPAddress("0.0.0.0");
                 WritePoolToFile("Ethermine ETC.json", etcPool);
