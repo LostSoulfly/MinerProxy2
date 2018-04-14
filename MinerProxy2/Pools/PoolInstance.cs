@@ -22,8 +22,9 @@ namespace MinerProxy2.Pools
         public PoolItem mainPool;
         public List<PoolItem> failoverPools = new List<PoolItem>();
         
-        public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin, int poolProtocol)
+        public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin, int poolProtocol, int poolGetWorkIntervalInMs = 1000)
         {
+            this.poolGetWorkIntervalInMs = poolGetWorkIntervalInMs;
             this.localListenPort = localListenPort;
             mainPool = new PoolItem(poolAddress, poolPort, poolWorkerName, poolWallet, coin, poolProtocol);
         }
