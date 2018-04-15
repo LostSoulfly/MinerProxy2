@@ -153,7 +153,7 @@ namespace MinerProxy2.Network
                 {
                     //Serilog.Log.Information(string.Format("{0, -10} {1, 6} {2, 6} {3, 6} {4, -15}", "MINER", "SUBMIT", "ACCEPT", "REJECT", "HASHRATE"));
                     //Serilog.Log.Information(string.Format("{0, -10} {1, 6} {2, 6} {3, 6} {4, -15}", "-----", "------", "------", "------", "--------"));
-                    minerManager.GetMinerList().ForEach<Miner>(m => m.PrintShares("[" + poolWorkerName + "]"));
+                    minerManager.GetMinerList().ForEach<Miner>(m => m.PrintShares(poolWorkerName));
                 }
                 poolHandler.DoSendHashrate(this);
             };
@@ -261,7 +261,7 @@ namespace MinerProxy2.Network
 
         public void Start()
         {
-            Log.Information("[{0} Connecting to {1}.",this.poolWorkerName, this.poolEndPoint);
+            Log.Information("[{0}] Connecting to {1}.",this.poolWorkerName, this.poolEndPoint);
             poolClient.Connect(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
         }
 
