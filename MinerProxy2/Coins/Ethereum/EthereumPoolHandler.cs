@@ -127,7 +127,7 @@ namespace MinerProxy2.Coins
                             }
                         }
 
-                        Log.Information("Authorized with {0}!", poolClient.poolEndPoint);
+                        Log.Information("[{0}] authorized with {1}!", _pool.poolWorkerName, poolClient.poolEndPoint);
                         break;
                             
                     case 5:
@@ -183,10 +183,17 @@ namespace MinerProxy2.Coins
                         if (miner != null)
                         {
                             _minerServer.SendToMiner(s, miner.connection);
-                            _pool.acceptedSharesCount++;
-                            Log.Information("{0}'s share was {1}! ({2})", miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
 
-                            //miner.PrintShares();
+                            if (result)
+                                _pool.acceptedSharesCount++;
+                            else
+                                _pool.rejectedSharesCount++;
+                            
+                            Log.Information("[{0}] {1}'s share was {2}! ({3})", _pool.poolWorkerName, miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
+
+                            if (!result)
+                                Log.Debug("Pool: " + s);
+                            
                         }
                         break;
                             

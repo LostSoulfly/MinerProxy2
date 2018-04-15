@@ -57,7 +57,7 @@ namespace MinerProxy2.Network
             }
 
             _poolClient.IsPoolConnectionRequired();
-            Log.Debug("{0} has connected for [{1}] on port {2}", e.connection.endPoint.ToString(), _poolClient.poolWorkerName, this.port);
+            Log.Debug("[{0}] new connection from {1}", _poolClient.poolWorkerName, e.connection.endPoint.ToString(), _poolClient.poolWorkerName);
             _coinHandler.MinerConnected(e.connection);
         }
 

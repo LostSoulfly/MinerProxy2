@@ -138,14 +138,22 @@ namespace MinerProxy2.Network
                 if (IsPoolConnectionRequired() == false)
                     return;
 
+                string hashPrint = minerManager.GetCurrentHashrateReadable();
+
+                if (hashPrint.Length > 0)
+                    hashPrint = "Hashrate: " + hashPrint;
+
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
-                Log.Debug("Current total hashrate: {0}", minerManager.GetCurrentHashrateReadable());
-                Log.Information("[{0}] uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
-                    this.poolWorkerName, time.ToString("hh\\:mm"), minerManager.ConnectedMiners, poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount, poolInstance.rejectedSharesCount);
+                Log.Information("[{0}] {1} Miners: {2} Shares: {3}/{4}/{5} {6}",
+                    this.poolWorkerName, time.ToString("hh\\:mm"), minerManager.ConnectedMiners,
+                    poolInstance.submittedSharesCount, poolInstance.acceptedSharesCount,
+                    poolInstance.rejectedSharesCount, hashPrint);
 
                 lock (minerManager.MinerManagerLock)
                 {
-                    minerManager.GetMinerList().ForEach<Miner>(m => m.PrintShares());
+                    //Serilog.Log.Information(string.Format("{0, -10} {1, 6} {2, 6} {3, 6} {4, -15}", "MINER", "SUBMIT", "ACCEPT", "REJECT", "HASHRATE"));
+                    //Serilog.Log.Information(string.Format("{0, -10} {1, 6} {2, 6} {3, 6} {4, -15}", "-----", "------", "------", "------", "--------"));
+                    minerManager.GetMinerList().ForEach<Miner>(m => m.PrintShares("[" + poolWorkerName + "]"));
                 }
                 poolHandler.DoSendHashrate(this);
             };
@@ -157,9 +165,7 @@ namespace MinerProxy2.Network
         {
 
             int tickRate = poolInstance.poolGetWorkIntervalInMs;
-
-            Log.Debug("GetWorkTimer set to {0}", poolInstance.poolGetWorkIntervalInMs);
-
+            
             getWorkTimer = new Timer(tickRate);
             getWorkTimer.AutoReset = true;
 
@@ -197,7 +203,7 @@ namespace MinerProxy2.Network
             if (poolConnected && minerServer.GetNumberOfConnections == 0)
             {
                 Stop();
-                Log.Information("Waiting for miners before reconnecting to {0}..", poolEndPoint);
+                Log.Information("[{0}] Waiting for miners..", poolWorkerName);
                 return false;
             }
 
@@ -255,7 +261,7 @@ namespace MinerProxy2.Network
 
         public void Start()
         {
-            Log.Information("Connecting to {0}.", this.poolEndPoint);
+            Log.Information("[{0} Connecting to {1}.",this.poolWorkerName, this.poolEndPoint);
             poolClient.Connect(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
         }
 

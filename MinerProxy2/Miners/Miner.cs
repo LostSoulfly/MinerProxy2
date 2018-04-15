@@ -50,9 +50,11 @@ namespace MinerProxy2.Miners
             connectionStartTime = DateTime.Now;
         }
         
-        public void PrintShares()
+        public void PrintShares(string prefix)
         {
-            Serilog.Log.Information("{0}'s shares: {1}/{2}/{3}", workerIdentifier, submittedShares, acceptedShares, rejectedShares);
+            //Serilog.Log.Information(string.Format("{0, -10} {1, 6} {2, 6} {3, 6} {4, 11}", workerIdentifier, submittedShares, acceptedShares, rejectedShares, hashrate.ToString("#,##0,Mh/s").Replace(",", ".")));
+
+            Serilog.Log.Information("{0} {1}'s shares: {2}/{3}/{4} ({5})", prefix, workerIdentifier, submittedShares, acceptedShares, rejectedShares, hashrate.ToString("#,##0,Mh/s").Replace(",", "."));
         }
     }
 }

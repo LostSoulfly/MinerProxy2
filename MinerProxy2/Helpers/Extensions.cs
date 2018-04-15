@@ -69,7 +69,7 @@ namespace MinerProxy2.Helpers
 
             if (deltaMs <= 1000)
             {
-                return ts.TotalMilliseconds + "ms" + append;
+                return Math.Truncate(ts.TotalMilliseconds) + "ms" + append;
             }
             if (delta < 60)
             {

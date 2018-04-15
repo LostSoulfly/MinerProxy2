@@ -62,6 +62,10 @@ namespace MinerProxy2.Miners
                     GetMinerList().ForEach<Miner>(m => total += m.hashrate);
             }
             catch { }
+
+            if (total == 0)
+                return "";
+
             return total.ToString("#,##0,Mh/s").Replace(",", ".");
         }
 
@@ -95,17 +99,25 @@ namespace MinerProxy2.Miners
 
         public Miner GetNextShare(bool accepted)
         {
-            Miner miner = GetMinerList().OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
-            Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
+            Miner miner;
 
-            if (accepted)
+            try
             {
-                miner.acceptedShares++;
-            }
-            else
-                miner.rejectedShares++;
+                miner = GetMinerList().OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
+                Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
-            return miner;
+                if (accepted)
+                    miner.acceptedShares++;
+                else
+                    miner.rejectedShares++;
+
+                return miner;
+
+            } catch (Exception ex)
+            {
+                Log.Error(ex, "GetNextshare");
+                return null;
+            }
         }
 
         public long GetRejectedShareTotal()

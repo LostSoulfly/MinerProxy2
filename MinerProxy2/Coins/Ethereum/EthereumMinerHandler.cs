@@ -116,7 +116,7 @@ namespace MinerProxy2.Coins
                             miner = new Miner(worker, connection);
 
                             _minerManager.AddMiner(miner);
-                            Log.Information("{0} has authenticated for [{1}]!", miner.workerIdentifier, _pool.poolWorkerName);
+                            Log.Information("[{0}] new miner: {1}!", _pool.poolWorkerName, miner.workerIdentifier);
                             _minerServer.SendToMiner("{\"id\":" + id + ",\"jsonrpc\":\"2.0\",\"result\":true}", connection);
                             //_minerManager.AddMinerId(miner, id);
 
@@ -150,13 +150,9 @@ namespace MinerProxy2.Coins
             Miner miner = _minerManager.GetMiner(connection);
             
             if (miner != null)
-            {
-                Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _pool.poolEndPoint);
                 _minerManager.RemoveMiner(miner);
-            } else
-            {
-                Log.Information("Non-miner {0} has disconnected for {1}", connection.endPoint, _pool.poolEndPoint);
-            }
+
+            Log.Information("{0} disconnected: {1}", _pool.poolWorkerName, miner.workerIdentifier);
         }
 
         public void MinerError(Exception exception, TcpConnection connection)
