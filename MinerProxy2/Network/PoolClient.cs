@@ -112,7 +112,7 @@ namespace MinerProxy2.Network
         {
             poolConnected = false;
             Stop();
-            CheckPoolConnection();
+            IsPoolConnectionRequired();
         }
 
         private void PoolClient_OnServerError(object sender, ServerErrorArgs e)
@@ -125,7 +125,7 @@ namespace MinerProxy2.Network
             if (poolInstance.numberOfConnectAttempts >= 5)
                 poolInstance.GetFailoverPool();
 
-            CheckPoolConnection();
+            IsPoolConnectionRequired();
         }
 
         private void StartPoolStats()
@@ -135,6 +135,9 @@ namespace MinerProxy2.Network
 
             statsTimer.Elapsed += delegate
             {
+                if (IsPoolConnectionRequired() == false)
+                    return;
+
                 TimeSpan time = poolInstance.poolConnectedTime - DateTime.Now;
                 Log.Debug("Current total hashrate: {0}", minerManager.GetCurrentHashrateReadable());
                 Log.Information("[{0}] uptime: {1}. Miners: {2} Shares: {3}/{4}/{5}",
@@ -154,7 +157,9 @@ namespace MinerProxy2.Network
         {
 
             int tickRate = poolInstance.poolGetWorkIntervalInMs;
-            
+
+            Log.Debug("GetWorkTimer set to {0}", poolInstance.poolGetWorkIntervalInMs);
+
             getWorkTimer = new Timer(tickRate);
             getWorkTimer.AutoReset = true;
 
@@ -185,7 +190,7 @@ namespace MinerProxy2.Network
                 statsTimer.Stop();
         }
 
-        public bool CheckPoolConnection()
+        public bool IsPoolConnectionRequired()
         {
             Log.Verbose("{0} number of connections: {1}", poolWorkerName, minerServer.GetNumberOfConnections);
 

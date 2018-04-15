@@ -16,15 +16,17 @@ namespace MinerProxy2.Pools
         public bool usePoolFailover;
         public int localListenPort;
         public int donationPercent = 2;
-        public int poolStatsIntervalInMs = 60000;
-        public int poolGetWorkIntervalInMs = 1000; //set this higher on slower coins like UBQ/MTP, lower on ETH/ETC
+        public int poolStatsIntervalInMs;
+        public int poolGetWorkIntervalInMs;
         public List<string> allowedIPAddresses = new List<string>();
         public PoolItem mainPool;
         public List<PoolItem> failoverPools = new List<PoolItem>();
         
-        public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet, string coin, int poolProtocol, int poolGetWorkIntervalInMs = 1000)
+        public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet,
+            string coin, int poolProtocol, int poolGetWorkIntervalInMs = 1000, int poolStatsIntervalInMs = 60000)
         {
             this.poolGetWorkIntervalInMs = poolGetWorkIntervalInMs;
+            this.poolStatsIntervalInMs = poolStatsIntervalInMs;
             this.localListenPort = localListenPort;
             mainPool = new PoolItem(poolAddress, poolPort, poolWorkerName, poolWallet, coin, poolProtocol);
         }

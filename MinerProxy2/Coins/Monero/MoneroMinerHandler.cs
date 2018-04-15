@@ -95,13 +95,22 @@ namespace MinerProxy2.Coins.Monero
         public void MinerDisconnected(TcpConnection connection)
         {
             Miner miner = _minerManager.GetMiner(connection);
-            Log.Information("{0} disconnected.", miner.workerIdentifier);
-            //_minerManager.RemoveMiner(connection);
+
+            if (miner != null)
+            {
+                Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _pool.poolEndPoint);
+                _minerManager.RemoveMiner(miner);
+            }
+            else
+            {
+                Log.Information("Non-miner {0} has disconnected for {1}", connection.endPoint, _pool.poolEndPoint);
+            }
         }
 
         public void MinerError(Exception exception, TcpConnection connection)
         {
             Log.Error(exception, "Miner Error");
+            MinerDisconnected(connection);
         }
 
         public void PrintMinerStats()

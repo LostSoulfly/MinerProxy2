@@ -56,7 +56,7 @@ namespace MinerProxy2.Network
                 }
             }
 
-            _poolClient.CheckPoolConnection();
+            _poolClient.IsPoolConnectionRequired();
             Log.Debug("{0} has connected for [{1}] on port {2}", e.connection.endPoint.ToString(), _poolClient.poolWorkerName, this.port);
             _coinHandler.MinerConnected(e.connection);
         }
@@ -69,19 +69,8 @@ namespace MinerProxy2.Network
 
         private void MinerServer_OnClientDisconnected(object sender, ClientDisonnectedArgs e)
         {
-            try
-            {
-                Miner miner = _minerManager.GetMiner(e.connection);
-
-                Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
-
-                if (miner != null)
-                    _minerManager.RemoveMiner(miner);
-            } catch (Exception ex)
-            {
-                Log.Error("OnClientDisconnect", ex);
-            }
-            _poolClient.CheckPoolConnection();
+            _coinHandler.MinerDisconnected(e.connection);
+            _poolClient.IsPoolConnectionRequired();
         }
 
         private void MinerServer_OnClientError(object sender, ClientErrorArgs e)
@@ -98,7 +87,7 @@ namespace MinerProxy2.Network
                 Log.Information("{0} has disconnected for {1}", e.connection.endPoint, _poolClient.poolEndPoint);
             }
 
-            _poolClient.CheckPoolConnection();
+            _poolClient.IsPoolConnectionRequired();
         }
 
         public void BroadcastToMiners(byte[] data)
