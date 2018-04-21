@@ -148,11 +148,12 @@ namespace MinerProxy2.Coins
         public void MinerDisconnected(TcpConnection connection)
         {
             Miner miner = _minerManager.GetMiner(connection);
-            
-            if (miner != null)
-                _minerManager.RemoveMiner(miner);
 
-            Log.Information("{0} disconnected: {1}", _pool.poolWorkerName, miner.workerIdentifier);
+            if (miner != null)
+            {
+                _minerManager.RemoveMiner(miner);
+                Log.Information("{0} disconnected: {1}", _pool.poolWorkerName, miner.workerIdentifier);
+            }
         }
 
         public void MinerError(Exception exception, TcpConnection connection)
