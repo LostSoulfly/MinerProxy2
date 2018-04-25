@@ -66,6 +66,11 @@ namespace MinerProxy2.Network.Sockets
                 //Log.Error("BeginReceive Server", ex);
                 Disconnect(tcpConnection);
             }
+            catch (SocketException socketException)
+            {
+                Log.Verbose("BeginReceive", socketException);
+                OnClientError?.Invoke(this, new ClientErrorArgs(socketException, tcpConnection));
+            }
             serverSocket.BeginAccept(AcceptCallback, null);
         }
 
