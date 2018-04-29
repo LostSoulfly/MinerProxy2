@@ -64,7 +64,14 @@ namespace MinerProxy2.Network
         private void MinerServer_OnClientDataReceived(object sender, ClientDataReceivedArgs e)
         {
             //Log.Information(Encoding.ASCII.GetString(e.Data));
-            _coinHandler.MinerDataReceived(e.Data, e.connection);
+            try
+            {
+                _coinHandler.MinerDataReceived(e.Data, e.connection);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("MinerDataReceived", ex);
+            }
         }
 
         private void MinerServer_OnClientDisconnected(object sender, ClientDisonnectedArgs e)
@@ -81,7 +88,7 @@ namespace MinerProxy2.Network
             if (miner != null)
             {
                 Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
-                _minerManager.RemoveMiner(miner);
+                _minerManager.MinerOffline(miner);
             } else
             {
                 Log.Information("{0} has disconnected for {1}", e.connection.endPoint, _poolClient.poolEndPoint);

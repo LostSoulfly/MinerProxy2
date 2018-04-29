@@ -151,7 +151,7 @@ namespace MinerProxy2.Coins
 
             if (miner != null)
             {
-                _minerManager.RemoveMiner(miner);
+                _minerManager.MinerOffline(miner);
                 Log.Information("{0} disconnected: {1}", _pool.poolWorkerName, miner.workerIdentifier);
             }
         }

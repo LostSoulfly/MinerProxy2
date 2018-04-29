@@ -11,8 +11,14 @@ namespace MinerProxy2.Miners
     public class Miner
     {
         public DateTime connectionStartTime;
+        public DateTime connectionDisconnectTime;
+        public TimeSpan totalTimeConnected;
         public DateTime lastCalculatedTime;
         public List<DateTime> shareSubmittedTimes;
+
+        public bool minerConnected;
+
+        public int numberOfConnects;
 
         public long acceptedShares { get; set; }
 

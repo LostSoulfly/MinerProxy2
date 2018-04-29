@@ -24,9 +24,10 @@ namespace MinerProxy2.Miners
                 Miner existing = GetMiner(miner.connection);
 
                 if (existing == null)
-                {
+                    existing = GetMiner(miner.workerName);
+
+                if (existing == null)
                     minerList.Add(miner);
-                }
             }
         }
 
@@ -93,6 +94,24 @@ namespace MinerProxy2.Miners
             }
 
             Log.Verbose("GetMiner {0} -> {1}", connection.endPoint, miner.workerIdentifier);
+
+            return miner;
+        }
+
+        public Miner GetMiner(string workerName)
+        {
+            Miner miner;
+            try
+            {
+                miner = GetMinerList().First(item => item.workerName == workerName);
+            }
+            catch (Exception ex)
+            {
+                //Log.Error("GetMiner", ex);
+                return null;
+            }
+
+            Log.Debug("GetMiner by workerName {0} -> {1} ({2})", miner.connection.endPoint, miner.workerIdentifier, miner.minerConnected ? "was connected" : "was not connected");
 
             return miner;
         }
@@ -179,6 +198,18 @@ namespace MinerProxy2.Miners
                 {
                     Log.Error(ex, "RemoveMiner");
                 }
+            }
+        }
+
+        public void MinerOffline(Miner miner)
+        {
+            lock (MinerManagerLock)
+            {
+                miner.connectionDisconnectTime = DateTime.Now;
+                miner.connection = null;
+                TimeSpan timeSpan;
+                timeSpan = miner.connectionStartTime - miner.connectionDisconnectTime;
+                miner.totalTimeConnected += timeSpan;
             }
         }
 
