@@ -18,6 +18,7 @@ namespace MinerProxy2.Network
     {
         private readonly object submittedShareLock = new object();
         private ICoinHandlerMiner coinHandler;
+        private Timer getWorkTimer;
         private MinerManager minerManager = new MinerManager();
         private MinerServer minerServer;
         private Client poolClient;
@@ -25,30 +26,22 @@ namespace MinerProxy2.Network
         private ICoinHandlerPool poolHandler;
         private PoolInstance poolInstance;
         private Timer statsTimer;
-        private Timer getWorkTimer;
         private List<byte[]> submittedSharesHistory = new List<byte[]>();
 
+        public string currentPoolTarget = string.Empty;
         public string currentPoolWork = string.Empty;
         public dynamic currentPoolWorkDynamic;
-
-        public string currentPoolTarget = string.Empty;
-
         public long acceptedSharesCount { get { return poolInstance.acceptedSharesCount; } set { poolInstance.acceptedSharesCount = value; } }
 
+        public List<string> allowedIPAddresses { get { return poolInstance.allowedIPAddresses; } }
         public string poolEndPoint { get { return poolInstance.GetCurrentPool().poolEndPoint; } }
 
+        public string poolHashrateId { get { return poolInstance.GetCurrentPool().poolHashrateId; } }
+        public string poolPassword { get { return poolInstance.GetCurrentPool().poolPassword; } }
+        public int poolProtocol { get { return poolInstance.GetCurrentPool().poolProtocol; } }
         public string poolWallet { get { return poolInstance.GetCurrentPool().poolWallet; } }
 
         public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
-
-        public string poolHashrateId { get { return poolInstance.GetCurrentPool().poolHashrateId; } }
-
-        public int poolProtocol { get { return poolInstance.GetCurrentPool().poolProtocol; } }
-        
-        public string poolPassword { get { return poolInstance.GetCurrentPool().poolPassword; } }
-
-        public List<string> allowedIPAddresses { get { return poolInstance.allowedIPAddresses; } }
-
         public long rejectedSharesCount { get { return poolInstance.rejectedSharesCount; } set { poolInstance.rejectedSharesCount = value; } }
 
         public long submittedSharesCount { get { return poolInstance.submittedSharesCount; } set { poolInstance.submittedSharesCount = value; } }
@@ -128,6 +121,22 @@ namespace MinerProxy2.Network
             IsPoolConnectionRequired();
         }
 
+        private void StartGetWorkTimer()
+        {
+            int tickRate = poolInstance.poolGetWorkIntervalInMs;
+
+            getWorkTimer = new Timer(tickRate);
+            getWorkTimer.AutoReset = true;
+
+            getWorkTimer.Elapsed += delegate
+            {
+                //Log.Debug("Requesting work from pool..");
+                poolHandler.DoPoolGetWork(this);
+            };
+
+            getWorkTimer.Start();
+        }
+
         private void StartPoolStats()
         {
             statsTimer = new Timer(poolInstance.poolStatsIntervalInMs);
@@ -161,23 +170,6 @@ namespace MinerProxy2.Network
             statsTimer.Start();
         }
 
-        private void StartGetWorkTimer()
-        {
-
-            int tickRate = poolInstance.poolGetWorkIntervalInMs;
-            
-            getWorkTimer = new Timer(tickRate);
-            getWorkTimer.AutoReset = true;
-
-            getWorkTimer.Elapsed += delegate
-            {
-                //Log.Debug("Requesting work from pool..");
-                poolHandler.DoPoolGetWork(this);
-            };
-
-            getWorkTimer.Start();
-        }
-
         private void StopGetWorkTimer()
         {
             if (getWorkTimer == null)
@@ -194,6 +186,34 @@ namespace MinerProxy2.Network
 
             if (statsTimer.Enabled)
                 statsTimer.Stop();
+        }
+
+        public void ClearSubmittedSharesHistory()
+        {
+            Log.Verbose("Clearing submitted shares history.");
+            lock (submittedShareLock) { submittedSharesHistory.Clear(); }
+        }
+
+        public void DoPoolGetWork()
+        {
+            poolHandler.DoPoolGetWork(this);
+        }
+
+        public bool HasShareBeenSubmitted(byte[] share)
+        {
+            bool submitted;
+
+            lock (submittedShareLock)
+            {
+                //search the list to see if this share has been
+                submitted = submittedSharesHistory.Any(item => item == share);
+
+                //If it wasn't found in the list, we add it
+                if (!submitted)
+                    submittedSharesHistory.Add(share);
+            }
+
+            return submitted;
         }
 
         public bool IsPoolConnectionRequired()
@@ -219,29 +239,6 @@ namespace MinerProxy2.Network
             return true;
         }
 
-        public void ClearSubmittedSharesHistory()
-        {
-            Log.Verbose("Clearing submitted shares history.");
-            lock (submittedShareLock) { submittedSharesHistory.Clear(); }
-        }
-
-        public bool HasShareBeenSubmitted(byte[] share)
-        {
-            bool submitted;
-
-            lock (submittedShareLock)
-            {
-                //search the list to see if this share has been
-                submitted = submittedSharesHistory.Any(item => item == share);
-
-                //If it wasn't found in the list, we add it
-                if (!submitted)
-                    submittedSharesHistory.Add(share);
-            }
-
-            return submitted;
-        }
-
         public void SendToPool(byte[] data)
         {
             //Log.Debug("PoolClient SendToPool");
@@ -254,14 +251,9 @@ namespace MinerProxy2.Network
             this.poolClient.SendToPool(data.GetBytes());
         }
 
-        public void DoPoolGetWork()
-        {
-            poolHandler.DoPoolGetWork(this);
-        }
-
         public void Start()
         {
-            Log.Information("[{0}] Connecting to {1}.",this.poolWorkerName, this.poolEndPoint);
+            Log.Information("[{0}] Connecting to {1}.", this.poolWorkerName, this.poolEndPoint);
             poolClient.Connect(poolInstance.GetCurrentPool().poolAddress, poolInstance.GetCurrentPool().poolPort);
         }
 
@@ -297,6 +289,5 @@ namespace MinerProxy2.Network
             minerManager.AddSubmittedShare(miner);
             SendToPool(data);
         }
-        
     }
 }

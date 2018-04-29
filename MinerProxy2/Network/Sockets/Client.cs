@@ -11,16 +11,16 @@ namespace MinerProxy2.Network.Sockets
 {
     public class Client
     {
+        private readonly object bufferLock = new object();
         private readonly object dataLock = new object();
         private byte[] buffer;
-        private byte[] unusedBuffer;
-        private int unusedBufferLength;
-        private readonly object bufferLock = new object();
         private int BUFFER_SIZE = 4096;
         private bool clientConnected;
         private Socket clientSocket;
-        public string host;
         private bool isDisconnecting;
+        private byte[] unusedBuffer;
+        private int unusedBufferLength;
+        public string host;
         public int port;
 
         public event EventHandler<ServerConnectedArgs> OnServerConnected;
@@ -42,7 +42,6 @@ namespace MinerProxy2.Network.Sockets
 
         private void ConnectCallback(IAsyncResult ar)
         {
-
             Socket socket = (Socket)ar.AsyncState;
             try
             {
@@ -115,7 +114,7 @@ namespace MinerProxy2.Network.Sockets
 
                 return;
             }
-            
+
             if (received == 0)
             {
                 if (!clientConnected || isDisconnecting || !this.clientSocket.Connected)

@@ -41,7 +41,7 @@ namespace MinerProxy2.Coins
             Log.Verbose("{0} sent: {1}", connection.endPoint, data.GetString());
 
             Miner miner = _minerManager.GetMiner(connection);
-            
+
             int id = -999;
             string jsonMethod = "";
 
@@ -58,9 +58,9 @@ namespace MinerProxy2.Coins
                     id = (int)dyn.id;
 
                 if (JsonHelper.DoesJsonObjectExist(dyn.method))
-                { 
+                {
                     jsonMethod = dyn.method;
-                    
+
                     if (miner == null && !jsonMethod.ToLower().Contains("login"))
                     {
                         Log.Verbose("{0}: Miner does not exist; disconnecting..", connection.endPoint);
@@ -87,7 +87,6 @@ namespace MinerProxy2.Coins
                                 _pool.DoPoolGetWork();
                             }
                             break;
-
 
                         case "eth_submitwork":
                             Log.Verbose("{0} found a share!", miner.workerIdentifier);
@@ -135,7 +134,6 @@ namespace MinerProxy2.Coins
                 {
                     switch (id)
                     {
-
                         default:
                             Log.Warning("MinerHandler id Unhandled {0} ", s);
                             _pool.SendToPool(s.GetBytes());

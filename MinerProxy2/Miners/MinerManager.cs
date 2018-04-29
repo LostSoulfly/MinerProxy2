@@ -12,8 +12,8 @@ namespace MinerProxy2.Miners
 {
     public class MinerManager
     {
-        public readonly object MinerManagerLock = new object();
         private List<Miner> minerList = new List<Miner>();
+        public readonly object MinerManagerLock = new object();
         public int ConnectedMiners { get { return minerList.Count; } }
 
         public void AddMiner(Miner miner)
@@ -28,19 +28,22 @@ namespace MinerProxy2.Miners
 
                 if (existing == null)
                     minerList.Add(miner);
+
+                miner.numberOfConnects++;
+                miner.minerConnected = true;
             }
         }
 
-        public List<Miner> GetMinerList()
+        public void AddMinerID(Miner miner, int id)
         {
-            return minerList.ToList();
+            miner.minerID = id;
         }
 
         public void AddSubmittedShare(Miner miner)
         {
             //Log.Debug("shareSubmittedtimes current count (before new share): {0}", miner.shareSubmittedTimes.Count);
             miner.shareSubmittedTimes.Add(DateTime.Now);
-            
+
             miner.submittedShares++;
         }
 
@@ -48,11 +51,22 @@ namespace MinerProxy2.Miners
         {
             long acceptedShares = 0; try
             {
-                    GetMinerList().ForEach<Miner>(m => acceptedShares += m.acceptedShares);
+                GetMinerList().ForEach<Miner>(m => acceptedShares += m.acceptedShares);
             }
             catch { }
 
             return acceptedShares;
+        }
+
+        public long GetCurrentHashrateLong()
+        {
+            long total = 0;
+            try
+            {
+                GetMinerList().ForEach<Miner>(m => total += m.hashrate);
+            }
+            catch { }
+            return total;
         }
 
         public string GetCurrentHashrateReadable()
@@ -60,7 +74,7 @@ namespace MinerProxy2.Miners
             long total = 0;
             try
             {
-                    GetMinerList().ForEach<Miner>(m => total += m.hashrate);
+                GetMinerList().ForEach<Miner>(m => total += m.hashrate);
             }
             catch { }
 
@@ -70,24 +84,14 @@ namespace MinerProxy2.Miners
             return total.ToString("#,##0,Mh/s").Replace(",", ".");
         }
 
-        public long GetCurrentHashrateLong()
-        {
-            long total = 0;
-            try
-            {
-                    GetMinerList().ForEach<Miner>(m => total += m.hashrate);
-            }
-            catch { }
-            return total;
-        }
-
         public Miner GetMiner(TcpConnection connection)
         {
             Miner miner;
             try
             {
                 miner = GetMinerList().First(item => item.connection.socket == connection.socket);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 //Log.Error("GetMiner", ex);
                 return null;
@@ -116,6 +120,11 @@ namespace MinerProxy2.Miners
             return miner;
         }
 
+        public List<Miner> GetMinerList()
+        {
+            return minerList.ToList();
+        }
+
         public Miner GetNextShare(bool accepted)
         {
             Miner miner;
@@ -131,8 +140,8 @@ namespace MinerProxy2.Miners
                     miner.rejectedShares++;
 
                 return miner;
-
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Log.Error(ex, "GetNextshare");
                 return null;
@@ -144,7 +153,7 @@ namespace MinerProxy2.Miners
             long rejectedShares = 0;
             try
             {
-                    GetMinerList().ForEach<Miner>(m => rejectedShares += m.rejectedShares);
+                GetMinerList().ForEach<Miner>(m => rejectedShares += m.rejectedShares);
             }
             catch { }
 
@@ -156,7 +165,7 @@ namespace MinerProxy2.Miners
             long submittedShares = 0;
             try
             {
-                    GetMinerList().ForEach<Miner>(m => submittedShares += m.submittedShares);
+                GetMinerList().ForEach<Miner>(m => submittedShares += m.submittedShares);
             }
             catch { }
 
@@ -180,9 +189,17 @@ namespace MinerProxy2.Miners
         }
         */
 
-        public void AddMinerID(Miner miner, int id)
+        public void MinerOffline(Miner miner)
         {
-            miner.minerID = id;
+            lock (MinerManagerLock)
+            {
+                miner.connectionDisconnectTime = DateTime.Now;
+                miner.connection = null;
+                miner.minerConnected = false;
+                //TimeSpan timeSpan;
+                //timeSpan = miner.connectionStartTime - miner.connectionDisconnectTime;
+                //miner.totalTimeConnected += timeSpan;
+            }
         }
 
         public void RemoveMiner(Miner miner)
@@ -201,18 +218,6 @@ namespace MinerProxy2.Miners
             }
         }
 
-        public void MinerOffline(Miner miner)
-        {
-            lock (MinerManagerLock)
-            {
-                miner.connectionDisconnectTime = DateTime.Now;
-                miner.connection = null;
-                TimeSpan timeSpan;
-                timeSpan = miner.connectionStartTime - miner.connectionDisconnectTime;
-                miner.totalTimeConnected += timeSpan;
-            }
-        }
-
         public string ResetMinerShareSubmittedTime(Miner miner)
         {
             string ts = string.Empty;
@@ -221,7 +226,8 @@ namespace MinerProxy2.Miners
                 ts = miner.shareSubmittedTimes.First().ToReadableTime();
                 Log.Verbose("Resetting {0} last submit time. ({1})", miner.workerIdentifier, ts);
                 miner.shareSubmittedTimes.Remove(miner.shareSubmittedTimes.First());
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Log.Error("ResetMinerShareSubmittedTime", ex);
                 ts = "error!";

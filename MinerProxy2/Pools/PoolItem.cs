@@ -2,30 +2,24 @@
    GNU General Public License v3.0 */
 
 using System;
-using System.Collections.Generic;
 
 namespace MinerProxy2.Pools
 {
     public class PoolItem
     {
-        public string coin { get; set; }
-        
-        public string poolAddress { get; set; }
-
         internal string poolEndPoint { get { return poolAddress + ":" + poolPort; } }
+        internal string poolHashrateId { get; set; }
+        public string coin { get; set; }
 
+        public string poolAddress { get; set; }
+        public string poolPassword { get; set; }
         public int poolPort { get; set; }
 
+        public int poolProtocol { get; set; }
         public string poolWallet { get; set; }
 
         public string poolWorkerName { get; set; }
 
-        public string poolPassword { get; set; }
-
-        internal string poolHashrateId { get; set; }
-
-        public int poolProtocol { get; set; }
-        
         public PoolItem(string poolAddress, int poolPort, string poolWorkerName, string poolWallet, string coin, int poolProtocol)
         {
             this.poolAddress = poolAddress;

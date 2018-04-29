@@ -13,15 +13,15 @@ namespace MinerProxy2.Pools
         internal int numberOfConnectAttempts;
         internal DateTime poolConnectedTime;
         internal long submittedSharesCount, acceptedSharesCount, rejectedSharesCount;
-        public bool usePoolFailover;
-        public int localListenPort;
-        public int donationPercent = 2;
-        public int poolStatsIntervalInMs;
-        public int poolGetWorkIntervalInMs;
         public List<string> allowedIPAddresses = new List<string>();
-        public PoolItem mainPool;
+        public int donationPercent = 2;
         public List<PoolItem> failoverPools = new List<PoolItem>();
-        
+        public int localListenPort;
+        public PoolItem mainPool;
+        public int poolGetWorkIntervalInMs;
+        public int poolStatsIntervalInMs;
+        public bool usePoolFailover;
+
         public PoolInstance(string poolAddress, int poolPort, int localListenPort, string poolWorkerName, string poolWallet,
             string coin, int poolProtocol, int poolGetWorkIntervalInMs = 1000, int poolStatsIntervalInMs = 60000)
         {
@@ -31,14 +31,14 @@ namespace MinerProxy2.Pools
             mainPool = new PoolItem(poolAddress, poolPort, poolWorkerName, poolWallet, coin, poolProtocol);
         }
 
-        public void AddFailoverPool(string poolAddress, int poolPort)
-        {
-            failoverPools.Add(new PoolItem(poolAddress, poolPort, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.coin, mainPool.poolProtocol));
-        }
-
         public void AddAllowedIPAddress(string ip)
         {
             allowedIPAddresses.Add(ip);
+        }
+
+        public void AddFailoverPool(string poolAddress, int poolPort)
+        {
+            failoverPools.Add(new PoolItem(poolAddress, poolPort, mainPool.poolWorkerName, mainPool.poolWallet, mainPool.coin, mainPool.poolProtocol));
         }
 
         public PoolItem GetCurrentPool()
@@ -63,7 +63,7 @@ namespace MinerProxy2.Pools
             else
                 currentPool = failoverPools[index];
 
-            Log.Information("Switching to failover pool {0}: {1}", index+1, currentPool.poolEndPoint);
+            Log.Information("Switching to failover pool {0}: {1}", index + 1, currentPool.poolEndPoint);
 
             return currentPool;
         }

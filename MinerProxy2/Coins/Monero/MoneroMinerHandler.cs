@@ -99,7 +99,7 @@ namespace MinerProxy2.Coins.Monero
             if (miner != null)
             {
                 Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _pool.poolEndPoint);
-                _minerManager.RemoveMiner(miner);
+                _minerManager.MinerOffline(miner);
             }
             else
             {

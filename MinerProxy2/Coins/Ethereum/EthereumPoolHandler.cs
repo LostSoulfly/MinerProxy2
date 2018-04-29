@@ -9,7 +9,6 @@ using MinerProxy2.Network.Sockets;
 using Newtonsoft.Json;
 using Serilog;
 using System;
-using System.Linq;
 
 namespace MinerProxy2.Coins
 {
@@ -53,7 +52,6 @@ namespace MinerProxy2.Coins
                 _minerManager.GetCurrentHashrateLong().ToString("X"), _pool.poolHashrateId);
             //Log.Debug("HashrateJson: " + hashrateJson);
             _pool.SendToPool(hashrateJson);
-
         }
 
         public void PoolConnected(PoolClient poolClient)
@@ -67,7 +65,7 @@ namespace MinerProxy2.Coins
             string work;
 
             string s = data.GetString();
-            
+
             dynamic dyn = JsonConvert.DeserializeObject(s.TrimNewLine());
 
             if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
@@ -75,13 +73,13 @@ namespace MinerProxy2.Coins
                 //This still needs to be converted to dyn.method
                 switch ((int)dyn.id)
                 {
-                        
                     case 0:
 
                         try
                         {
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
-                        } catch
+                        }
+                        catch
                         {
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2];
                         }
@@ -101,10 +99,9 @@ namespace MinerProxy2.Coins
                             }
                             _pool.currentPoolTarget = work;
                         }
-                            
+
                         //_minerServer.BroadcastToMiners();
                         break;
-                        
 
                     case 1:
                     case 2:
@@ -129,7 +126,7 @@ namespace MinerProxy2.Coins
 
                         Log.Information("[{0}] authorized with {1}!", _pool.poolWorkerName, poolClient.poolEndPoint);
                         break;
-                            
+
                     case 5:
                     case 3:
                         //Log.Debug("{0} sent new work.", _pool.poolEndPoint);
@@ -142,7 +139,8 @@ namespace MinerProxy2.Coins
                         try
                         {
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
-                        } catch
+                        }
+                        catch
                         {
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2];
                         }
@@ -167,7 +165,6 @@ namespace MinerProxy2.Coins
                             _pool.currentPoolWorkDynamic = dyn;
                         }
 
-                            
                         break;
 
                     case int i when (i >= 7 && i != 999):
@@ -188,15 +185,14 @@ namespace MinerProxy2.Coins
                                 _pool.acceptedSharesCount++;
                             else
                                 _pool.rejectedSharesCount++;
-                            
+
                             Log.Information("[{0}] {1}'s share was {2}! ({3})", _pool.poolWorkerName, miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
 
                             if (!result)
                                 Log.Debug("Pool: " + s);
-                            
                         }
                         break;
-                            
+
                     case 6:
                         Log.Verbose("Hashrate accepted by {0}", poolClient.poolEndPoint);
                         //_minerServer.BroadcastToMiners(s);

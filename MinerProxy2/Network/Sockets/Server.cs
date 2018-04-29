@@ -14,8 +14,10 @@ namespace MinerProxy2.Network.Sockets
     public class Server
     {
         private const int BUFFER_SIZE = 4096;
+
         //private readonly byte[] buffer = new byte[BUFFER_SIZE];
         private readonly List<TcpConnection> clientSockets = new List<TcpConnection>();
+
         private bool isDisconnecting;
         private bool serverListening;
         private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -60,8 +62,8 @@ namespace MinerProxy2.Network.Sockets
             {
                 socket.BeginReceive(tcpConnection.buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);
                 //Log.Verbose("New miner connected, waiting for request.");
-
-            } catch (ObjectDisposedException ex)
+            }
+            catch (ObjectDisposedException ex)
             {
                 //Log.Error("BeginReceive Server", ex);
                 Disconnect(tcpConnection);
@@ -129,7 +131,7 @@ namespace MinerProxy2.Network.Sockets
             {
                 OnClientDataReceived?.Invoke(this, new ClientDataReceivedArgs(packets[i], tcpConnection));
             }
-            
+
             try
             {
                 current.BeginReceive(tcpConnection.buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, tcpConnection);

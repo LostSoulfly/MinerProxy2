@@ -11,14 +11,16 @@ namespace MinerProxy2.Helpers
 {
     public static class Extensions
     {
-        public static byte[] TrimNewLine(this byte[] data) { return TrimNewLine(data.GetString()).GetBytes(); }
-        
-        public static string TrimNewLine(this string s) { return s.TrimEnd('\r', '\n', '\t'); }
+        public static byte[] CheckForNewLine(this byte[] data)
+        {
+            return CheckForNewLine(data.GetString()).GetBytes();
+        }
 
-        public static byte[] CheckForNewLine(this byte[] data) { return CheckForNewLine(data.GetString()).GetBytes(); }
+        public static string CheckForNewLine(this string data)
+        {
+            return data.TrimNewLine() + "\n";
+        }
 
-        public static string CheckForNewLine(this string data) { return data.TrimNewLine() + "\n"; }
-        
         public static IEnumerable<T> ForEach<T>(this IEnumerable<T> array, Action<T> act)
         {
             foreach (var i in array)
@@ -107,6 +109,15 @@ namespace MinerProxy2.Helpers
             var years = Convert.ToInt32(Math.Floor((double)ts.Days / 365));
             return years <= 1 ? "one year" + append : years + " years" + append;
         }
-        
+
+        public static byte[] TrimNewLine(this byte[] data)
+        {
+            return TrimNewLine(data.GetString()).GetBytes();
+        }
+
+        public static string TrimNewLine(this string s)
+        {
+            return s.TrimEnd('\r', '\n', '\t');
+        }
     }
 }

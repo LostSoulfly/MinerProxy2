@@ -43,7 +43,6 @@ namespace MinerProxy2.Network
 
         private void MinerServer_OnClientConnected(object sender, ClientConnectedArgs e)
         {
-
             string remoteAddress = e.connection.endPoint.Address.ToString();
 
             if (_poolClient.allowedIPAddresses.Count > 0 && !_poolClient.allowedIPAddresses.Contains("0.0.0.0"))
@@ -84,12 +83,12 @@ namespace MinerProxy2.Network
         {
             Miner miner = _minerManager.GetMiner(e.connection);
 
-
             if (miner != null)
             {
                 Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
                 _minerManager.MinerOffline(miner);
-            } else
+            }
+            else
             {
                 Log.Information("{0} has disconnected for {1}", e.connection.endPoint, _poolClient.poolEndPoint);
             }
@@ -105,6 +104,11 @@ namespace MinerProxy2.Network
         public void BroadcastToMiners(string data)
         {
             minerServer.BroadcastToMiners(data.GetBytes());
+        }
+
+        public void DisconnectConnection(TcpConnection connection)
+        {
+            minerServer.Disconnect(connection);
         }
 
         public void ListenForMiners()
@@ -139,11 +143,6 @@ namespace MinerProxy2.Network
         public void StopListening()
         {
             minerServer.Stop();
-        }
-
-        public void DisconnectConnection(TcpConnection connection)
-        {
-            minerServer.Disconnect(connection);
         }
     }
 }

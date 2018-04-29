@@ -7,13 +7,55 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace MinerProxy2.Config
 {
     public static class Settings
     {
         public static int logLevel { get; set; }
+
+        public static List<PoolInstance> LoadPoolDirectory()
+        {
+            List<PoolInstance> pools = new List<PoolInstance>();
+            PoolInstance temp;
+
+            string dirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"pools\");
+            Log.Information("Loading pools.. {0}", @"\pools\");
+
+            if (!Directory.Exists(dirPath))
+            {
+                Log.Information("Pool directory doesn't exist; creating..");
+                Directory.CreateDirectory(dirPath);
+            }
+
+            List<string> dir = new List<string>(Directory.EnumerateFiles(dirPath, "*.json"));
+
+            if (dir.Count == 0)
+            {
+                Log.Information("No pools found; creating default..");
+                PoolInstance etcPool = new PoolInstance("us1-etc.ethermine.org", 4444, 9000, "MProxyETC", "0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84", "ETC", 0);
+                etcPool.AddFailoverPool(etcPool.mainPool.poolAddress, etcPool.mainPool.poolPort);
+                etcPool.AddAllowedIPAddress("0.0.0.0");
+                WritePoolToFile("Ethermine ETC.json", etcPool);
+            }
+
+            dir = new List<string>(Directory.EnumerateFiles(dirPath, "*.json"));
+
+            foreach (var item in dir)
+            {
+                Log.Verbose("Attempting to load {0}..", Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, item));
+                temp = LoadPoolFromFile(item);
+                if (temp == null)
+                {
+                    Log.Debug("Skipping {0}", item);
+                    continue;
+                }
+                Log.Information("Loaded {0} for {1} on port {2}", temp.mainPool.poolWorkerName, temp.mainPool.poolEndPoint, temp.localListenPort);
+                pools.Add(temp);
+            }
+
+            return pools;
+        }
 
         public static PoolInstance LoadPoolFromFile(string filename)
         {
@@ -27,7 +69,7 @@ namespace MinerProxy2.Config
             try
             {
                 PoolInstance pool = JsonConvert.DeserializeObject<PoolInstance>(File.ReadAllText(filename));
-                
+
                 return pool;
             }
             catch (Exception ex)
@@ -52,49 +94,5 @@ namespace MinerProxy2.Config
                 return false;
             }
         }
-
-        public static List<PoolInstance> LoadPoolDirectory()
-        {
-            List<PoolInstance> pools = new List<PoolInstance>();
-            PoolInstance temp;
-
-            string dirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"pools\");
-            Log.Information("Loading pools.. {0}", @"\pools\");
-
-            if (!Directory.Exists(dirPath))
-            {
-                Log.Information("Pool directory doesn't exist; creating..");
-                Directory.CreateDirectory(dirPath);
-            }
-
-            List<string> dir = new List<string>(Directory.EnumerateFiles(dirPath, "*.json"));
-
-            if (dir.Count == 0)
-            { 
-                Log.Information("No pools found; creating default..");
-                PoolInstance etcPool = new PoolInstance("us1-etc.ethermine.org", 4444, 9000, "MProxyETC", "0x83D557A1E88C9E3BbAe51DFA7Bd12CF523B28b84", "ETC", 0);
-                etcPool.AddFailoverPool(etcPool.mainPool.poolAddress, etcPool.mainPool.poolPort);
-                etcPool.AddAllowedIPAddress("0.0.0.0");
-                WritePoolToFile("Ethermine ETC.json", etcPool);
-            }
-            
-            dir = new List<string>(Directory.EnumerateFiles(dirPath, "*.json"));
-
-            foreach (var item in dir)
-            {
-                Log.Verbose("Attempting to load {0}..", Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, item));
-                temp = LoadPoolFromFile(item);
-                if (temp == null)
-                {
-                    Log.Debug("Skipping {0}", item);
-                    continue;
-                }
-                Log.Information("Loaded {0} for {1} on port {2}", temp.mainPool.poolWorkerName, temp.mainPool.poolEndPoint, temp.localListenPort);
-                pools.Add(temp);
-            }
-
-            return pools;
-        }
-            
     }
 }
