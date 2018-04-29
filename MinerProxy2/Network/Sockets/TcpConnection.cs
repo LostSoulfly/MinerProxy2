@@ -10,8 +10,8 @@ namespace MinerProxy2.Network.Sockets
     {
         public readonly IPEndPoint endPoint;
         public readonly Socket socket;
-        public int uniqueId;
         public byte[] buffer;
+        public int uniqueId;
         public byte[] unusedBuffer;
         public int unusedBufferLength;
 

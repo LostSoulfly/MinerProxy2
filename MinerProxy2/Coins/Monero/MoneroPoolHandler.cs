@@ -9,7 +9,6 @@ using MinerProxy2.Network.Sockets;
 using Newtonsoft.Json;
 using Serilog;
 using System;
-using System.Linq;
 
 namespace MinerProxy2.Coins.Monero
 {
@@ -39,7 +38,6 @@ namespace MinerProxy2.Coins.Monero
 
         public void DoSendHashrate(PoolClient poolClient)
         {
-
         }
 
         public void PoolConnected(PoolClient poolClient)
@@ -86,7 +84,8 @@ namespace MinerProxy2.Coins.Monero
                         default:
                             break;
                     }
-                }else */if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
+                }else */
+                if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
                     switch ((int)dyn.id)
                     {
@@ -109,6 +108,7 @@ namespace MinerProxy2.Coins.Monero
                                         _pool.currentPoolTarget = work;
                                     }
                                     break;
+
                                 default:
                                     break;
                             }
@@ -123,7 +123,6 @@ namespace MinerProxy2.Coins.Monero
                         default:
                             break;
                     }
-
                 }
             }
         }

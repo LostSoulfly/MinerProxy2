@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace MinerProxy2.Helpers
 {
@@ -67,7 +66,7 @@ namespace MinerProxy2.Helpers
             }
             // Get the first position of the seperator
             index = GetBytesIndex(buffer, seperator) + seperator.Length;
-            
+
             // if we have no seperators, just build the exisingBuffer and return an empty list.
             if (index == 0)
             {
@@ -108,7 +107,8 @@ namespace MinerProxy2.Helpers
                 existingBuffer = new byte[BUFFER_SIZE];
                 existingBufferLength = buffer.Length - lastIndex;
                 Array.Copy(buffer, lastIndex, existingBuffer, 0, buffer.Length - lastIndex);
-            } else
+            }
+            else
             {
                 //If we have no more buffer, reset the existingBuffer and it's length
                 existingBuffer = new byte[BUFFER_SIZE];
@@ -118,6 +118,5 @@ namespace MinerProxy2.Helpers
             //and return the current bufferList containing our full strings of bytes
             return bufferList;
         }
-
     }
 }

@@ -2,13 +2,11 @@
    GNU General Public License v3.0 */
 
 using System;
-using System.Linq;
 
 namespace MinerProxy2.Helpers
 {
     public static class JsonHelper
     {
-        
         public static bool DoesJsonObjectExist(dynamic json)
         {
             try
@@ -23,6 +21,5 @@ namespace MinerProxy2.Helpers
 
             return true;
         }
-        
     }
 }
