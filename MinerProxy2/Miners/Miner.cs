@@ -11,8 +11,7 @@ namespace MinerProxy2.Miners
     {
         public DateTime connectionDisconnectTime;
         public DateTime connectionStartTime;
-        public Queue<HashrateItem> hashrateHistory = new Queue<HashrateItem>(1000);
-
+        
         public bool minerConnected;
 
         public int minerID;
@@ -27,18 +26,7 @@ namespace MinerProxy2.Miners
 
         public TcpConnection connection { get; set; }
 
-        public long hashrate
-        {
-            get
-            {
-                return hashrate;
-            }
-            set
-            {
-                hashrate = value;
-                hashrateHistory.Enqueue(new HashrateItem(DateTime.Now, value));
-            }
-        }
+        public long hashrate { get; set; }
 
         public bool noRigName { get; set; }
 

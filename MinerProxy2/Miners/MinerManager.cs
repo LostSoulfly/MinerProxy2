@@ -13,6 +13,7 @@ namespace MinerProxy2.Miners
     public class MinerManager
     {
         private List<Miner> minerList = new List<Miner>();
+        public List<MinerStats> minerStats = new List<MinerStats>();
         public readonly object MinerManagerLock = new object();
         public int ConnectedMiners { get { return minerList.Count; } }
 
@@ -188,20 +189,7 @@ namespace MinerProxy2.Miners
             return miner.minerIdList;
         }
         */
-
-        public void MinerOffline(Miner miner)
-        {
-            lock (MinerManagerLock)
-            {
-                miner.connectionDisconnectTime = DateTime.Now;
-                miner.connection = null;
-                miner.minerConnected = false;
-                //TimeSpan timeSpan;
-                //timeSpan = miner.connectionStartTime - miner.connectionDisconnectTime;
-                //miner.totalTimeConnected += timeSpan;
-            }
-        }
-
+        
         public void RemoveMiner(Miner miner)
         {
             lock (MinerManagerLock)

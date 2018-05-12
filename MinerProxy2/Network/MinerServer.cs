@@ -86,7 +86,7 @@ namespace MinerProxy2.Network
             if (miner != null)
             {
                 Log.Information("{0} has disconnected for {1}", miner.workerIdentifier, _poolClient.poolEndPoint);
-                _minerManager.MinerOffline(miner);
+                _minerManager.RemoveMiner(miner);
             }
             else
             {
