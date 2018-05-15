@@ -5,7 +5,7 @@ using MinerProxy2.Helpers;
 
 namespace MinerProxy2.Miners
 {
-    public class MinerStats
+    public class MinerStatsItem
     {
         //hashrate
         public FixedSizedQueue<HashrateItem> hashrateHistory = new FixedSizedQueue<HashrateItem>(1000);
@@ -30,8 +30,13 @@ namespace MinerProxy2.Miners
 
         public long totalSubmittedShares;
 
-        public long minerIdentifier;
-        
+        public string workerName;
+
+        public MinerStatsItem(string workerName)
+        {
+            this.workerName = workerName;
+        }
+
         public void AddHashrate(long hashrate)
         {
             // We only want to store a new hashrate every ~10 seconds

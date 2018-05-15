@@ -13,7 +13,7 @@ namespace MinerProxy2.Miners
     public class MinerManager
     {
         private List<Miner> minerList = new List<Miner>();
-        public List<MinerStats> minerStats = new List<MinerStats>();
+        public List<MinerStatsItem> minerStatsList = new List<MinerStatsItem>();
         public readonly object MinerManagerLock = new object();
         public int ConnectedMiners { get { return minerList.Count; } }
 
@@ -21,6 +21,8 @@ namespace MinerProxy2.Miners
         {
             lock (MinerManagerLock)
             {
+                MinerStatsItem minerStatsItem;
+
                 Log.Verbose("Adding new miner {0} ", miner.workerIdentifier);
                 Miner existing = GetMiner(miner.connection);
 
@@ -29,6 +31,15 @@ namespace MinerProxy2.Miners
 
                 if (existing == null)
                     minerList.Add(miner);
+
+                minerStatsItem = GetMinerStats(miner.workerName);
+
+                if (minerStatsItem == null)
+                {
+                    minerStatsItem = new MinerStatsItem(miner.workerName);
+                    minerStatsList.Add(minerStatsItem);
+                }
+                
 
                 miner.numberOfConnects++;
                 miner.minerConnected = true;
@@ -44,7 +55,7 @@ namespace MinerProxy2.Miners
         {
             //Log.Debug("shareSubmittedtimes current count (before new share): {0}", miner.shareSubmittedTimes.Count);
             miner.shareSubmittedTimes.Add(DateTime.Now);
-
+            
             miner.submittedShares++;
         }
 
@@ -121,9 +132,32 @@ namespace MinerProxy2.Miners
             return miner;
         }
 
+        public MinerStatsItem GetMinerStats(string workerName)
+        {
+            MinerStatsItem minerStats;
+            try
+            {
+                minerStats = GetMinerStatsList().First(item => item.workerName == workerName);
+            }
+            catch (Exception ex)
+            {
+                //Log.Error("GetMiner", ex);
+                return null;
+            }
+
+            Log.Debug("GetMinerStats by workerName {0}", minerStats.workerName);
+
+            return minerStats;
+        }
+
         public List<Miner> GetMinerList()
         {
             return minerList.ToList();
+        }
+
+        public List<MinerStatsItem> GetMinerStatsList()
+        {
+            return minerStatsList.ToList();
         }
 
         public Miner GetNextShare(bool accepted)
@@ -136,10 +170,15 @@ namespace MinerProxy2.Miners
                 Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
                 if (accepted)
+                {
                     miner.acceptedShares++;
+                    miner.minerStats.AddShare(true);
+                }
                 else
+                {
                     miner.rejectedShares++;
-
+                    miner.minerStats.AddShare(false);
+                }
                 return miner;
             }
             catch (Exception ex)

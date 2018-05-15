@@ -26,6 +26,8 @@ namespace MinerProxy2.Miners
 
         public TcpConnection connection { get; set; }
 
+        public MinerStatsItem minerStats;
+
         public long hashrate { get; set; }
 
         public bool noRigName { get; set; }
