@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 using Serilog;
 using System;
 
-namespace MinerProxy2.Coins
+namespace MinerProxy2.Coins.Ethereum
 {
     public class EthereumPoolHandler : ICoinHandlerPool
     {
@@ -64,9 +64,9 @@ namespace MinerProxy2.Coins
             //Log.Debug("Pool {0} sent: {1}", poolClient.poolEndPoint, data.GetString());
             string work;
 
-            string s = data.GetString();
+            string poolData = data.GetString();
 
-            dynamic dyn = JsonConvert.DeserializeObject(s.TrimNewLine());
+            dynamic dyn = JsonConvert.DeserializeObject(poolData.TrimNewLine());
 
             if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
             {
@@ -74,7 +74,7 @@ namespace MinerProxy2.Coins
                 switch ((int)dyn.id)
                 {
                     case 0:
-
+                        //new target
                         try
                         {
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2] + dyn.result[3];
@@ -84,7 +84,7 @@ namespace MinerProxy2.Coins
                             work = dyn.result[0] + dyn.result[1] + dyn.result[2];
                         }
 
-                        if (_pool.currentPoolWork != work)
+                        if (_pool.currentPoolTarget != work)
                         {
                             Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
 
@@ -133,7 +133,7 @@ namespace MinerProxy2.Coins
 
                         if (JsonHelper.DoesJsonObjectExist(dyn.error))
                         {
-                            Log.Error("Oops");
+                            Log.Fatal("Server error3 for {0}: {1} {2}", poolClient.poolEndPoint, Convert.ToString(dyn.error.code), Convert.ToString(dyn.error.message));
                             return;
                         }
                         try
@@ -179,7 +179,7 @@ namespace MinerProxy2.Coins
 
                         if (miner != null)
                         {
-                            _minerServer.SendToMiner(s, miner.connection);
+                            _minerServer.SendToMiner(poolData, miner.connection);
 
                             if (result)
                                 _pool.acceptedSharesCount++;
@@ -189,7 +189,7 @@ namespace MinerProxy2.Coins
                             Log.Information("[{0}] {1}'s share was {2}! ({3})", _pool.poolWorkerName, miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
 
                             if (!result)
-                                Log.Debug("Pool: " + s);
+                                Log.Debug("Pool: " + poolData);
                         }
                         break;
 
@@ -221,7 +221,7 @@ namespace MinerProxy2.Coins
                         break;
 
                     default:
-                        Log.Warning("EthPoolHandler Unhandled: {0}", s);
+                        Log.Warning("EthPoolHandler Unhandled: {0}", poolData);
                         break;
                 }
             } /* else if (dyn.error != null && dyn.result == null)

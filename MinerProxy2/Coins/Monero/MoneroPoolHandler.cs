@@ -32,8 +32,22 @@ namespace MinerProxy2.Coins.Monero
         public void DoPoolLogin(PoolClient poolClient)
         {
             Log.Verbose("Authorizing with pool {0}", poolClient.poolEndPoint);
+            switch (_pool.poolProtocol)
+            {
+                case 0:
+                    _pool.SendToPool(string.Format("{{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{{\"login\":\"{0}\",\"pass\":\"{1}\",\"agent\":\"XMRig/2.6.3 (Windows NT 10.0; Win64; x64) libuv/1.20.3 msvc/2017\",\"algo\":[\"cn/1\",\"cn/0\",\"cn/xtl\",\"cn/msr\",\"cn\"]}}}}", _pool.poolWallet, _pool.poolPassword));
+                    break;
 
-            _pool.SendToPool(string.Format("{{\"method\":\"login\",\"params\":{{\"login\":\"{0}\",\"pass\":\"{1}\",\"rigid\":\"\",\"agent\":\"xmr-stak/2.3.0/8f845f2/master/win/nvidia-amd-cpu/aeon-cryptonight-monero/0\"}},\"id\":1}}", _pool.poolWallet, _pool.poolWorkerName));
+                case 1:
+                    _pool.SendToPool(string.Format("{{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{{\"login\":\"{0}.{1}\",\"pass\":\"{2}\",\"agent\":\"XMRig/2.6.3 (Windows NT 10.0; Win64; x64) libuv/1.20.3 msvc/2017\",\"algo\":[\"cn/1\",\"cn/0\",\"cn/xtl\",\"cn/msr\",\"cn\"]}}}}", _pool.poolWallet, _pool.poolWorkerName, _pool.poolPassword));
+
+                    break;
+
+                case 2:
+                    _pool.SendToPool(string.Format("{{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"login\",\"params\":{{\"login\":\"{0}+{1}\",\"pass\":\"{2}\",\"agent\":\"XMRig/2.6.3 (Windows NT 10.0; Win64; x64) libuv/1.20.3 msvc/2017\",\"algo\":[\"cn/1\",\"cn/0\",\"cn/xtl\",\"cn/msr\",\"cn\"]}}}}", _pool.poolWallet, _pool.poolWorkerName, _pool.poolPassword));
+
+                    break;
+            }
         }
 
         public void DoSendHashrate(PoolClient poolClient)
@@ -51,76 +65,116 @@ namespace MinerProxy2.Coins.Monero
 
             string work;
 
-            string split = data.GetString();
+            string poolData = data.GetString();
 
-            foreach (string s in split.Split('\r', '\n'))
-            {
-                if (s.Length <= 1)
-                    continue;
+            if (poolData.Length <= 1)
+                return;
 
-                dynamic dyn = JsonConvert.DeserializeObject(s.CheckForNewLine());
+            dynamic dyn = JsonConvert.DeserializeObject(poolData.TrimNewLine());
 
-                /*if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.method))
+            if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
                 {
-                    switch ((string)dyn.method)
-                    {
-                        case "job":
-                            work = dyn.@params[0] + dyn.@params[1] + dyn.@params[2] + dyn.@params[3];
-                            if (_pool.currentPoolWork != work)
-                            {
-                                Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
-
-                                foreach (Miner m in _minerManager.minerList)
-                                {
-                                    //Log.Debug("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
-                                    dyn.id = m.minerID;
-                                    _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
-                                }
-
-                                _pool.currentPoolTarget = work;
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }else */
-                if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
+                switch ((int)dyn.id)
                 {
-                    switch ((int)dyn.id)
-                    {
-                        case 1:
-                            switch (dyn.method)
+                    case 1:
+                        if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.method))
+                        {
+                            string jsonMethod = dyn.method;
+                            switch (jsonMethod.ToLower())
                             {
                                 case "job":
                                     work = dyn.@params.blob + dyn.@params.job_id + dyn.@params.target + dyn.@params.id;
-                                    if (_pool.currentPoolWork != work)
+                                    if (_pool.currentPoolTarget != work)
                                     {
                                         Log.Debug("[{0}] sent new target", poolClient.poolWorkerName);
 
-                                        foreach (Miner m in _minerManager.GetMinerList())
+                                        lock (_minerManager.MinerManagerLock)
                                         {
-                                            //Log.Debug("Modifying getWork ID {0} to ID {1}", (int)dyn.id, m.minerID);
-                                            dyn.id = m.minerID;
-                                            _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
+                                            foreach (Miner m in _minerManager.GetMinerList())
+                                            {
+                                                if (m.connection != null)
+                                                {
+                                                    Log.Debug("Modifying work target ID {0} to ID {1}", (int)dyn.id, m.minerID);
+                                                    dyn.id = m.minerID;
+                                                    SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
+                                                }
+                                            }
                                         }
 
                                         _pool.currentPoolTarget = work;
+                                        _pool.currentPoolWork = poolData;
                                     }
-                                    break;
+                                    return;
 
                                 default:
-                                    break;
+                                    return;
                             }
-                            switch (dyn.result.status)
+                        }
+                        else
+                        {
+
+                            work = dyn.result.job.blob + dyn.result.job.job_id + dyn.result.job.target + dyn.result.job.id;
+                            if (_pool.currentPoolTarget != work)
                             {
-                                case "OK":
-                                    Log.Debug("[{0}] returned OK", poolClient.poolWorkerName);
-                                    break;
+                                Log.Debug("[{0}] sent new target2", poolClient.poolWorkerName);
+
+                                lock (_minerManager.MinerManagerLock)
+                                {
+                                    foreach (Miner m in _minerManager.GetMinerList())
+                                    {
+                                        if (m.connection != null)
+                                        {
+                                            Log.Debug("Modifying work target ID {0} to ID {1}", (int)dyn.id, m.minerID);
+                                            dyn.id = m.minerID;
+                                            _minerServer.SendToMiner(JsonConvert.SerializeObject(dyn), m.connection);
+                                        }
+                                    }
+                                }
+
+                                _pool.currentPoolTarget = work;
+                                _pool.currentPoolWork = poolData;
+                                return;
+                            }
+                        }
+                        break;
+
+                    default:
+                        Log.Debug("switch defaulted");
+                        break;
+                }
+
+                Log.Verbose("exit3");
+
+                if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.result.status))
+                {
+                    string status = dyn.result.status;
+                    switch (status.ToUpper())
+                    {
+                        case "OK":
+                            Log.Debug("[{0}] returned OK", poolClient.poolWorkerName);
+                            bool result = true;
+
+                            //result = dyn.result.status == "OK";
+
+                            Miner miner = _minerManager.GetNextShare(result);
+
+                            if (miner != null)
+                            {
+                                _minerServer.SendToMiner(poolData, miner.connection);
+
+                                if (result)
+                                    _pool.acceptedSharesCount++;
+                                else
+                                    _pool.rejectedSharesCount++;
+
+                                Log.Information("[{0}] {1}'s share was {2}! ({3})", _pool.poolWorkerName, miner.workerIdentifier, result ? "accepted" : "rejected", _minerManager.ResetMinerShareSubmittedTime(miner));
+
+                                if (!result)
+                                    Log.Debug("Pool: " + poolData);
                             }
                             break;
-
                         default:
+                            Log.Verbose("result default");
                             break;
                     }
                 }

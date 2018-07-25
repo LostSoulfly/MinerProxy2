@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 using Serilog;
 using System;
 
-namespace MinerProxy2.Coins
+namespace MinerProxy2.Coins.Ethereum
 {
     internal class EthereumMinerHandler : ICoinHandlerMiner
     {
@@ -90,7 +90,7 @@ namespace MinerProxy2.Coins
 
                         case "eth_submitwork":
                             Log.Verbose("{0} found a share!", miner.workerIdentifier);
-                            _pool.SubmitShareToPool(s.GetBytes(), _minerManager.GetMiner(connection));
+                            _pool.SubmitShareToPool(s.GetBytes(), miner);
                             break;
 
                         case "eth_submithashrate":

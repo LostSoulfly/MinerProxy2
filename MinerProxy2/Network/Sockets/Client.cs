@@ -168,7 +168,7 @@ namespace MinerProxy2.Network.Sockets
 
                 // Complete sending the data to the remote device.
                 int bytesSent = client.EndSend(ar);
-                Log.Verbose("Sent {0} bytes to {1}.", bytesSent, client.RemoteEndPoint.ToString());
+                //Log.Verbose("Sent {0} bytes to {1}.", bytesSent, client.RemoteEndPoint.ToString());
             }
             catch (ObjectDisposedException exception)
             {

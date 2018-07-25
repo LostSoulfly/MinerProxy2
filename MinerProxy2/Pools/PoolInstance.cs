@@ -58,12 +58,17 @@ namespace MinerProxy2.Pools
 
             int index = failoverPools.FindIndex(p => p == GetCurrentPool()) + 1;
 
-            if (index > failoverPools.Count)
+            if (index > failoverPools.Count - 1)
+            {
                 currentPool = mainPool;
+                Log.Information("Switching back to main pool {0}", currentPool.poolEndPoint);
+            }
             else
+            {
                 currentPool = failoverPools[index];
+                Log.Information("Switching to failover pool {0}: {1}", index + 1, currentPool.poolEndPoint);
+            }
 
-            Log.Information("Switching to failover pool {0}: {1}", index + 1, currentPool.poolEndPoint);
 
             return currentPool;
         }

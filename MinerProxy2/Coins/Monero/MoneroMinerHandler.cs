@@ -31,8 +31,6 @@ namespace MinerProxy2.Coins.Monero
         public void MinerConnected(TcpConnection connection)
         {
             Log.Verbose("{0} connected.", connection.endPoint);
-            if (_pool.currentPoolWork != null)
-                _minerServer.SendToMiner(_pool.currentPoolWork, connection);
         }
 
         public void MinerDataReceived(byte[] data, TcpConnection connection)
@@ -44,50 +42,68 @@ namespace MinerProxy2.Coins.Monero
             if (miner == null)
                 Log.Verbose("{0}: Miner does not exist.", connection.endPoint);
 
-            string test = data.GetString();
+            string minerData = data.GetString();
             int id = -999;
             string jsonMethod = "";
 
-            foreach (string s in test.Split('\r', '\n'))
+            if (minerData.Length <= 1)
+                return;
+
+            dynamic dyn = new object();
+
+            try { dyn = JsonConvert.DeserializeObject(minerData.TrimNewLine()); } catch (Exception ex) { Log.Error(ex, "DeserializeObject Json error"); return; }
+
+            if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
+                id = (int)dyn.id;
+
+            if (JsonHelper.DoesJsonObjectExist(dyn.method))
             {
-                if (s.Length <= 1)
-                    continue;
+                jsonMethod = dyn.method;
 
-                dynamic dyn = new object();
-
-                try { dyn = JsonConvert.DeserializeObject(s.TrimNewLine()); } catch (Exception ex) { Log.Error(ex, "DeserializeObject Json error"); return; }
-
-                if (Helpers.JsonHelper.DoesJsonObjectExist(dyn.id))
-                    id = (int)dyn.id;
-
-                if (JsonHelper.DoesJsonObjectExist(dyn.method))
+                switch (jsonMethod.ToLower())
                 {
-                    jsonMethod = dyn.method;
+                    case "login":
+                        string worker = dyn.@params.login;
 
-                    switch (jsonMethod.ToLower())
-                    {
-                        case "login":
-                            string worker = dyn.@params.login;
+                        if (worker.Contains("."))
+                            worker = worker.Split(".")[1];
+                        else if (!_pool.poolWallet.Contains(worker))    // if our wallet address isn't part of the worker address, probably a devfee?
+                            worker = "DevFee";
+                        else
+                            worker = connection.endPoint.ToString();
 
-                            if (worker.Contains("."))
-                                worker = worker.Split(".")[1];
-                            else if (worker != _pool.poolWallet)
-                                worker = "DevFee";
-                            else
-                                worker = connection.endPoint.ToString();
+                        miner = new Miner(worker, connection);
 
-                            miner = new Miner(worker, connection);
+                        _minerManager.AddMiner(miner);
+                        Log.Information("{0} has authenticated for [{1}]!", miner.workerIdentifier, _pool.poolWorkerName);
+                        //SendToMiner("{\"id\":" + id + ",\"jsonrpc\":\"2.0\",\"error\":null,\"result\":{\"status\": \"OK\"}}", connection);
 
-                            _minerManager.AddMiner(miner);
-                            Log.Information("{0} has authenticated for [{1}]!", miner.workerIdentifier, _pool.poolWorkerName);
-                            _minerServer.SendToMiner("{\"id\":" + id + ",\"jsonrpc\":\"2.0\",\"error\":null,\"result\":{\"status\": \"OK\"}}", connection);
-                            break;
+                        _minerManager.AddMinerID(miner, id);
 
-                        case "submit":
-                            Log.Verbose("{0} found a share!", miner.workerIdentifier);
-                            _pool.SubmitShareToPool(s.GetBytes(), _minerManager.GetMiner(connection));
-                            break;
-                    }
+                        if (_pool.currentPoolTarget.Length != 0)
+                            SendToMiner(_pool.currentPoolWork.GetBytes(), connection);
+                        return;
+
+                    case "submit":
+
+                        if (miner == null)
+                        {
+                            Log.Error("submit from non-existent miner!");
+                            return;
+                        }
+
+                        Log.Verbose("{0} found a share!", miner.workerIdentifier);
+
+                        _minerManager.AddMinerID(miner, id);
+
+                        _pool.SubmitShareToPool(minerData.GetBytes(), miner);
+                        return;
+
+                    case "keepalived":
+                        //{"id":2,"jsonrpc":"2.0","method":"keepalived","params":{"id":""}}
+                        Log.Verbose($"Keepalive from {miner.workerIdentifier}");
+                        SendToMiner($"{{\"id\":{id},\"jsonrpc\":\"2.0\",\"error\":null,\"result\":{{\"status\":\"KEEPALIVED\"}}}}", connection);
+                        return;
                 }
             }
         }

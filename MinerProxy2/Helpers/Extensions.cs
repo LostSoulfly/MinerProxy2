@@ -59,6 +59,13 @@ namespace MinerProxy2.Helpers
             return result;
         }
 
+        public static string ToReadableTime(this TimeSpan span, string append = "")
+        {
+            DateTime dateTime = DateTime.Now - span;
+
+            return ToReadableTime(dateTime, append);
+        }
+
         public static string ToReadableTime(this DateTime value, string append = "")
         {
             TimeSpan ts = DateTime.Now - value;

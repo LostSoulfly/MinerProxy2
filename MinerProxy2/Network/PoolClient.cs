@@ -19,6 +19,7 @@ namespace MinerProxy2.Network
         private readonly object submittedShareLock = new object();
         private ICoinHandlerMiner coinHandler;
         private Timer getWorkTimer;
+        private Timer poolReponseCheckTimer;
         private MinerManager minerManager = new MinerManager();
         private MinerServer minerServer;
         private Client poolClient;
@@ -40,7 +41,7 @@ namespace MinerProxy2.Network
         public string poolPassword { get { return poolInstance.GetCurrentPool().poolPassword; } }
         public int poolProtocol { get { return poolInstance.GetCurrentPool().poolProtocol; } }
         public string poolWallet { get { return poolInstance.GetCurrentPool().poolWallet; } }
-
+        
         public string poolWorkerName { get { return poolInstance.GetCurrentPool().poolWorkerName; } }
         public long rejectedSharesCount { get { return poolInstance.rejectedSharesCount; } set { poolInstance.rejectedSharesCount = value; } }
 
@@ -87,12 +88,28 @@ namespace MinerProxy2.Network
             poolInstance.poolConnectedTime = DateTime.Now;
             StartPoolStats();
             StartGetWorkTimer();
+            StartPoolResponseTimer();
             if (!poolConnected)
             {
                 poolConnected = true;
                 poolHandler.DoPoolLogin(this);
                 poolHandler.DoPoolGetWork(this);
             }
+        }
+
+        private void StartPoolResponseTimer()
+        {
+            int tickRate = 30000;
+
+            poolReponseCheckTimer = new Timer(tickRate);
+            poolReponseCheckTimer.AutoReset = true;
+
+            poolReponseCheckTimer.Elapsed += delegate
+            {
+                minerManager.CheckAndCorrectShareResponseTimes();
+            };
+
+            poolReponseCheckTimer.Start();
         }
 
         private void PoolClient_OnServerDataReceived(object sender, ServerDataReceivedArgs e)
@@ -261,6 +278,7 @@ namespace MinerProxy2.Network
         {
             StopPoolStats();
             StopGetWorkTimer();
+            StopPoolResponseTimer();
 
             if (poolConnected)
             {
@@ -274,6 +292,15 @@ namespace MinerProxy2.Network
             }
 
             ClearSubmittedSharesHistory();
+        }
+
+        private void StopPoolResponseTimer()
+        {
+            if (poolReponseCheckTimer == null)
+                return;
+
+            if (poolReponseCheckTimer.Enabled)
+                poolReponseCheckTimer.Stop();
         }
 
         public void SubmitShareToPool(byte[] data, Miner miner)

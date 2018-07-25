@@ -17,29 +17,37 @@ namespace MinerProxy2.Miners
         public readonly object MinerManagerLock = new object();
         public int ConnectedMiners { get { return minerList.Count; } }
 
+        private FixedSizedQueue<TimeSpan> poolResponseTimesList = new FixedSizedQueue<TimeSpan>(10);
+        private DateTime poolSubmitTime = new DateTime();
+
+        public TimeSpan poolResponseTimeAverageMs => new TimeSpan((long)poolResponseTimesList.Average(TimeSpan => TimeSpan.TotalMilliseconds) + 30000); // server share response +30 seconds
+
         public void AddMiner(Miner miner)
         {
             lock (MinerManagerLock)
             {
-                MinerStatsItem minerStatsItem;
+                //MinerStatsItem minerStatsItem;
 
-                Log.Verbose("Adding new miner {0} ", miner.workerIdentifier);
+                Log.Verbose("Adding new miner {0} {1}", miner.workerName, miner.workerIdentifier);
                 Miner existing = GetMiner(miner.connection);
 
                 if (existing == null)
                     existing = GetMiner(miner.workerName);
 
                 if (existing == null)
+                {
                     minerList.Add(miner);
+                }
 
-                minerStatsItem = GetMinerStats(miner.workerName);
+                MinerStatsItem minerStatsItem = GetMinerStats(miner.workerName);
 
                 if (minerStatsItem == null)
                 {
+                    Log.Verbose($"Setting up new MinerStats for {miner.workerIdentifier}");
                     minerStatsItem = new MinerStatsItem(miner.workerName);
+                    miner.minerStats = minerStatsItem;
                     minerStatsList.Add(minerStatsItem);
                 }
-                
 
                 miner.numberOfConnects++;
                 miner.minerConnected = true;
@@ -48,6 +56,7 @@ namespace MinerProxy2.Miners
 
         public void AddMinerID(Miner miner, int id)
         {
+            Log.Verbose($"Changing {miner.workerIdentifier} ID: {id}");
             miner.minerID = id;
         }
 
@@ -55,7 +64,9 @@ namespace MinerProxy2.Miners
         {
             //Log.Debug("shareSubmittedtimes current count (before new share): {0}", miner.shareSubmittedTimes.Count);
             miner.shareSubmittedTimes.Add(DateTime.Now);
-            
+
+            poolSubmitTime = DateTime.Now;
+
             miner.submittedShares++;
         }
 
@@ -141,7 +152,7 @@ namespace MinerProxy2.Miners
             }
             catch (Exception ex)
             {
-                //Log.Error("GetMiner", ex);
+                //Log.Error("GetMinerStats", ex);
                 return null;
             }
 
@@ -162,12 +173,13 @@ namespace MinerProxy2.Miners
 
         public Miner GetNextShare(bool accepted)
         {
-            Miner miner;
+            Miner miner = null;
+
+            poolResponseTimesList.Enqueue(poolSubmitTime - DateTime.Now);
 
             try
             {
                 miner = GetMinerList().OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
-                Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
 
                 if (accepted)
                 {
@@ -179,12 +191,31 @@ namespace MinerProxy2.Miners
                     miner.rejectedShares++;
                     miner.minerStats.AddShare(false);
                 }
+                Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
                 return miner;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "GetNextshare");
-                return null;
+                return miner;
+            }
+        }
+
+        public void CheckAndCorrectShareResponseTimes()
+        {
+            Log.Debug($"Pool average response time: {poolResponseTimeAverageMs.ToReadableTime()}");
+            foreach (Miner miner in GetMinerList())
+            {
+                for (int i = miner.shareSubmittedTimes.Count - 1; i >= 0; i--)
+                {
+                    TimeSpan share = DateTime.Now - miner.shareSubmittedTimes[i];
+
+                    if (share.TotalMilliseconds > poolResponseTimeAverageMs.TotalMilliseconds)
+                    {
+                        Log.Warning($"{miner.workerName}'s share over 30 seconds above pool response time average; removing share..");
+                        miner.shareSubmittedTimes.RemoveAt(i);
+                    }
+                }
             }
         }
 
