@@ -20,7 +20,10 @@ namespace MinerProxy2.Miners
         private FixedSizedQueue<TimeSpan> poolResponseTimesList = new FixedSizedQueue<TimeSpan>(10);
         private DateTime poolSubmitTime = new DateTime();
 
-        public TimeSpan poolResponseTimeAverageMs => new TimeSpan((long)poolResponseTimesList.Average(TimeSpan => TimeSpan.TotalMilliseconds) + 30000); // server share response +30 seconds
+        public TimeSpan poolResponseTimeAverageMs => new TimeSpan((long)poolResponseTimesList.Average(TimeSpan => TimeSpan.Ticks)); // server share response time
+
+        public TimeSpan poolResponseTimeAverageLimitMs => new TimeSpan((long)poolResponseTimesList.Average(TimeSpan => TimeSpan.Ticks) + (long)TimeSpan.FromSeconds(10).Ticks); // server share response +10 seconds
+
 
         public void AddMiner(Miner miner)
         {
@@ -175,7 +178,8 @@ namespace MinerProxy2.Miners
         {
             Miner miner = null;
 
-            poolResponseTimesList.Enqueue(poolSubmitTime - DateTime.Now);
+            Log.Verbose($"Enqueue poolResponse time: {(DateTime.Now - poolSubmitTime).ToReadableTime()}");
+            poolResponseTimesList.Enqueue(DateTime.Now - poolSubmitTime);
 
             try
             {
@@ -210,7 +214,7 @@ namespace MinerProxy2.Miners
                 {
                     TimeSpan share = DateTime.Now - miner.shareSubmittedTimes[i];
 
-                    if (share.TotalMilliseconds > poolResponseTimeAverageMs.TotalMilliseconds)
+                    if (share.TotalMilliseconds > poolResponseTimeAverageLimitMs.TotalMilliseconds)
                     {
                         Log.Warning($"{miner.workerName}'s share over 30 seconds above pool response time average; removing share..");
                         miner.shareSubmittedTimes.RemoveAt(i);
