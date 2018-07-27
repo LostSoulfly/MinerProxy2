@@ -27,9 +27,9 @@ namespace MinerProxy2
                 .MinimumLevel.ControlledBy(logLevel)
                 .WriteTo.Console(theme: SystemConsoleTheme.Literate, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
                 //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "log.txt")
-                //.WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "verbose.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose)
+                .WriteTo.File(path: AppDomain.CurrentDomain.BaseDirectory + "Errors.txt", restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning)
                 .CreateLogger();
-
+            
             Helpers.Logging.MinerProxyHeader();
             
             List<PoolInstance> pools;
