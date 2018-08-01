@@ -67,6 +67,7 @@ namespace MinerProxy2
                                 foreach (var stats in pool.minerManager.GetMinerStatsList())
                                 {
                                     Log.Information($"Miner: {stats.workerName}");
+                                    Log.Information($"Hashrate Average: {(stats.hashrateHistory.Average(HashrateItem => HashrateItem.hashrate)).ToString("#,##0,Mh/s").Replace(",", ".")}");
                                     Log.Information($"numberofConnects: {stats.numberOfConnects}");
                                     Log.Information($"firstConnectTime: {stats.firstConnectTime}");
                                     Log.Information($"lastConnectTime: {stats.lastConnectTime}");
