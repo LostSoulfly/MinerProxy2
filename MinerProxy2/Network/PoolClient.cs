@@ -20,12 +20,12 @@ namespace MinerProxy2.Network
         private ICoinHandlerMiner coinHandler;
         private Timer getWorkTimer;
         private Timer poolReponseCheckTimer;
-        private MinerManager minerManager = new MinerManager();
-        private MinerServer minerServer;
+        public MinerManager minerManager = new MinerManager();
+        public MinerServer minerServer;
         private Client poolClient;
         private bool poolConnected;
-        private ICoinHandlerPool poolHandler;
-        private PoolInstance poolInstance;
+        public ICoinHandlerPool poolHandler;
+        public PoolInstance poolInstance;
         private Timer statsTimer;
         private List<byte[]> submittedSharesHistory = new List<byte[]>();
 
@@ -311,7 +311,6 @@ namespace MinerProxy2.Network
                 Log.Warning("Share already exists, not sending to pool.");
                 return;
             }
-
             poolInstance.submittedSharesCount++;
             minerManager.AddSubmittedShare(miner);
             SendToPool(data);

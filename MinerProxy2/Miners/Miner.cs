@@ -15,9 +15,7 @@ namespace MinerProxy2.Miners
         public bool minerConnected;
 
         public int minerID;
-
-        public int numberOfConnects;
-
+        
         //public TimeSpan totalTimeConnected;
         //public DateTime lastCalculatedTime;
         public List<DateTime> shareSubmittedTimes;
@@ -25,9 +23,7 @@ namespace MinerProxy2.Miners
         public long acceptedShares { get; set; }
 
         public TcpConnection connection { get; set; }
-
-        public MinerStatsItem minerStats;
-
+        
         public long hashrate { get; set; }
 
         public bool noRigName { get; set; }

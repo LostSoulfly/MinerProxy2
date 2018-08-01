@@ -42,18 +42,32 @@ namespace MinerProxy2.Miners
                     minerList.Add(miner);
                 }
 
-                MinerStatsItem minerStatsItem = GetMinerStats(miner.workerName);
-
-                if (minerStatsItem == null)
-                {
-                    Log.Verbose($"Setting up new MinerStats for {miner.workerIdentifier}");
-                    minerStatsItem = new MinerStatsItem(miner.workerName);
-                    miner.minerStats = minerStatsItem;
-                    minerStatsList.Add(minerStatsItem);
-                }
-
-                miner.numberOfConnects++;
+                AddMinerStats(miner);
+                
+                GetMinerStats(miner).MinerConnected();
                 miner.minerConnected = true;
+            }
+        }
+
+        public MinerStatsItem AddMinerStats(Miner miner)
+        {
+            MinerStatsItem minerStatsItem;
+
+            minerStatsItem = GetMinerStats(miner, false);
+
+            if (minerStatsItem != null)
+            {
+                return minerStatsItem;
+            }
+            else
+            {
+                Log.Verbose($"Setting up new MinerStats for {miner.workerIdentifier}");
+                minerStatsItem = new MinerStatsItem(miner.workerName);
+                minerStatsList.Add(minerStatsItem);
+
+                Log.Verbose(string.Format("MinerStatsList count: {0}", minerStatsList.Count));
+
+                return minerStatsItem;
             }
         }
 
@@ -67,6 +81,8 @@ namespace MinerProxy2.Miners
         {
             //Log.Debug("shareSubmittedtimes current count (before new share): {0}", miner.shareSubmittedTimes.Count);
             miner.shareSubmittedTimes.Add(DateTime.Now);
+
+            GetMinerStats(miner).SubmittedShare();
 
             poolSubmitTime = DateTime.Now;
 
@@ -146,20 +162,23 @@ namespace MinerProxy2.Miners
             return miner;
         }
 
-        public MinerStatsItem GetMinerStats(string workerName)
+        public MinerStatsItem GetMinerStats(Miner miner, bool create = true)
         {
             MinerStatsItem minerStats;
+
             try
             {
-                minerStats = GetMinerStatsList().First(item => item.workerName == workerName);
+                minerStats = GetMinerStatsList().First(item => item.workerName == miner.workerName);
             }
             catch (Exception ex)
             {
-                //Log.Error("GetMinerStats", ex);
-                return null;
+                if (create)
+                    return AddMinerStats(miner);
+                else
+                    return null;
             }
 
-            Log.Debug("GetMinerStats by workerName {0}", minerStats.workerName);
+            Log.Verbose("GetMinerStats by workerName {0}", minerStats.workerName);
 
             return minerStats;
         }
@@ -171,6 +190,8 @@ namespace MinerProxy2.Miners
 
         public List<MinerStatsItem> GetMinerStatsList()
         {
+
+            //Log.Debug(string.Format("MinerStatsList count: {0}", minerStatsList.Count));
             return minerStatsList.ToList();
         }
 
@@ -186,15 +207,12 @@ namespace MinerProxy2.Miners
                 miner = GetMinerList().OrderBy(m => m.shareSubmittedTimes.DefaultIfEmpty(DateTime.MaxValue).FirstOrDefault()).First();
 
                 if (accepted)
-                {
                     miner.acceptedShares++;
-                    miner.minerStats.AddShare(true);
-                }
                 else
-                {
                     miner.rejectedShares++;
-                    miner.minerStats.AddShare(false);
-                }
+
+                GetMinerStats(miner).AddShare(accepted);
+
                 Log.Verbose("GetNextShare: {0} ({1})!", miner.workerIdentifier, accepted ? "Accepted" : "Rejected");
                 return miner;
             }
@@ -271,6 +289,7 @@ namespace MinerProxy2.Miners
                 Log.Debug("Removing {0}", miner.workerIdentifier);
                 try
                 {
+                    GetMinerStats(miner).MinerDisconnected();
                     minerList.Remove(miner);
                 }
                 catch (Exception ex)
@@ -300,6 +319,7 @@ namespace MinerProxy2.Miners
         public void UpdateMinerHashrate(long hashrate, Miner miner)
         {
             miner.hashrate = hashrate;
+            GetMinerStats(miner).AddHashrate(hashrate);
         }
     }
 }
