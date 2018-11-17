@@ -40,6 +40,9 @@ namespace MinerProxy2.Miners
 
         public void AddHashrate(long hashrate)
         {
+            if (hashrate == 0)
+                return;
+
             // We only want to store a new hashrate every ~10 seconds
             TimeSpan nextHashrate = TimeSpan.FromSeconds(10);
             

@@ -99,6 +99,7 @@ namespace MinerProxy2
 
                     }
                 }
+                System.Threading.Thread.Sleep(50);
             }
         }
     }

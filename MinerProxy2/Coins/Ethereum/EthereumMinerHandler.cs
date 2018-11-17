@@ -97,7 +97,7 @@ namespace MinerProxy2.Coins.Ethereum
                             string hash = dyn.@params[0];
                             long hashrate = Convert.ToInt64(hash, 16);
                             _minerManager.UpdateMinerHashrate(hashrate, miner);
-                            Log.Debug("{0} sent hashrate: {1}", miner.workerIdentifier, hashrate.ToString("#,##0,Mh/s").Replace(",", "."));
+                            Log.Verbose("{0} sent hashrate: {1}", miner.workerIdentifier, hashrate.ToString("#,##0,Mh/s").Replace(",", "."));
                             break;
 
                         case "eth_login": // DevFee only?
