@@ -23,7 +23,6 @@
     <Folder Include="Coins\Monero\" />
     <Folder Include="Coins\Lbry\" />
     <Folder Include="Coins\Generic\" />
-    <Folder Include="Coins\PassThru\" />
     <Folder Include="Coins\PASC\" />
     <Folder Include="Coins\SIA\" />
     <Folder Include="Coins\NiceHash\" />

@@ -1,5 +1,6 @@
 ﻿using MinerProxy2.Coins.Ethereum;
 using MinerProxy2.Coins.Monero;
+using MinerProxy2.Coins.PassThru;
 using MinerProxy2.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,7 @@ namespace MinerProxy2.Helpers
 
                 case "PASSTHRU":
                 case "THRU":
-                    break;
+                    return ((ICoinHandlerMiner)new PassThruMinerHandler(), (ICoinHandlerPool)new PassThruPoolHandler());
 
                 case "NICEHASH":
                 case "NICE":
