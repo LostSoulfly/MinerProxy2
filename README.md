@@ -9,7 +9,7 @@ This is a pre-alpha project currently. Many things are not implemented yet. I do
 There are no current releases. To use this project in its current state you must compile it.
 
 
-1. [Download the .NET Core Runtime installer](https://www.microsoft.com/net/download/Windows/run), unless you have the SDK already installed.
+1. [Download the .NET Core Runtime installer](https://dotnet.microsoft.com/download/), unless you have the SDK already installed.
 
 2. [Download the newest MinerProxy2 release](https://github.com/LostSoulFly/MinerProxy2/releases) and extract it somewhere.
 
