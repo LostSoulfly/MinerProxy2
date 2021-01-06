@@ -31,8 +31,8 @@ namespace MinerProxy2.Coins.Ethereum
         public void MinerConnected(TcpConnection connection)
         {
             Log.Verbose("{0} connected.", connection.endPoint);
-            if (_pool.currentPoolWork != null)
-                _minerServer.SendToMiner(_pool.currentPoolWork, connection);
+            /*if (_pool.currentPoolWork != null)
+                _minerServer.SendToMiner(_pool.currentPoolWork, connection);*/
             //_minerManager.AddMiner();
         }
 
