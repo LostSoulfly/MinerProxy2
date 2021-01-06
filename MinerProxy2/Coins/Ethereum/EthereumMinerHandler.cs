@@ -90,7 +90,17 @@ namespace MinerProxy2.Coins.Ethereum
 
                         case "eth_submitwork":
                             Log.Verbose("{0} found a share!", miner.workerIdentifier);
-                            _pool.SubmitShareToPool(s.GetBytes(), miner);
+                            string shareData = s;
+
+                            // T-Rex miner sends worker name with shares, replace it here.
+                            if (JsonHelper.DoesJsonObjectExist(dyn.worker))
+                            {
+                                Log.Verbose("{0} replace worker name (orig: {1}, new: {2})", miner.workerIdentifier, (string)dyn.worker, _pool.poolWorkerName);
+                                dyn.worker = _pool.poolWorkerName;
+                                shareData = JsonConvert.SerializeObject(dyn);
+                            }
+
+                            _pool.SubmitShareToPool(shareData.GetBytes(), miner);
                             break;
 
                         case "eth_submithashrate":
